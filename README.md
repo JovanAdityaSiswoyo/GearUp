@@ -1,58 +1,185 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# GearUp
 
-## About Laravel
+GearUp adalah sistem manajemen booking dan peminjaman alat camping berbasis Laravel dengan fitur multi-user (Admin, Officer, User).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Laravel 11.x
+- PHP 8.2+
+- MySQL 8.0+
+- Livewire 4.x
+- Tailwind CSS 4.x
+- Sweet Alert
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Setup Instructions
 
-## Learning Laravel
+### 1. Clone Repository
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+git clone <repository-url>
+cd AplikasiPinjam
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. Install Dependencies
 
-## Laravel Sponsors
+```bash
+composer install
+npm install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 3. Environment Configuration
 
-### Premium Partners
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Edit file `.env` dan sesuaikan konfigurasi database:
 
-## Contributing
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=camping_loan_app
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Database Setup
 
-## Code of Conduct
+Buat database terlebih dahulu, lalu jalankan migrasi dan seeder:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate:fresh
+php artisan db:seed
+```
 
-## Security Vulnerabilities
+### 5. Run Application
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Untuk development, jalankan kedua perintah berikut di terminal terpisah:
+
+```bash
+# Terminal 1 - Backend Server
+php artisan serve
+
+# Terminal 2 - Frontend Assets (Vite HMR)
+npm run dev
+```
+
+Atau gunakan concurrently:
+
+```bash
+npx concurrently "php artisan serve" "npm run dev"
+```
+
+Aplikasi dapat diakses di: `http://localhost:8000`
+
+### 6. Default Credentials
+
+Setelah seeding, Anda dapat login dengan:
+
+**Test User:**
+- Email: `test@example.com`
+- Password: `password`
+
+**Admin/Officer/User lainnya:**
+- Email: `[sesuai data seeder]`
+- Password: `password`
+
+## Database Structure
+
+### Tables
+
+- **users** - User accounts dengan UUID
+- **user_info** - Detail informasi user (phone, birthday)
+- **admins** - Admin accounts
+- **officers** - Officer accounts
+- **categories** - Kategori produk
+- **products** - Produk yang tersedia (milik admin, per category)
+- **packages** - Paket bundling produk
+- **package_products** - Junction table (many-to-many packages-products)
+- **books** - Booking paket oleh user
+- **detail_books** - Detail participant dalam booking
+- **book_products** - Booking individual product
+- **detail_book_products** - Detail participant dalam book_products
+
+### Key Features
+
+- ✅ UUID sebagai primary key untuk semua tabel
+- ✅ Foreign key constraints dengan cascade
+- ✅ Relationships: One-to-One, One-to-Many, Many-to-Many
+- ✅ Factory & Seeder untuk test data lengkap
+- ✅ Authentication ready (User, Admin, Officer)
+
+## Development Commands
+
+### Database
+
+```bash
+# Reset dan migrate ulang
+php artisan migrate:fresh
+
+# Seed test data
+php artisan db:seed
+
+# Reset + Seed sekaligus
+php artisan migrate:fresh --seed
+```
+
+### Generate Code
+
+```bash
+# Create migration
+php artisan make:migration create_table_name
+
+# Create model
+php artisan make:model ModelName
+
+# Create controller
+php artisan make:controller ControllerName
+
+# Create Livewire component
+php artisan make:livewire ComponentName
+
+# Create seeder
+php artisan make:seeder SeederName
+
+# Create factory
+php artisan make:factory FactoryName
+```
+
+### Assets
+
+```bash
+# Development (watch mode)
+npm run dev
+
+# Production build
+npm run build
+```
+
+## Project Structure
+
+```
+AplikasiPinjam/
+├── app/
+│   ├── Http/Controllers/
+│   ├── Models/          # Eloquent models dengan UUID & relationships
+│   └── Providers/
+├── database/
+│   ├── factories/       # Model factories untuk testing
+│   ├── migrations/      # Database migrations dengan UUID
+│   └── seeders/        # Database seeders
+├── resources/
+│   ├── css/            # Tailwind CSS
+│   ├── js/             # JavaScript & Livewire
+│   └── views/          # Blade templates
+└── routes/
+    ├── web.php         # Web routes
+    └── console.php     # Console commands
+```
 
 ## License
 
