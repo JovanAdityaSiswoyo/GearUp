@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Payment;
 
 class Book extends Model
 {
@@ -46,5 +47,10 @@ class Book extends Model
     public function detailBookProducts()
     {
         return $this->hasMany(DetailBookProduct::class, 'id_book_product');
+    }
+
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 }

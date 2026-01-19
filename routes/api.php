@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\UserInfoController;
 use App\Http\Controllers\Api\DetailBookController;
 use App\Http\Controllers\Api\BookProductController;
 use App\Http\Controllers\Api\DetailBookProductController;
+use App\Http\Controllers\Api\PaymentController;
 
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -48,4 +49,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('detail-books', DetailBookController::class);
     Route::apiResource('book-products', BookProductController::class);
     Route::apiResource('detail-book-products', DetailBookProductController::class);
+    Route::apiResource('payments', PaymentController::class);
 });

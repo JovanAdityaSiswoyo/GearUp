@@ -29,8 +29,8 @@ GET /api/books?search=BOOK-001
 - **Books**: book_code, booker_name, booker_email, status
 - **Book Products**: book_code, booker_name, booker_email, status
 - **User Info**: phone
-- **Detail Books**: participant_name, participant_email, participant_telp
-- **Detail Book Products**: participant_name, participant_email, participant_telp
+- **Detail Books**: full_name, phone_number, emergency_phone_number, instagram_handle, other_socials
+- **Detail Book Products**: full_name, phone_number, emergency_phone_number, instagram_handle, other_socials
 
 ---
 
@@ -163,6 +163,15 @@ GET /api/books?search=BOOK-001
 | PUT | `/detail-book-products/{id}` | Update detail book product |
 | DELETE | `/detail-book-products/{id}` | Delete detail book product |
 
+### Payments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/payments` | List all payments (filter: ?status=paid&payable_type=book&payable_id=xxx) |
+| POST | `/payments` | Create new payment |
+| GET | `/payments/{id}` | Get single payment |
+| PUT | `/payments/{id}` | Update payment |
+| DELETE | `/payments/{id}` | Delete payment |
+
 ---
 
 ## Quick Start
@@ -241,7 +250,7 @@ Import `postman_collection.json` ke Postman untuk testing lengkap.
 
 ---
 
-## Total Endpoints: 59
+## Total Endpoints: 64
 
 - **Public:** 7 endpoints
-- **Protected:** 52 endpoints
+- **Protected:** 57 endpoints
