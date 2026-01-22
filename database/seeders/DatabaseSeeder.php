@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AdminSeeder::class,
             OfficerSeeder::class,
+            BrandSeeder::class,
             CategorySeeder::class,
             ProductSeeder::class,
             PackageSeeder::class,
@@ -39,6 +40,7 @@ class DatabaseSeeder extends Seeder
             UserInfoSeeder::class,
             DetailBookSeeder::class,
             PaymentSeeder::class,
+            ActivityLogSeeder::class,
         ]);
     }
 }

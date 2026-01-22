@@ -10,7 +10,7 @@ class Category extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['categories'];
+    protected $fillable = ['categories', 'name', 'description'];
 
     public function products()
     {

@@ -16,10 +16,23 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
-        $categories = ['Outdoor', 'Adventure', 'Beach', 'Mountain', 'Water Sports', 'Wildlife'];
+        $categories = [
+            ['name' => 'Outdoor', 'desc' => 'Peralatan untuk aktivitas luar ruangan'],
+            ['name' => 'Adventure', 'desc' => 'Perlengkapan petualangan dan hiking'],
+            ['name' => 'Beach', 'desc' => 'Peralatan untuk aktivitas pantai'],
+            ['name' => 'Mountain', 'desc' => 'Perlengkapan pendakian gunung'],
+            ['name' => 'Water Sports', 'desc' => 'Peralatan olahraga air'],
+            ['name' => 'Wildlife', 'desc' => 'Perlengkapan pengamatan satwa liar'],
+            ['name' => 'Camping', 'desc' => 'Peralatan berkemah dan survival'],
+            ['name' => 'Cycling', 'desc' => 'Perlengkapan bersepeda'],
+        ];
+        
+        $selected = fake()->randomElement($categories);
+        
         return [
             'id' => \Illuminate\Support\Str::uuid(),
-            'categories' => fake()->randomElement($categories),
+            'categories' => $selected['name'],
+            'description' => $selected['desc'],
         ];
     }
 }

@@ -5,178 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - AplikasiPinjam</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-        .sub-header {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
 </head>
 <body class="bg-gray-50">
-    <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-gradient-to-b from-purple-600 to-pink-500 text-white">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold">Admin Panel</h1>
-                <p class="text-sm opacity-80 sub-header">AplikasiPinjam</p>
-            </div>
-            
-            <nav class="mt-6">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center px-6 py-3 bg-white/20 border-r-4 border-white">
-                    <x-heroicon-o-home class="h-5 w-5 mr-3" />
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('admin.users.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-users class="h-5 w-5 mr-3" />
-                    <span>Users</span>
-                </a>
-                <a href="{{ route('admin.books.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-book-open class="h-5 w-5 mr-3" />
-                    <span>Books</span>
-                </a>
-                <a href="{{ route('admin.products.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-cube class="h-5 w-5 mr-3" />
-                    <span>Products</span>
-                </a>
-                <a href="{{ route('admin.categories.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-tag class="h-5 w-5 mr-3" />
-                    <span>Categories</span>
-                </a>
-                <a href="{{ route('admin.packages.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-cube-transparent class="h-5 w-5 mr-3" />
-                    <span>Packages</span>
-                </a>
-                <a href="{{ route('admin.payments.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-credit-card class="h-5 w-5 mr-3" />
-                    <span>Payments</span>
-                </a>
-            </nav>
-        </aside>
+    @include('sweetalert::alert')
+    <div class="min-h-screen">
+        @include('admin.partials.sidebar')
 
-        <!-- Main Content -->
-        <div class="flex-1">
-            <!-- Header -->
-            <header class="bg-white shadow-sm">
-                <div class="flex items-center justify-between px-8 py-4">
-                    <div>
-                        <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
-                        <p class="text-sm text-gray-500 sub-header">Welcome back, {{ auth()->guard('admin')->user()->name ?? auth()->user()->name }}!</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
-                            <x-heroicon-o-bell class="h-6 w-6" />
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
-                        <div class="flex items-center space-x-3">
-                            <div class="text-right">
-                                <p class="text-sm font-medium text-gray-800">{{ auth()->guard('admin')->user()->name ?? auth()->user()->name }}</p>
-                                <p class="text-xs text-gray-500 sub-header">
-                                    {{ auth()->guard('admin')->check() ? 'Administrator' : (auth()->user()->roles->first()->name ?? 'User') }}
-                                </p>
-                            </div>
-                            <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                {{ substr(auth()->guard('admin')->user()->name ?? auth()->user()->name, 0, 1) }}
-                            </div>
-                            <form action="{{ route('logout') }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="text-gray-600 hover:text-red-600 transition">
-                                    <x-heroicon-o-arrow-right-on-rectangle class="h-6 w-6" />
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </header>
+        <div class="ml-64">
+            @include('admin.partials.header', ['title' => 'Dashboard'])
 
-            <!-- Dashboard Content -->
             <main class="p-8">
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Users Card -->
                     <div class="bg-white rounded-xl shadow-sm p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 sub-header">Total Users</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ \App\Models\User::count() }}</h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-purple-100 rounded-lg">
+                                <x-heroicon-o-users class="h-6 w-6 text-purple-600" />
                             </div>
-                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <x-heroicon-o-users class="h-6 w-6 text-blue-600" />
-                            </div>
+                            <span class="text-xs text-green-600 font-semibold">+12%</span>
                         </div>
-                        <div class="mt-4">
-                            <span class="text-sm text-green-600 font-medium">↑ 12%</span>
-                            <span class="text-sm text-gray-500 sub-header ml-1">from last month</span>
-                        </div>
+                        <h3 class="text-gray-500 text-sm font-medium">Total Users</h3>
+                        <p class="text-2xl font-bold text-gray-800">{{ \App\Models\User::count() }}</p>
                     </div>
 
+                    <!-- Total Peminjaman Card -->
                     <div class="bg-white rounded-xl shadow-sm p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 sub-header">Total Books</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ \App\Models\Book::count() }}</h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-blue-100 rounded-lg">
+                                <x-heroicon-o-clipboard-document-list class="h-6 w-6 text-blue-600" />
                             </div>
-                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <x-heroicon-o-book-open class="h-6 w-6 text-purple-600" />
-                            </div>
+                            <span class="text-xs text-green-600 font-semibold">+8%</span>
                         </div>
-                        <div class="mt-4">
-                            <span class="text-sm text-green-600 font-medium">↑ 8%</span>
-                            <span class="text-sm text-gray-500 sub-header ml-1">from last month</span>
-                        </div>
+                        <h3 class="text-gray-500 text-sm font-medium">Total Peminjaman</h3>
+                        <p class="text-2xl font-bold text-gray-800">{{ \App\Models\BookProduct::count() }}</p>
                     </div>
 
+                    <!-- Total Products Card -->
                     <div class="bg-white rounded-xl shadow-sm p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 sub-header">Total Products</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ \App\Models\Product::count() }}</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-pink-100 rounded-lg">
                                 <x-heroicon-o-cube class="h-6 w-6 text-pink-600" />
                             </div>
+                            <span class="text-xs text-green-600 font-semibold">+5%</span>
                         </div>
-                        <div class="mt-4">
-                            <span class="text-sm text-green-600 font-medium">↑ 15%</span>
-                            <span class="text-sm text-gray-500 sub-header ml-1">from last month</span>
-                        </div>
+                        <h3 class="text-gray-500 text-sm font-medium">Total Products</h3>
+                        <p class="text-2xl font-bold text-gray-800">{{ \App\Models\Product::count() }}</p>
                     </div>
 
+                    <!-- Revenue Card -->
                     <div class="bg-white rounded-xl shadow-sm p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 sub-header">Total Revenue</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-1">Rp {{ number_format(\App\Models\Payment::where('status', 'completed')->sum('amount'), 0, ',', '.') }}</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-green-100 rounded-lg">
                                 <x-heroicon-o-currency-dollar class="h-6 w-6 text-green-600" />
                             </div>
+                            <span class="text-xs text-green-600 font-semibold">+23%</span>
                         </div>
-                        <div class="mt-4">
-                            <span class="text-sm text-green-600 font-medium">↑ 23%</span>
-                            <span class="text-sm text-gray-500 sub-header ml-1">from last month</span>
-                        </div>
+                        <h3 class="text-gray-500 text-sm font-medium">Total Revenue</h3>
+                        <p class="text-2xl font-bold text-gray-800">Rp {{ number_format(\App\Models\Payment::sum('amount') ?? 0, 0, ',', '.') }}</p>
                     </div>
                 </div>
 
-                <!-- Recent Activity & Quick Actions -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Recent Users -->
-                    <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Users</h3>
                         <div class="space-y-4">
                             @foreach(\App\Models\User::latest()->take(5)->get() as $user)
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-semibold">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold">
                                         {{ substr($user->name, 0, 1) }}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-800">{{ $user->name }}</p>
-                                        <p class="text-xs text-gray-500 sub-header">{{ $user->email }}</p>
+                                        <h4 class="text-sm font-semibold text-gray-800">{{ $user->name }}</h4>
+                                        <p class="text-xs text-gray-500">{{ $user->email }}</p>
                                     </div>
                                 </div>
-                                <span class="text-xs text-gray-500 sub-header">{{ $user->created_at->diffForHumans() }}</span>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500">Joined</p>
+                                    <p class="text-sm font-medium text-gray-700">{{ $user->created_at->format('M d, Y') }}</p>
+                                </div>
                             </div>
                             @endforeach
                         </div>
@@ -184,23 +93,75 @@
 
                     <!-- Quick Actions -->
                     <div class="bg-white rounded-xl shadow-sm p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <a href="{{ route('admin.users.create') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition">
-                                <x-heroicon-o-user-plus class="h-8 w-8 text-purple-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">Add User</span>
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Quick Actions</h3>
+                            <span class="text-xs text-purple-600 font-semibold">Shortcuts</span>
+                        </div>
+                        <div class="space-y-3">
+                            <a href="{{ route('admin.users.create') }}" class="group flex items-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:from-purple-100 hover:to-pink-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <x-heroicon-o-user-plus class="h-6 w-6 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">Add New User</h4>
+                                    <p class="text-xs text-gray-500">Create user account</p>
+                                </div>
+                                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
                             </a>
-                            <a href="{{ route('admin.books.create') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition">
-                                <x-heroicon-o-plus-circle class="h-8 w-8 text-purple-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">Add Book</span>
+
+                            <a href="{{ route('admin.products.create') }}" class="group flex items-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl hover:from-blue-100 hover:to-cyan-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <x-heroicon-o-cube class="h-6 w-6 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">Add Product</h4>
+                                    <p class="text-xs text-gray-500">Register new product</p>
+                                </div>
+                                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
                             </a>
-                            <a href="{{ route('admin.products.create') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition">
-                                <x-heroicon-o-cube class="h-8 w-8 text-purple-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">Add Product</span>
+
+                            <a href="{{ route('admin.bookings.index') }}" class="group flex items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl hover:from-green-100 hover:to-emerald-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <x-heroicon-o-clipboard-document-list class="h-6 w-6 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">Peminjaman</h4>
+                                    <p class="text-xs text-gray-500">Manage bookings</p>
+                                </div>
+                                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-green-600 transition-colors" />
                             </a>
-                            <a href="{{ route('admin.payments.index') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition">
-                                <x-heroicon-o-credit-card class="h-8 w-8 text-purple-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">View Payments</span>
+
+                            <a href="{{ route('admin.payments.index') }}" class="group flex items-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl hover:from-orange-100 hover:to-amber-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <x-heroicon-o-credit-card class="h-6 w-6 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">Payments</h4>
+                                    <p class="text-xs text-gray-500">View all payments</p>
+                                </div>
+                                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-orange-600 transition-colors" />
+                            </a>
+
+                            <a href="{{ route('admin.reconciliation.index') }}" class="group flex items-center p-4 bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl hover:from-indigo-100 hover:to-violet-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <x-heroicon-o-calculator class="h-6 w-6 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">Rekonsiliasi</h4>
+                                    <p class="text-xs text-gray-500">Payment reconciliation</p>
+                                </div>
+                                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                            </a>
+
+                            <a href="{{ route('admin.activity-log.index') }}" class="group flex items-center p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl hover:from-pink-100 hover:to-rose-100 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <x-heroicon-o-clock class="h-6 w-6 text-white" />
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">Activity Log</h4>
+                                    <p class="text-xs text-gray-500">View system logs</p>
+                                </div>
+                                <x-heroicon-o-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-pink-600 transition-colors" />
                             </a>
                         </div>
                     </div>

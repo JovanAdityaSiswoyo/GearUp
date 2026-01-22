@@ -13,10 +13,15 @@ class Product extends Model
     protected $fillable = [
         'id_admins',
         'id_category',
+        'brand_id',
         'name',
         'desc',
+        'description',
         'status',
         'price',
+        'price_per_day',
+        'stock',
+        'image',
     ];
 
     public function admin()
@@ -27,6 +32,16 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'id_category');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('order');
     }
 
     public function packages()

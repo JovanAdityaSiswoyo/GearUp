@@ -128,7 +128,7 @@ new class extends Component
                     <!-- Cari -->
                     <div>
                         <label class="block text-gray-600 text-xs mb-2 font-medium">Cari</label>
-                        <div class="flex items-center gap-2 border-b-2 border-gray-200 pb-3 h-9">
+                        <div class="flex items-center gap-1 border-b-2 border-gray-200 pb-3 h-9">
                             <input 
                                 type="text" 
                                 placeholder="Cari peralatan ..." 

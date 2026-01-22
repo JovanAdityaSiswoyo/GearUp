@@ -14,6 +14,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased">
+    @include('sweetalert::alert')
     @yield('content', $slot ?? '')
 </body>
 </html>

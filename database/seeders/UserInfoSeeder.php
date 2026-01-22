@@ -10,13 +10,15 @@ class UserInfoSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create user_info for all existing users
+        // Create user_info for all existing users that don't have one
         User::all()->each(function ($user) {
-            $user->userInfo()->create([
-                'id' => Str::uuid(),
-                'phone' => fake()->numerify('08##########'),
-                'birthday' => fake()->date(),
-            ]);
+            if (!$user->userInfo) {
+                $user->userInfo()->create([
+                    'id' => Str::uuid(),
+                    'phone' => fake()->numerify('08##########'),
+                    'birthday' => fake()->date(),
+                ]);
+            }
         });
     }
 }

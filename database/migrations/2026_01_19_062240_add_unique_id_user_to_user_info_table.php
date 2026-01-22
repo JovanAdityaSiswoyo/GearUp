@@ -22,6 +22,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user_info', function (Blueprint $table) {
+            // Drop the foreign key first if it exists
+            try {
+                $table->dropForeign(['id_user']);
+            } catch (\Exception $e) {
+                // Foreign key might not exist
+            }
             $table->dropUnique(['id_user']);
         });
     }
