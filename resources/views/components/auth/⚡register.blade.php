@@ -35,7 +35,7 @@ new class extends Component
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
 };
 ?>

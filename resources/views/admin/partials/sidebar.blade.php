@@ -49,5 +49,9 @@
             <x-heroicon-o-clock class="h-5 w-5 mr-3" />
             <span>Log Aktivitas</span>
         </a>
+        <a href="{{ route('admin.cms.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.cms.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
+            <x-heroicon-o-document-text class="h-5 w-5 mr-3" />
+            <span>Content Management</span>
+        </a>
     </nav>
 </aside>

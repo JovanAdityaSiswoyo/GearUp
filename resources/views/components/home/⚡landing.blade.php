@@ -1,10 +1,20 @@
 <?php
 
 use Livewire\Component;
+use App\Models\Product;
 
 new class extends Component
 {
-    //
+    public function with(): array
+    {
+        return [
+            'bestPicks' => Product::with('category', 'brand')
+                ->where('status', 'active')
+                ->orderBy('created_at', 'desc')
+                ->take(12)
+                ->get()
+        ];
+    }
 };
 ?>
 
@@ -38,10 +48,23 @@ new class extends Component
                 <div class="hidden lg:block text-white text-sm">
                     Lebih dari <span class="text-green-500 font-bold">1000+</span> peralatan camping
                 </div>
-                <a href="{{ route('login') }}" class="bg-green-600 hover:bg-teal-800 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
-                    <span>Masuk</span>
-                    <x-heroicon-o-arrow-right class="h-4 w-4" />
-                </a>
+                @auth
+                    <div class="flex items-center space-x-3">
+                        <span class="text-white text-sm">Hi, {{ auth()->user()->name }}</span>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
+                                <span>Keluar</span>
+                                <x-heroicon-o-arrow-right-on-rectangle class="h-4 w-4" />
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" class="bg-green-600 hover:bg-teal-800 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
+                        <span>Masuk</span>
+                        <x-heroicon-o-arrow-right class="h-4 w-4" />
+                    </a>
+                @endauth
             </div>
         </nav>
 
@@ -276,30 +299,22 @@ new class extends Component
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @php
-                $bestPicks = [
-                    ['title' => 'Sleeping Bag - Polar', 'price' => 'Rp 7.500', 'image' => 'https://images.unsplash.com/photo-1504714146340-959ca07c7982?q=80&w=800'],
-                    ['title' => 'Sepatu Mahawu - Cream - 42', 'price' => 'Rp 17.000', 'image' => 'https://images.unsplash.com/photo-1542293779-5d89c7a1c728?q=80&w=800'],
-                    ['title' => 'Sepatu Air Protect X - 41 - Random', 'price' => 'Rp 25.000', 'image' => 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=800'],
-                    ['title' => 'Carrier - Quenstown - 50L - Coklat Muda', 'price' => 'Rp 25.000', 'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800'],
-                    ['title' => 'Tenda Dome 4 Orang', 'price' => 'Rp 32.000', 'image' => 'https://images.unsplash.com/photo-1501700493788-fa1a4fc9fe62?q=80&w=800'],
-                    ['title' => 'Kompor Portable Gas', 'price' => 'Rp 9.000', 'image' => 'https://images.unsplash.com/photo-1502810190503-8303352d1d76?q=80&w=800'],
-                    ['title' => 'Matras Angin Ultralight', 'price' => 'Rp 12.000', 'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800'],
-                    ['title' => 'Jaket Windbreaker', 'price' => 'Rp 15.000', 'image' => 'https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?q=80&w=800'],
-                    ['title' => 'Headlamp 300 Lumens', 'price' => 'Rp 6.500', 'image' => 'https://images.unsplash.com/photo-1470246973918-29a93221c455?q=80&w=800'],
-                    ['title' => 'Tracking Pole Carbon', 'price' => 'Rp 10.500', 'image' => 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800'],
-                    ['title' => 'Tas Hydration 2L', 'price' => 'Rp 8.500', 'image' => 'https://images.unsplash.com/photo-1503602642458-232111445657?q=80&w=800'],
-                    ['title' => 'Cooking Set Ultralight', 'price' => 'Rp 11.000', 'image' => 'https://images.unsplash.com/photo-1445307806294-bff7f67ff225?q=80&w=800'],
-                ];
-            @endphp
-
-            @foreach ($bestPicks as $item)
+            @foreach ($bestPicks as $product)
                 <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col">
                     <div class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
-                        <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}" class="w-full h-full object-cover" loading="lazy">
+                        @if($product->image)
+                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover" loading="lazy">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                <x-heroicon-o-photo class="h-16 w-16 text-gray-400" />
+                            </div>
+                        @endif
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $item['title'] }}</h3>
-                    <div class="mt-auto text-teal-700 font-bold text-lg">{{ $item['price'] }}</div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $product->name }}</h3>
+                    @if($product->category)
+                        <p class="text-sm text-gray-500 mb-2">{{ $product->category->categories }}</p>
+                    @endif
+                    <div class="mt-auto text-teal-700 font-bold text-lg">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}/hari</div>
                 </div>
             @endforeach
         </div>

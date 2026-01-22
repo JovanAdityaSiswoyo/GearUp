@@ -33,7 +33,7 @@ new class extends Component
                 return redirect()->route('officer.dashboard');
             }
             
-            return redirect()->route('dashboard');
+            return redirect()->route('home');
         }
         
         // Try to login as Admin

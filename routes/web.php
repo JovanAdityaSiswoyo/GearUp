@@ -18,13 +18,6 @@ Route::middleware('guest')->group(function () {
     })->name('register');
 });
 
-// User Routes (Regular Users)
-Route::middleware(['auth:web'])->group(function () {
-    Route::get('/landingpage', function () {
-        return view('home');
-    })->name('home');
-});
-
 // Admin Routes
 Route::prefix('admin')->middleware(['auth:web,admin'])->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
@@ -69,6 +62,9 @@ Route::prefix('admin')->middleware(['auth:web,admin'])->name('admin.')->group(fu
     
     // Activity Log
     Route::get('/activity-log', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-log.index');
+    
+    // CMS Content Management
+    Route::resource('cms', App\Http\Controllers\CmsContentController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     
     // Gallery Images Delete
     Route::delete('/gallery-images/{id}', [App\Http\Controllers\GalleryImageController::class, 'destroy'])->name('gallery-images.destroy');
