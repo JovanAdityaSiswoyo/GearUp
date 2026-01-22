@@ -49,6 +49,11 @@ class BookProduct extends Model
         return $this->hasMany(DetailBookProduct::class, 'id_book_product');
     }
 
+    public function detailBookProduct()
+    {
+        return $this->hasOne(DetailBookProduct::class, 'id_book_product');
+    }
+
     public function payments()
     {
         return $this->morphMany(Payment::class, 'payable');

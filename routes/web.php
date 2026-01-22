@@ -91,17 +91,53 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::get('/returns', function () { return 'Returns Index'; })->name('returns.index');
 });
 
+// Courier Routes
+Route::prefix('courier')->middleware(['auth:web,courier'])->name('courier.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('courier.dashboard');
+    })->name('dashboard');
+    
+    // Deliveries Management
+    Route::get('/deliveries', function () { return 'Deliveries Index'; })->name('deliveries.index');
+    Route::get('/deliveries/create', function () { return 'Create Delivery'; })->name('deliveries.create');
+    
+    // Pickups Management
+    Route::get('/pickups', function () { return 'Pickups Index'; })->name('pickups.index');
+    Route::get('/pickups/create', function () { return 'Create Pickup'; })->name('pickups.create');
+    
+    // Returns Management
+    Route::get('/returns', function () { return 'Returns Index'; })->name('returns.index');
+    
+    // Tracking Management
+    Route::get('/tracking', function () { return 'Tracking Index'; })->name('tracking.index');
+});
+
 // Logout Route (Available for all guards)
 Route::post('/logout', function () {
     if (auth()->guard('admin')->check()) {
         auth()->guard('admin')->logout();
     } elseif (auth()->guard('officer')->check()) {
         auth()->guard('officer')->logout();
+    } elseif (auth()->guard('courier')->check()) {
+        auth()->guard('courier')->logout();
     } else {
         auth()->guard('web')->logout();
     }
     
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect()->route('login');
+    return redirect()->route('home');
 })->name('logout');
+
+// User Profile Routes (Protected)
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\User\ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [App\Http\Controllers\User\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [App\Http\Controllers\User\ProfileController::class, 'updatePhoto'])->name('profile.update-photo');
+    Route::post('/profile/language', [App\Http\Controllers\User\ProfileController::class, 'switchLanguage'])->name('profile.switch-language');
+    Route::get('/my-booking', [App\Http\Controllers\User\BookingController::class, 'myBooking'])->name('user.my-booking');
+    
+    // User Booking Routes
+    Route::get('/booking/create/{product}', [App\Http\Controllers\User\BookingController::class, 'create'])->name('user.booking.create');
+    Route::post('/booking', [App\Http\Controllers\User\BookingController::class, 'store'])->name('user.booking.store');
+});

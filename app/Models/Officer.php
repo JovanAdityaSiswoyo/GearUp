@@ -30,6 +30,7 @@ class Officer extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_photo',
     ];
 
     protected $hidden = [

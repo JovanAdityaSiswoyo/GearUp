@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-class Admin extends Authenticatable
+class Courier extends Authenticatable
 {
     use HasFactory, Notifiable, HasUuids, HasRoles;
 
@@ -30,6 +30,8 @@ class Admin extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'address',
         'profile_photo',
     ];
 
@@ -44,10 +46,5 @@ class Admin extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    public function products()
-    {
-        return $this->hasMany(Product::class, 'id_admins');
     }
 }

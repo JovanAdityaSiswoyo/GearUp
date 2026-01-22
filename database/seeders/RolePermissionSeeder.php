@@ -17,7 +17,7 @@ class RolePermissionSeeder extends Seeder
         app()['cache']->forget('spatie.permission.cache');
 
         // Create permissions for each guard
-        $guards = ['web', 'admin', 'officer'];
+        $guards = ['web', 'admin', 'officer', 'courier'];
         
         foreach ($guards as $guard) {
             $this->createPermissionsForGuard($guard);
@@ -94,6 +94,25 @@ class RolePermissionSeeder extends Seeder
             $permission = Permission::where('name', $perm)->where('guard_name', $guard)->first();
             if ($permission) {
                 $officer->givePermissionTo($permission);
+            }
+        }
+
+        // Courier Role
+        $courier = Role::firstOrCreate(['name' => 'courier', 'guard_name' => $guard]);
+        $courierPerms = [
+            'read-user', 'list-users',
+            'read-book', 'list-books',
+            'read-product', 'list-products',
+            'read-category', 'list-categories',
+            'read-package', 'list-packages',
+            'read-payment', 'list-payments',
+            'read-loan', 'list-loans',
+            'view-dashboard',
+        ];
+        foreach ($courierPerms as $perm) {
+            $permission = Permission::where('name', $perm)->where('guard_name', $guard)->first();
+            if ($permission) {
+                $courier->givePermissionTo($permission);
             }
         }
 

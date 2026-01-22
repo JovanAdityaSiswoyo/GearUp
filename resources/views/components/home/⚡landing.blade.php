@@ -50,7 +50,20 @@ new class extends Component
                 </div>
                 @auth
                     <div class="flex items-center space-x-3">
-                        <span class="text-white text-sm">Hi, {{ auth()->user()->name }}</span>
+                        <a href="{{ route('profile.show') }}" class="flex items-center space-x-2 hover:opacity-80 transition group">
+                            @if (auth()->user()->profile_photo)
+                                <img 
+                                    src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                    alt="{{ auth()->user()->name }}"
+                                    class="w-10 h-10 rounded-full object-cover border-2 border-white"
+                                >
+                            @else
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-teal-500 flex items-center justify-center text-white font-semibold text-sm border-2 border-white">
+                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                </div>
+                            @endif
+                            <span class="text-white text-sm hidden sm:block group-hover:text-green-200">{{ auth()->user()->name }}</span>
+                        </a>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
@@ -300,7 +313,7 @@ new class extends Component
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @foreach ($bestPicks as $product)
-                <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col">
+                <a href="{{ auth()->check() ? route('user.booking.create', $product->id) : route('login') }}" class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
                     <div class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
                         @if($product->image)
                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover" loading="lazy">
@@ -315,7 +328,7 @@ new class extends Component
                         <p class="text-sm text-gray-500 mb-2">{{ $product->category->categories }}</p>
                     @endif
                     <div class="mt-auto text-teal-700 font-bold text-lg">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}/hari</div>
-                </div>
+                </a>
             @endforeach
         </div>
     </div>

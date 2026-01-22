@@ -50,6 +50,11 @@ return [
             'driver' => 'session',
             'provider' => 'officers',
         ],
+        
+        'courier' => [
+            'driver' => 'session',
+            'provider' => 'couriers',
+        ],
     ],
 
     /*
@@ -83,6 +88,11 @@ return [
         'officers' => [
             'driver' => 'eloquent',
             'model' => App\Models\Officer::class,
+        ],
+        
+        'couriers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Courier::class,
         ],
 
         // 'users' => [
