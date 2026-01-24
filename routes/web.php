@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -136,8 +137,24 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/photo', [App\Http\Controllers\User\ProfileController::class, 'updatePhoto'])->name('profile.update-photo');
     Route::post('/profile/language', [App\Http\Controllers\User\ProfileController::class, 'switchLanguage'])->name('profile.switch-language');
     Route::get('/my-booking', [App\Http\Controllers\User\BookingController::class, 'myBooking'])->name('user.my-booking');
-    
+
+
+    // User Cart Routes
+
+    Route::get('/cart', [App\Http\Controllers\User\CartController::class, 'index'])->name('user.cart.index');
+    Route::post('/cart/add/{product}', [App\Http\Controllers\User\CartController::class, 'add'])->name('user.cart.add');
+    Route::post('/cart/remove/{product}', [App\Http\Controllers\User\CartController::class, 'remove'])->name('user.cart.remove');
+    Route::post('/cart/checkout', [App\Http\Controllers\User\CartController::class, 'checkout'])->name('user.cart.checkout');
+
+    // Route for cart booking summary after checkout
+    Route::get('/booking/cart', [App\Http\Controllers\User\BookingController::class, 'cartBooking'])->name('user.booking.cart');
+    Route::post('/booking/cart', [App\Http\Controllers\User\BookingController::class, 'cartBooking']);
+
+    // User Product Detail Route
+    Route::get('/product/{product}', [App\Http\Controllers\User\ProductController::class, 'show'])->name('user.product.show');
+
     // User Booking Routes
     Route::get('/booking/create/{product}', [App\Http\Controllers\User\BookingController::class, 'create'])->name('user.booking.create');
+    Route::get('/booking/create-multi', [App\Http\Controllers\User\BookingController::class, 'createMulti'])->name('user.booking.create-multi');
     Route::post('/booking', [App\Http\Controllers\User\BookingController::class, 'store'])->name('user.booking.store');
 });

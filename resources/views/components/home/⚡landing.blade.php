@@ -1,7 +1,9 @@
 <?php
 
 use Livewire\Component;
+
 use App\Models\Product;
+use App\Models\Package;
 
 new class extends Component
 {
@@ -12,7 +14,10 @@ new class extends Component
                 ->where('status', 'active')
                 ->orderBy('created_at', 'desc')
                 ->take(12)
-                ->get()
+                ->get(),
+                        'packages' => Package::orderBy('created_at', 'desc')
+                            ->take(10)
+                            ->get()
         ];
     }
 };
@@ -23,78 +28,119 @@ new class extends Component
 <div class="min-h-[70vh] bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?q=80&w=2070'); font-family: 'Poppins', sans-serif;">
     <!-- Content -->
     <div class="relative z-10">
-        <!-- Header/Navbar -->
-        <nav class="px-6 lg:px-16 py-4 flex items-center justify-between border-b border-white/20">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <img src="/gallery/GearUpLogo.png" alt="GearUp Logo" class="h-12 w-auto">
-                <span class="text-white font-bold text-xl hidden lg:block">GearUp</span>
-            </div>
-
-            <!-- Contact Info (Desktop) -->
-            <div class="hidden lg:flex items-center space-x-6 text-white text-sm">
+        <!-- Header Atas: Kontak & Info -->
+        <div id="top-header" class="w-full bg-transparent px-6 lg:px-16 py-2 flex flex-col md:flex-row items-center justify-between text-white text-sm border-b-1 border-white/40 transition-all duration-300" style="background:transparent;">
+            <div class="flex items-center space-x-6">
                 <div class="flex items-center space-x-2">
                     <x-heroicon-o-phone class="h-5 w-5" />
-                    <span>0877 7603 4179</span>
+                    <span>0878 1200 0155</span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <x-heroicon-o-envelope class="h-5 w-5" />
-                    <span>gearup@gmail.com</span>
+                    <span>forestaadventure@gmail.com</span>
                 </div>
             </div>
-
-            <!-- Right Actions -->
-            <div class="flex items-center space-x-4">
-                <div class="hidden lg:block text-white text-sm">
-                    Lebih dari <span class="text-green-500 font-bold">1000+</span> peralatan camping
-                </div>
-                @auth
-                    <div class="flex items-center space-x-3">
-                        <a href="{{ route('profile.show') }}" class="flex items-center space-x-2 hover:opacity-80 transition group">
-                            @if (auth()->user()->profile_photo)
-                                <img 
-                                    src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
-                                    alt="{{ auth()->user()->name }}"
-                                    class="w-10 h-10 rounded-full object-cover border-2 border-white"
-                                >
-                            @else
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-teal-500 flex items-center justify-center text-white font-semibold text-sm border-2 border-white">
-                                    {{ substr(auth()->user()->name, 0, 1) }}
-                                </div>
-                            @endif
-                            <span class="text-white text-sm hidden sm:block group-hover:text-green-200">{{ auth()->user()->name }}</span>
-                        </a>
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
-                                <span>Keluar</span>
-                                <x-heroicon-o-arrow-right-on-rectangle class="h-4 w-4" />
-                            </button>
-                        </form>
-                    </div>
-                @else
-                    <a href="{{ route('login') }}" class="bg-green-600 hover:bg-teal-800 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
-                        <span>Masuk</span>
-                        <x-heroicon-o-arrow-right class="h-4 w-4" />
-                    </a>
-                @endauth
-            </div>
-        </nav>
-
-        <!-- Navigation Menu -->
-        <div class="px-6 lg:px-16 mt-6">
-            <div class="flex items-center space-x-8 text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                <a href="#kategori" class="hover:text-white/80 transition flex items-center space-x-1">
-                    <span>Kategori</span>
-                    <x-heroicon-o-chevron-down class="h-4 w-4" />
+            <div class="flex items-center space-x-4 mt-2 md:mt-0">
+                <span class="hidden md:inline">Lebih dari <span class="text-green-400 font-bold">1000+</span> peralatan camping</span>
+                <a href="#" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-1.5 rounded-full flex items-center space-x-2 transition">
+                    <span>Lihat</span>
+                    <x-heroicon-o-arrow-right class="h-4 w-4" />
                 </a>
-                <a href="#cara-sewa" class="hover:text-white/80 transition">Cara Sewa</a>
-                <a href="#kontak" class="hover:text-white/80 transition">Kontak</a>
             </div>
         </div>
 
+        <!-- Header Bawah: Logo, Navigasi, Login/Cart -->
+        <nav id="main-navbar" class="w-full bg-transparent px-6 lg:px-16 py-3 flex items-center justify-between text-white border-b-1 border-white/40 transition-all duration-300" style="background:transparent; position:static; top:auto; left:auto; transform:none;">
+        <script>
+        // Navbar and header show/hide & sticky blur effect on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbar = document.getElementById('main-navbar');
+            const topHeader = document.getElementById('top-header');
+            function handleScroll() {
+                if(window.scrollY > 80) {
+                    // Make navbar fixed and blurred
+                    navbar.style.position = 'fixed';
+                    navbar.style.top = '0';
+                    navbar.style.left = '0';
+                    navbar.style.right = '0';
+                    navbar.style.zIndex = '40';
+                    navbar.style.background = 'rgba(30,30,30,0.25)'; // semi-transparent dark
+                    navbar.classList.remove('bg-transparent');
+                    navbar.classList.add('backdrop-blur-md');
+                    navbar.classList.add('shadow-lg');
+                    navbar.style.backdropFilter = 'blur(12px)';
+                    navbar.style.transform = 'translateY(0)';
+                    if(topHeader) topHeader.style.transform = 'translateY(-100%)';
+                } else {
+                    // Make navbar static and transparent
+                    navbar.style.position = 'static';
+                    navbar.style.background = 'transparent';
+                    navbar.classList.add('bg-transparent');
+                    navbar.classList.remove('backdrop-blur-md');
+                    navbar.classList.remove('shadow-lg');
+                    navbar.style.backdropFilter = '';
+                    navbar.style.transform = 'none';
+                    if(topHeader) topHeader.style.transform = 'translateY(0)';
+                }
+            }
+            // Initial state: navbar static, both visible
+            navbar.style.position = 'static';
+            navbar.style.background = 'transparent';
+            navbar.classList.add('bg-transparent');
+            navbar.classList.remove('backdrop-blur-md');
+            navbar.classList.remove('shadow-lg');
+            navbar.style.backdropFilter = '';
+            navbar.style.transform = 'none';
+            if(topHeader) topHeader.style.transform = 'translateY(0)';
+            window.addEventListener('scroll', handleScroll);
+        });
+        </script>
+            <div class="flex items-center space-x-8">
+                <a href="#" class="flex items-center space-x-2">
+                    <img src="/gallery/GearUpLogo.png" alt="GearUp Logo" class="h-10 w-auto">
+                </a>
+                <a href="#kategori" class="font-semibold hover:text-green-400 transition flex items-center space-x-1">
+                    <span>Kategori</span>
+                    <x-heroicon-o-chevron-down class="h-4 w-4" />
+                </a>
+                <a href="#cara-sewa" class="font-semibold hover:text-green-400 transition">Cara Sewa</a>
+                <a href="#kontak" class="font-semibold hover:text-green-400 transition">Kontak</a>
+            </div>
+            <div class="flex items-center space-x-6">
+                @auth
+                    <a href="{{ route('profile.show') }}" class="flex items-center space-x-2 hover:opacity-80 transition group">
+                        <x-heroicon-o-user class="h-6 w-6" />
+                        <span class="text-white text-sm hidden sm:block group-hover:text-green-200">{{ auth()->user()->name }}</span>
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST" class="inline-block">
+                        @csrf
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full font-semibold transition flex items-center space-x-2">
+                            <span>Keluar</span>
+                            <x-heroicon-o-arrow-right-on-rectangle class="h-4 w-4" />
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
+                        <x-heroicon-o-user class="h-5 w-5" />
+                        <span>Masuk</span>
+                    </a>
+                @endauth
+                <!-- Cart Icon (linked & dynamic count) -->
+                @php
+                    $cartCount = session('cart') ? count(session('cart')) : 0;
+                @endphp
+                <a href="/cart" class="relative bg-white rounded-xl p-2 flex items-center justify-center shadow hover:opacity-90 transition" aria-label="Lihat Keranjang">
+                    <x-heroicon-o-shopping-cart class="h-8 w-8 text-gray-800" />
+                    <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full px-1.5">
+                        {{ $cartCount }}
+                    </span>
+                </a>
+            </div>
+        </nav>
+
+
         <!-- Hero Content -->
-        <div class="px-6 lg:px-16 mt-16 lg:mt-24 max-w-3xl pb-28 md:pb-36" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.9);">
+        <div class="px-6 lg:px-16 mt-16 lg:mt-24 max-w-3xl pb-28 md:pb-36 pt-[48px]" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.9);">
             <!-- Tagline -->
             <p class="text-green-500 text-base mb-3 font-medium">
                 Siap Menjelajah. Tanpa Ribet.
@@ -181,6 +227,36 @@ new class extends Component
         </div>
     </div>
 </div>
+
+<!-- Scroll to Top Floating Button (hidden by default, appears on scroll) -->
+<button id="scrollToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+    class="fixed bottom-8 right-6 lg:right-12 w-12 h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center shadow-lg z-50 opacity-0 pointer-events-none transition-opacity duration-500 p-0"
+    style="display:block;">
+    <span class="flex items-center justify-center w-full h-full">
+        <x-heroicon-o-arrow-up class="h-6 w-6 m-0 p-0" />
+    </span>
+</button>
+
+<script>
+    // Show/hide scroll to top button with fade animation
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    let scrollBtnVisible = false;
+    window.addEventListener('scroll', function() {
+        if(window.scrollY > 200) {
+            if (!scrollBtnVisible) {
+                scrollToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                scrollToTopBtn.classList.add('opacity-100');
+                scrollBtnVisible = true;
+            }
+        } else {
+            if (scrollBtnVisible) {
+                scrollToTopBtn.classList.remove('opacity-100');
+                scrollToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                scrollBtnVisible = false;
+            }
+        }
+    });
+</script>
 
 <!-- Pilihan Brand Section -->
 <div class="py-16 px-6 lg:px-16 bg-gray-50 pt-48">
@@ -285,15 +361,126 @@ new class extends Component
             startAutoPlay();
         </script>
 
-        <!-- Scroll to Top Button -->
-        <div class="mt-12 flex justify-end">
-            <button 
-                onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-                class="w-12 h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition shadow-lg"
-            >
-                <x-heroicon-o-arrow-up class="h-6 w-6" />
+
+
+    </div>
+</div>
+
+<!-- Paket Satset Outdoor Section -->
+<div class="py-16 px-6 lg:px-16 bg-white">
+    <div class="max-w-7xl mx-auto">
+        <!-- Section Header with See All Button -->
+        <div class="mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-3 md:mb-0">
+                    Paket Satset Outdoor
+                </h2>
+                <p class="text-gray-600 text-lg" style="font-family: 'Inter', sans-serif;">
+                    Pilihan paket hemat & praktis untuk petualanganmu!
+                </p>
+            </div>
+            <a href="#" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-3 rounded-full shadow-sm transition whitespace-nowrap">
+                <span>Lihat Semua Paket</span>
+                <x-heroicon-o-arrow-right class="h-5 w-5" />
+            </a>
+        </div>
+
+        <!-- Packages Carousel with Navigation -->
+        <div class="relative overflow-hidden">
+            <button id="pkgPrevBtn" type="button" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white border border-gray-300 shadow rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition disabled:opacity-40" aria-label="Sebelumnya" style="display: none;">
+                <x-heroicon-o-chevron-left class="h-6 w-6 text-gray-700" />
+            </button>
+            <div id="packagesCarousel" class="flex gap-6 transition-transform duration-500 ease-in-out px-4 py-6">
+                @foreach ($packages as $package)
+                    <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
+                        <div class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
+                            @if($package->image)
+                                <img src="{{ asset('storage/' . $package->image) }}" alt="{{ $package->name_package }}" class="w-full h-full object-cover" loading="lazy">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                    <x-heroicon-o-photo class="h-16 w-16 text-gray-400" />
+                                </div>
+                            @endif
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 text-center">{{ $package->name_package }}</h3>
+                        <p class="text-sm text-gray-500 mb-2 text-center line-clamp-2">{{ $package->description }}</p>
+                        <div class="mt-auto text-teal-700 font-bold text-lg text-center mb-2">Rp {{ number_format($package->price, 0, ',', '.') }}</div>
+                        <a href="#" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-full shadow-sm transition mx-auto">
+                            <span>Lihat Detail</span>
+                            <x-heroicon-o-arrow-right class="h-4 w-4" />
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+            <button id="pkgNextBtn" type="button" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white border border-gray-300 shadow rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition disabled:opacity-40" aria-label="Berikutnya" style="display: none;">
+                <x-heroicon-o-chevron-right class="h-6 w-6 text-gray-700" />
             </button>
         </div>
+
+        <script>
+            const packagesCarousel = document.getElementById('packagesCarousel');
+            const pkgPrevBtn = document.getElementById('pkgPrevBtn');
+            const pkgNextBtn = document.getElementById('pkgNextBtn');
+            let pkgCurrentPosition = 0;
+            let pkgAutoPlayInterval;
+
+            function getPkgVisibleItems() {
+                if(window.innerWidth < 640) return 1;
+                if(window.innerWidth < 1024) return 2;
+                if(window.innerWidth < 1280) return 4;
+                return 6;
+            }
+
+            function updatePackagesCarousel() {
+                const itemWidth = packagesCarousel.children[0]?.offsetWidth + 24 || 0;
+                const visibleItems = getPkgVisibleItems();
+                packagesCarousel.style.transform = `translateX(-${pkgCurrentPosition * itemWidth}px)`;
+                // Show/hide nav
+                if (pkgPrevBtn && pkgNextBtn) {
+                    pkgPrevBtn.style.display = (packagesCarousel.children.length > visibleItems) ? 'flex' : 'none';
+                    pkgNextBtn.style.display = (packagesCarousel.children.length > visibleItems) ? 'flex' : 'none';
+                    pkgPrevBtn.disabled = pkgCurrentPosition === 0;
+                    pkgNextBtn.disabled = pkgCurrentPosition >= packagesCarousel.children.length - visibleItems;
+                }
+            }
+
+            function movePkgNext() {
+                const totalItems = packagesCarousel.children.length;
+                const visibleItems = getPkgVisibleItems();
+                if (pkgCurrentPosition < totalItems - visibleItems) {
+                    pkgCurrentPosition++;
+                } else {
+                    pkgCurrentPosition = 0;
+                }
+                updatePackagesCarousel();
+            }
+
+            function movePkgPrev() {
+                const visibleItems = getPkgVisibleItems();
+                if (pkgCurrentPosition > 0) {
+                    pkgCurrentPosition--;
+                } else {
+                    pkgCurrentPosition = packagesCarousel.children.length - visibleItems;
+                    if(pkgCurrentPosition < 0) pkgCurrentPosition = 0;
+                }
+                updatePackagesCarousel();
+            }
+
+            function startPkgAutoPlay() {
+                pkgAutoPlayInterval = setInterval(movePkgNext, 4000);
+            }
+
+            if(pkgPrevBtn) pkgPrevBtn.addEventListener('click', movePkgPrev);
+            if(pkgNextBtn) pkgNextBtn.addEventListener('click', movePkgNext);
+
+            window.addEventListener('resize', () => {
+                pkgCurrentPosition = 0;
+                updatePackagesCarousel();
+            });
+
+            startPkgAutoPlay();
+            updatePackagesCarousel();
+        </script>
     </div>
 </div>
 
@@ -313,7 +500,7 @@ new class extends Component
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @foreach ($bestPicks as $product)
-                <a href="{{ auth()->check() ? route('user.booking.create', $product->id) : route('login') }}" class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
+                <a href="{{ auth()->check() ? route('user.product.show', $product->id) : route('login') }}" class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
                     <div class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
                         @if($product->image)
                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover" loading="lazy">
@@ -393,15 +580,7 @@ new class extends Component
             </div>
         </div>
 
-        <!-- Scroll to Top Button -->
-        <div class="absolute bottom-16 right-6 lg:right-16">
-            <button 
-                onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-                class="w-12 h-12 bg-gray-800 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition shadow-lg"
-            >
-                <x-heroicon-o-arrow-up class="h-6 w-6" />
-            </button>
-        </div>
+
 
         <!-- Bottom Bar -->
         <div class="border-t border-gray-800 pt-8">

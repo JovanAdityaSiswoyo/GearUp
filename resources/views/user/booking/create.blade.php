@@ -1,3 +1,5 @@
+@include('layouts.app')
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,49 +45,7 @@
     
     <div class="min-h-screen flex flex-col">
         <!-- Header/Navbar -->
-        <nav class="px-6 lg:px-16 py-4 flex items-center justify-between border-b bg-white shadow-sm">
-            <!-- Logo -->
-            <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition">
-                <img src="/gallery/GearUpLogo.png" alt="GearUp Logo" class="h-12 w-auto">
-                <span class="text-gray-800 font-bold text-xl hidden lg:block">GearUp</span>
-            </a>
-
-            <!-- Contact Info (Desktop) -->
-            <div class="hidden lg:flex items-center space-x-6 text-gray-600 text-sm">
-                <div class="flex items-center space-x-2">
-                    <x-heroicon-o-phone class="h-5 w-5" />
-                    <span>0877 7603 4179</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <x-heroicon-o-envelope class="h-5 w-5" />
-                    <span>gearup@gmail.com</span>
-                </div>
-            </div>
-
-            <!-- Right Actions -->
-            <div class="flex items-center space-x-4">
-                @auth
-                    <div class="flex items-center space-x-3">
-                        @if (auth()->user()->profile_photo)
-                            <img 
-                                src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
-                                alt="{{ auth()->user()->name }}"
-                                class="w-10 h-10 rounded-full object-cover border-2 border-green-500"
-                            >
-                        @else
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-teal-500 flex items-center justify-center text-white font-semibold text-sm border-2 border-green-500">
-                                {{ substr(auth()->user()->name, 0, 1) }}
-                            </div>
-                        @endif
-                        <span class="text-gray-800 text-sm hidden sm:block">{{ auth()->user()->name }}</span>
-                    </div>
-                @endauth
-                <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg transition">
-                    <x-heroicon-o-arrow-left class="h-5 w-5 inline" />
-                    <span class="hidden sm:inline ml-1">Kembali</span>
-                </a>
-            </div>
-        </nav>
+        
 
         <!-- Main Content -->
         <main class="flex-1 px-6 lg:px-16 py-8">
@@ -99,49 +59,77 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Product Info Card -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-                            <h2 class="text-lg font-bold text-gray-800 mb-4">Produk yang Dipilih</h2>
-                            
-                            <!-- Product Image -->
-                            <div class="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-4">
-                                @if($product->image)
-                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                        <x-heroicon-o-photo class="h-16 w-16 text-gray-400" />
+                        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-4">
+                            <h2 class="text-lg font-bold text-gray-800 mb-1">Produk yang Dipilih</h2>
+                            <p class="text-sm text-gray-500 mb-4">Total produk dipilih: <span class="font-semibold text-green-700">{{ count($products) }}</span></p>
+                            <div class="relative">
+                                <div id="carousel-container" class="relative w-full flex items-center justify-center">
+                                    <button type="button" id="carousel-prev" class="absolute left-0 z-10 bg-white border border-gray-300 rounded-full shadow p-2 hover:bg-gray-100 disabled:opacity-30" style="top: 50%; transform: translateY(-50%);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                                    </button>
+                                    <div id="carousel-card-wrapper" class="w-full flex items-center justify-center">
+                                        @foreach($products as $i => $product)
+                                            <div class="carousel-card" data-index="{{ $i }}" style="display: {{ $i === 0 ? 'block' : 'none' }}; width: 100%;">
+                                                <div class="min-w-[260px] max-w-sm bg-gray-50 rounded-2xl shadow-lg p-5 border-2 border-green-200 mx-auto">
+                                                    <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-4">
+                                                        @if($product->image)
+                                                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                                        @else
+                                                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                <x-heroicon-o-photo class="h-20 w-20 text-gray-400" />
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
+                                                    @if($product->category)
+                                                        <p class="text-sm text-gray-500 mb-2">{{ $product->category->categories }}</p>
+                                                    @endif
+                                                    @if($product->brand)
+                                                        <div class="flex items-center space-x-2 mb-3">
+                                                            <span class="text-sm text-gray-600 font-medium">Brand:</span>
+                                                            <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">{{ $product->brand->name }}</span>
+                                                        </div>
+                                                    @endif
+                                                    <div class="border-t pt-3 mt-3">
+                                                        <div class="flex justify-between items-center mb-2">
+                                                            <span class="text-sm text-gray-600">Harga/hari:</span>
+                                                            <span class="text-lg font-bold text-teal-700">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}</span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center">
+                                                            <span class="text-sm text-gray-600">Stok:</span>
+                                                            <span class="font-semibold text-gray-900 text-sm">{{ $product->stock }} unit</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                @endif
-                            </div>
-
-                            <!-- Product Details -->
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
-                            
-                            @if($product->category)
-                                <p class="text-sm text-gray-500 mb-3">{{ $product->category->categories }}</p>
-                            @endif
-
-                            @if($product->brand)
-                                <div class="flex items-center space-x-2 mb-4">
-                                    <span class="text-sm text-gray-600 font-medium">Brand:</span>
-                                    <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">{{ $product->brand->name }}</span>
+                                    <button type="button" id="carousel-next" class="absolute right-0 z-10 bg-white border border-gray-300 rounded-full shadow p-2 hover:bg-gray-100 disabled:opacity-30" style="top: 50%; transform: translateY(-50%);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                    </button>
                                 </div>
-                            @endif
-
-                            @if($product->description)
-                                <div class="mb-4 pb-4 border-b">
-                                    <p class="text-sm text-gray-700 leading-relaxed whitespace-normal">{{ $product->description }}</p>
-                                </div>
-                            @endif
-
-                            <div class="border-t pt-4 mt-4">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-gray-600">Harga per hari:</span>
-                                    <span class="text-xl font-bold text-teal-700">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-600">Stok tersedia:</span>
-                                    <span class="font-semibold text-gray-900">{{ $product->stock }} unit</span>
-                                </div>
+                                                    <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        const cards = document.querySelectorAll('.carousel-card');
+                                                        const prevBtn = document.getElementById('carousel-prev');
+                                                        const nextBtn = document.getElementById('carousel-next');
+                                                        let current = 0;
+                                                        function updateCarousel() {
+                                                            cards.forEach((card, i) => {
+                                                                card.style.display = (i === current) ? 'block' : 'none';
+                                                            });
+                                                            prevBtn.disabled = (current === 0);
+                                                            nextBtn.disabled = (current === cards.length - 1);
+                                                        }
+                                                        prevBtn.addEventListener('click', function() {
+                                                            if (current > 0) { current--; updateCarousel(); }
+                                                        });
+                                                        nextBtn.addEventListener('click', function() {
+                                                            if (current < cards.length - 1) { current++; updateCarousel(); }
+                                                        });
+                                                        updateCarousel();
+                                                    });
+                                                    </script>
                             </div>
                         </div>
                     </div>
@@ -153,7 +141,12 @@
 
                             <form action="{{ route('user.booking.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                                 @csrf
-                                <input type="hidden" name="id_product" value="{{ $product->id }}">
+
+                                <!-- Hidden input for products[] -->
+                                @foreach($products as $product)
+                                    <input type="hidden" name="products[]" value="{{ $product->id }}">
+                                @endforeach
+
 
                                 <!-- Section: Data Dasar -->
                                 <div>
@@ -219,19 +212,26 @@
 
                                         <!-- Amount -->
                                         <div>
-                                            <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Jumlah Unit <span class="text-red-500">*</span>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Jumlah Unit per Produk <span class="text-red-500">*</span>
                                             </label>
-                                            <input 
-                                                type="number" 
-                                                id="amount"
-                                                name="amount"
-                                                value="{{ old('amount', 1) }}"
-                                                min="1"
-                                                max="{{ $product->stock }}"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                                                required
-                                            >
+                                            <div class="space-y-3">
+                                                @foreach($products as $product)
+                                                    <div class="flex items-center space-x-3">
+                                                        <span class="w-40 font-medium text-gray-700">{{ $product->name }}</span>
+                                                        <input 
+                                                            type="number" 
+                                                            name="amount[{{ $product->id }}]"
+                                                            value="{{ old('amount.' . $product->id, 1) }}"
+                                                            min="1"
+                                                            max="{{ $product->stock }}"
+                                                            class="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                                                            required
+                                                        >
+                                                        <span class="text-gray-500 text-sm">/ stok: {{ $product->stock }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                             @error('amount')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
@@ -479,6 +479,40 @@
                                             @error('shipping_method')
                                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                             @enderror
+
+                                            <!-- Dropdown kurir, hanya muncul jika Antar ke Alamat -->
+                                            <div id="courier-wrapper" class="mt-4" style="display: none;">
+                                                <label for="courier" class="block text-sm font-medium text-gray-700 mb-2">Pilih Kurir</label>
+                                                <select id="courier" name="courier" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
+                                                    <option value="">Pilih Kurir</option>
+                                                    <option value="JNE" {{ old('courier') == 'JNE' ? 'selected' : '' }}>JNE</option>
+                                                    <option value="J&T" {{ old('courier') == 'J&T' ? 'selected' : '' }}>J&T</option>
+                                                    <option value="SiCepat" {{ old('courier') == 'SiCepat' ? 'selected' : '' }}>SiCepat</option>
+                                                    <option value="AnterAja" {{ old('courier') == 'AnterAja' ? 'selected' : '' }}>AnterAja</option>
+                                                    <option value="GrabExpress" {{ old('courier') == 'GrabExpress' ? 'selected' : '' }}>GrabExpress</option>
+                                                    <option value="Gojek" {{ old('courier') == 'Gojek' ? 'selected' : '' }}>Gojek</option>
+                                                </select>
+                                                @error('courier')
+                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                var shippingSelect = document.getElementById('shipping_method');
+                                                var courierWrapper = document.getElementById('courier-wrapper');
+                                                function toggleCourier() {
+                                                    if (shippingSelect.value === 'delivery') {
+                                                        courierWrapper.style.display = '';
+                                                    } else {
+                                                        courierWrapper.style.display = 'none';
+                                                        document.getElementById('courier').value = '';
+                                                    }
+                                                }
+                                                shippingSelect.addEventListener('change', toggleCourier);
+                                                // Initial state
+                                                toggleCourier();
+                                            });
+                                            </script>
                                         </div>
 
                                         <!-- Shipping Date -->

@@ -13,6 +13,7 @@
     </style>
 </head>
 <body class="bg-gray-50">
+    @include('layouts.app')
     @include('sweetalert::alert')
 
     @if (session('success'))
@@ -38,50 +39,7 @@
 
     <div class="min-h-screen flex flex-col">
         <!-- Header/Navbar -->
-        <nav class="px-6 lg:px-16 py-4 flex items-center justify-between border-b bg-white shadow-sm">
-            <!-- Logo -->
-            <a href="{{ route('home') }}" class="flex items-center space-x-3 hover:opacity-80 transition">
-                <img src="/gallery/GearUpLogo.png" alt="GearUp Logo" class="h-12 w-auto">
-                <span class="text-gray-800 font-bold text-xl hidden lg:block">GearUp</span>
-            </a>
-
-            <!-- Contact Info (Desktop) -->
-            <div class="hidden lg:flex items-center space-x-6 text-gray-600 text-sm">
-                <div class="flex items-center space-x-2">
-                    <x-heroicon-o-phone class="h-5 w-5" />
-                    <span>0877 7603 4179</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <x-heroicon-o-envelope class="h-5 w-5" />
-                    <span>gearup@gmail.com</span>
-                </div>
-            </div>
-
-            <!-- Right Actions -->
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-3">
-                    @if (auth()->user()->profile_photo)
-                        <img 
-                            src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
-                            alt="{{ auth()->user()->name }}"
-                            class="w-10 h-10 rounded-full object-cover border-2 border-green-500"
-                        >
-                    @else
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-teal-500 flex items-center justify-center text-white font-semibold text-sm border-2 border-green-500">
-                            {{ substr(auth()->user()->name, 0, 1) }}
-                        </div>
-                    @endif
-                    <span class="text-gray-800 text-sm hidden sm:block">{{ auth()->user()->name }}</span>
-                </div>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
-                        <span>Keluar</span>
-                        <x-heroicon-o-arrow-right-on-rectangle class="h-4 w-4" />
-                    </button>
-                </form>
-            </div>
-        </nav>
+        
 
         <!-- Main Content -->
         <main class="flex-1 px-6 lg:px-16 py-8">
