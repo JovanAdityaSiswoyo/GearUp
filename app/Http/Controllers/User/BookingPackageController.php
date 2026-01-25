@@ -68,6 +68,16 @@ class BookingPackageController extends Controller
         $detail->identity_document_path = $identityPath;
         $detail->save();
 
+        // Simpan detail produk-produk package ke tabel book_package_products
+        foreach ($package->products as $product) {
+            \App\Models\BookPackageProduct::create([
+                'id' => (string) \Illuminate\Support\Str::uuid(),
+                'id_book' => $booking->id,
+                'id_product' => $product->id,
+                'qty' => 1 // Atur qty sesuai kebutuhan jika package bisa punya jumlah per produk
+            ]);
+        }
+
         // Redirect ke halaman sukses atau detail booking
         return redirect()->route('user.my-booking')->with('success', 'Booking paket berhasil dibuat!');
     }

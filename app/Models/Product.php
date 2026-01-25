@@ -39,6 +39,11 @@ class Product extends Model
         return $this->belongsTo(Brand::class, 'brand_id');
     }
 
+    public function bookPackageProducts()
+    {
+        return $this->hasMany(BookPackageProduct::class, 'id_product', 'id');
+    }
+
     public function images()
     {
         return $this->hasMany(ProductImage::class)->orderBy('order');

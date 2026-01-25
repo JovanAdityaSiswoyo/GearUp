@@ -29,9 +29,15 @@ class Book extends Model
         'checkout_appointment_end' => 'datetime',
     ];
 
+
     public function package()
     {
         return $this->belongsTo(Package::class, 'id_package');
+    }
+
+    public function bookPackageProducts()
+    {
+        return $this->hasMany(BookPackageProduct::class, 'id_book', 'id');
     }
 
     public function user()

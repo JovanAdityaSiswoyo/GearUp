@@ -168,6 +168,13 @@ class BookingController extends Controller
             ->where('id_user', auth()->id())
             ->latest()
             ->get();
-        return view('user.booking.my-booking', compact('bookings'));
+
+        // Ambil riwayat booking package user
+        $packageBookings = \App\Models\Book::with(['package', 'detailBooks'])
+            ->where('id_user', auth()->id())
+            ->latest()
+            ->get();
+
+        return view('user.booking.my-booking', compact('bookings', 'packageBookings'));
     }
 }
