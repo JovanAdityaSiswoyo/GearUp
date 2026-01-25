@@ -392,7 +392,7 @@ new class extends Component
             </button>
             <div id="packagesCarousel" class="flex gap-6 transition-transform duration-500 ease-in-out px-4 py-6">
                 @foreach ($packages as $package)
-                    <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
+                    <a href="{{ route('user.package.show', $package->id) }}" class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block relative group" style="text-decoration:none;">
                         <div class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
                             @if($package->image)
                                 <img src="{{ asset('storage/' . $package->image) }}" alt="{{ $package->name_package }}" class="w-full h-full object-cover" loading="lazy">
@@ -405,11 +405,11 @@ new class extends Component
                         <h3 class="text-lg font-semibold text-gray-900 mb-2 text-center">{{ $package->name_package }}</h3>
                         <p class="text-sm text-gray-500 mb-2 text-center line-clamp-2">{{ $package->description }}</p>
                         <div class="mt-auto text-teal-700 font-bold text-lg text-center mb-2">Rp {{ number_format($package->price, 0, ',', '.') }}</div>
-                        <a href="#" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-full shadow-sm transition mx-auto">
+                        <span class="inline-flex items-center space-x-2 bg-green-500 group-hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-full shadow-sm transition mx-auto mt-2">
                             <span>Lihat Detail</span>
                             <x-heroicon-o-arrow-right class="h-4 w-4" />
-                        </a>
-                    </div>
+                        </span>
+                    </a>
                 @endforeach
             </div>
             <button id="pkgNextBtn" type="button" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white border border-gray-300 shadow rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition disabled:opacity-40" aria-label="Berikutnya" style="display: none;">

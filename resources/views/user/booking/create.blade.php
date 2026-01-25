@@ -132,6 +132,72 @@
                                                     </script>
                             </div>
                         </div>
+                        <!-- Payment Summary -->
+                        <div class="mt-6 bg-green-50 border border-green-200 rounded-xl p-4">
+                            <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">
+                                <x-heroicon-o-currency-dollar class="h-5 w-5" />
+                                Ringkasan Pembayaran
+                            </h4>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>Total Harga Produk / Hari</span>
+                                <span id="summary-product-price">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>Estimasi Hari Sewa</span>
+                                <span id="summary-days">-</span>
+                            </div>
+                            <div class="flex justify-between text-base font-bold border-t pt-2 mt-2">
+                                <span>Total Pembayaran</span>
+                                <span id="summary-total">Rp 0</span>
+                            </div>
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const start = document.getElementById('rental_start_at');
+                                const end = document.getElementById('rental_end_at');
+                                const daysSpan = document.getElementById('summary-days');
+                                const totalSpan = document.getElementById('summary-total');
+                                const priceSpan = document.getElementById('summary-product-price');
+                                // Ambil semua input amount
+                                function getProductData() {
+                                    const amounts = document.querySelectorAll('input[name^="amount["]');
+                                    let total = 0;
+                                    @foreach($products as $product)
+                                        let val = 1;
+                                        const input = document.querySelector('input[name="amount[{{ $product->id }}]"]');
+                                        if (input && input.value) val = parseInt(input.value) || 1;
+                                        total += val * {{ $product->price_per_day }};
+                                    @endforeach
+                                    return total;
+                                }
+                                function updateSummary() {
+                                    let days = 0;
+                                    if (start && end && start.value && end.value) {
+                                        const d1 = new Date(start.value);
+                                        const d2 = new Date(end.value);
+                                        days = Math.floor((d2 - d1) / (1000*60*60*24)) + 1;
+                                    }
+                                    const totalPerDay = getProductData();
+                                    priceSpan.textContent = 'Rp ' + totalPerDay.toLocaleString('id-ID');
+                                    if (isNaN(days) || days < 1) {
+                                        daysSpan.textContent = '-';
+                                        totalSpan.textContent = 'Rp 0';
+                                    } else {
+                                        daysSpan.textContent = days + ' hari';
+                                        totalSpan.textContent = 'Rp ' + (totalPerDay * days).toLocaleString('id-ID');
+                                    }
+                                }
+                                // Listen to amount changes
+                                document.querySelectorAll('input[name^="amount["]').forEach(input => {
+                                    input.addEventListener('input', updateSummary);
+                                });
+                                if (start && end) {
+                                    start.addEventListener('change', updateSummary);
+                                    end.addEventListener('change', updateSummary);
+                                }
+                                updateSummary();
+                            });
+                            </script>
+                        </div>
                     </div>
 
                     <!-- Booking Form -->

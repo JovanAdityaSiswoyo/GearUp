@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -153,8 +152,15 @@ Route::middleware('auth')->group(function () {
     // User Product Detail Route
     Route::get('/product/{product}', [App\Http\Controllers\User\ProductController::class, 'show'])->name('user.product.show');
 
+    // User Package Detail Route
+    Route::get('/package/{package}', [App\Http\Controllers\User\PackageController::class, 'show'])->name('user.package.show');
+
     // User Booking Routes
     Route::get('/booking/create/{product}', [App\Http\Controllers\User\BookingController::class, 'create'])->name('user.booking.create');
     Route::get('/booking/create-multi', [App\Http\Controllers\User\BookingController::class, 'createMulti'])->name('user.booking.create-multi');
     Route::post('/booking', [App\Http\Controllers\User\BookingController::class, 'store'])->name('user.booking.store');
+
+    // User Booking Package Routes
+    Route::get('/booking/package/{package}', [App\Http\Controllers\User\BookingPackageController::class, 'create'])->name('user.booking.package.create');
+    Route::post('/booking/package/{package}', [App\Http\Controllers\User\BookingPackageController::class, 'store'])->name('user.booking.package.store');
 });
