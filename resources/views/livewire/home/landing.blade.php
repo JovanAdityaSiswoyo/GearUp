@@ -1,28 +1,5 @@
-<?php
 
-use Livewire\Component;
-
-use App\Models\Product;
-use App\Models\Package;
-
-new class extends Component
-{
-    public function with(): array
-    {
-        return [
-            'bestPicks' => Product::with('category', 'brand')
-                ->where('status', 'active')
-                ->orderBy('created_at', 'desc')
-                ->take(12)
-                ->get(),
-                        'packages' => Package::orderBy('created_at', 'desc')
-                            ->take(10)
-                            ->get()
-        ];
-    }
-};
-?>
-
+<div>
 <div>
 <!-- Hero Section with Background -->
 <div class="min-h-[70vh] bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?q=80&w=2070'); font-family: 'Poppins', sans-serif;">
