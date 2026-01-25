@@ -8,6 +8,12 @@ use App\Models\Package;
 
 class PackageController extends Controller
 {
+    public function index(Request $request)
+    {
+        $packages = Package::latest()->paginate(12);
+        return view('livewire.home.packages', compact('packages'));
+    }
+
     public function show($id)
     {
         $package = Package::with(['products.category', 'products.brand'])->findOrFail($id);

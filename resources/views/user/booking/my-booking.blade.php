@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -43,6 +43,7 @@
 
         <!-- Main Content -->
         <main class="flex-1 px-6 lg:px-16 py-8">
+
             <div class="max-w-6xl mx-auto">
                 <!-- Page Header -->
                 <div class="mb-8">
@@ -53,7 +54,206 @@
                     <p class="text-gray-600">Lihat semua booking dan status penyewaan Anda</p>
                 </div>
 
-                @if($bookings->isEmpty())
+                @if((isset($packageBookings) && $packageBookings->isNotEmpty()) || ($bookings && $bookings->isNotEmpty()))
+                    <!-- Bookings Grid -->
+                    <div class="space-y-12">
+                        @if(isset($packageBookings) && $packageBookings->isNotEmpty())
+                        <div>
+                            <h2 class="text-2xl font-bold text-blue-700 mb-4">History Booking Paket</h2>
+                            <div class="space-y-6">
+                                @foreach($packageBookings as $booking)
+                                    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden border-l-4 border-blue-500">
+                                        <div class="p-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                <!-- Package Info -->
+                                                <div class="md:col-span-2">
+                                                    <div class="flex items-start space-x-4">
+                                                        @if($booking->package && $booking->package->image)
+                                                            <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-20 h-20 rounded-lg object-cover">
+                                                        @else
+                                                            <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
+                                                                <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
+                                                            </div>
+                                                        @endif
+                                                        <div class="flex-1">
+                                                            <h3 class="text-lg font-bold text-gray-900">{{ $booking->package->name_package ?? 'Paket Dihapus' }}</h3>
+                                                            <p class="text-sm text-gray-600 mb-2">Booking Code: <span class="font-mono font-semibold text-green-600">{{ $booking->book_code }}</span></p>
+                                                            <p class="text-sm text-gray-600">Penyewa: {{ $booking->booker_name }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Booking Details -->
+                                                <div>
+                                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Detail Sewa Paket</h4>
+                                                    <div class="space-y-2 text-sm">
+                                                        <div>
+                                                            <span class="text-gray-600">Mulai:</span>
+                                                            <p class="font-semibold text-gray-900">{{ $booking->checkin_appointment_start?->format('d M Y') }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-gray-600">Berakhir:</span>
+                                                            <p class="font-semibold text-gray-900">{{ $booking->checkout_appointment_end?->format('d M Y') }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-gray-600">Jumlah Unit:</span>
+                                                            <p class="font-semibold text-gray-900">1 paket</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Status & Actions -->
+                                                <div>
+                                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Status</h4>
+                                                    <div class="flex flex-col items-start space-y-3">
+                                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                            {{ ucfirst($booking->status) }}
+                                                        </span>
+                                                        @if($booking->status === 'pending')
+                                                            <p class="text-xs text-gray-600">Menunggu konfirmasi...</p>
+                                                        @elseif($booking->status === 'confirmed')
+                                                            <p class="text-xs text-gray-600">Siap untuk diambil</p>
+                                                        @elseif($booking->status === 'active')
+                                                            <p class="text-xs text-green-600 font-medium">Sedang disewa</p>
+                                                        @elseif($booking->status === 'completed')
+                                                            <p class="text-xs text-gray-600">Penyewaan selesai</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Contact Info -->
+                                            <div class="mt-6 pt-6 border-t">
+                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    <div>
+                                                        <p class="text-xs text-gray-600 mb-1">Kontak Pemesan</p>
+                                                        <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_email }}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-xs text-gray-600 mb-1">Telepon</p>
+                                                        <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_telp }}</p>
+                                                    </div>
+                                                    @if($booking->detailBooks && $booking->detailBooks->count())
+                                                        <div>
+                                                            <p class="text-xs text-gray-600 mb-1">Metode Pengiriman</p>
+                                                            <p class="text-sm font-semibold text-gray-900">{{ ucfirst($booking->detailBooks->first()->shipping_method) }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-xs text-gray-600 mb-1">Tanggal Pengiriman</p>
+                                                            <p class="text-sm font-semibold text-gray-900">{{ $booking->detailBooks->first()->shipping_date?->format('d M Y') }}</p>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($bookings && $bookings->isNotEmpty())
+                        <div>
+                            <h2 class="text-2xl font-bold text-green-700 mb-4">History Booking Produk</h2>
+                            <div class="space-y-6">
+                                @foreach($bookings as $booking)
+                                    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden border-l-4 
+                                        @if($booking->status === 'pending') border-yellow-500
+                                        @elseif($booking->status === 'confirmed') border-blue-500
+                                        @elseif($booking->status === 'active') border-green-500
+                                        @elseif($booking->status === 'completed') border-gray-500
+                                        @else border-red-500
+                                        @endif">
+                                        <div class="p-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                <!-- Product Info -->
+                                                <div class="md:col-span-2">
+                                                    <div class="flex items-start space-x-4">
+                                                        @if($booking->product && $booking->product->image)
+                                                            <img src="{{ asset('storage/' . $booking->product->image) }}" alt="{{ $booking->product->name }}" class="w-20 h-20 rounded-lg object-cover">
+                                                        @else
+                                                            <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
+                                                                <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
+                                                            </div>
+                                                        @endif
+                                                        <div class="flex-1">
+                                                            <h3 class="text-lg font-bold text-gray-900">{{ $booking->product->name ?? 'Product Deleted' }}</h3>
+                                                            <p class="text-sm text-gray-600 mb-2">Booking Code: <span class="font-mono font-semibold text-green-600">{{ $booking->book_code }}</span></p>
+                                                            <p class="text-sm text-gray-600">Penyewa: {{ $booking->detailBookProduct?->full_name ?? $booking->booker_name }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Booking Details -->
+                                                <div>
+                                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Detail Sewa</h4>
+                                                    <div class="space-y-2 text-sm">
+                                                        <div>
+                                                            <span class="text-gray-600">Mulai:</span>
+                                                            <p class="font-semibold text-gray-900">{{ $booking->detailBookProduct?->rental_start_at?->format('d M Y') ?? $booking->checkin_appointment_start->format('d M Y') }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-gray-600">Berakhir:</span>
+                                                            <p class="font-semibold text-gray-900">{{ $booking->detailBookProduct?->rental_end_at?->format('d M Y') ?? $booking->checkout_appointment_end->format('d M Y') }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-gray-600">Jumlah Unit:</span>
+                                                            <p class="font-semibold text-gray-900">{{ $booking->amount }} unit</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Status & Actions -->
+                                                <div>
+                                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Status</h4>
+                                                    <div class="flex flex-col items-start space-y-3">
+                                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                            @if($booking->status === 'pending') bg-yellow-100 text-yellow-800
+                                                            @elseif($booking->status === 'confirmed') bg-blue-100 text-blue-800
+                                                            @elseif($booking->status === 'active') bg-green-100 text-green-800
+                                                            @elseif($booking->status === 'completed') bg-gray-100 text-gray-800
+                                                            @else bg-red-100 text-red-800
+                                                            @endif">
+                                                            {{ ucfirst($booking->status) }}
+                                                        </span>
+                                                        @if($booking->status === 'pending')
+                                                            <p class="text-xs text-gray-600">Menunggu konfirmasi...</p>
+                                                        @elseif($booking->status === 'confirmed')
+                                                            <p class="text-xs text-gray-600">Siap untuk diambil</p>
+                                                        @elseif($booking->status === 'active')
+                                                            <p class="text-xs text-green-600 font-medium">Sedang disewa</p>
+                                                        @elseif($booking->status === 'completed')
+                                                            <p class="text-xs text-gray-600">Penyewaan selesai</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Contact Info -->
+                                            <div class="mt-6 pt-6 border-t">
+                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    <div>
+                                                        <p class="text-xs text-gray-600 mb-1">Kontak Pemesan</p>
+                                                        <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_email }}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-xs text-gray-600 mb-1">Telepon</p>
+                                                        <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_telp }}</p>
+                                                    </div>
+                                                    @if($booking->detailBookProduct)
+                                                        <div>
+                                                            <p class="text-xs text-gray-600 mb-1">Metode Pengiriman</p>
+                                                            <p class="text-sm font-semibold text-gray-900">{{ ucfirst($booking->detailBookProduct->shipping_method) }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-xs text-gray-600 mb-1">Tanggal Pengiriman</p>
+                                                            <p class="text-sm font-semibold text-gray-900">{{ $booking->detailBookProduct->shipping_date->format('d M Y') }}</p>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                @else
                     <!-- Empty State -->
                     <div class="bg-white rounded-xl shadow-sm p-12 text-center">
                         <x-heroicon-o-inbox class="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -63,201 +263,6 @@
                             <x-heroicon-o-arrow-left class="h-5 w-5" />
                             <span>Kembali ke Home</span>
                         </a>
-                    </div>
-                @else
-                    <!-- Bookings Grid -->
-                    <div class="space-y-6">
-                        @foreach($bookings as $booking)
-                            <!-- Booking Produk (default) -->
-
-                        {{-- Booking Package History --}}
-                        @if(isset($packageBookings) && $packageBookings->count())
-                            @foreach($packageBookings as $booking)
-                                                            <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden border-l-4 border-blue-500">
-                                                                <div class="p-6">
-                                                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                                                        <!-- Package Info -->
-                                                                        <div class="md:col-span-2">
-                                                                            <div class="flex items-start space-x-4">
-                                                                                @if($booking->package && $booking->package->image)
-                                                                                    <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-20 h-20 rounded-lg object-cover">
-                                                                                @else
-                                                                                    <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
-                                                                                        <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
-                                                                                    </div>
-                                                                                @endif
-                                                                                <div class="flex-1">
-                                                                                    <h3 class="text-lg font-bold text-gray-900">{{ $booking->package->name_package ?? 'Paket Dihapus' }}</h3>
-                                                                                    <p class="text-sm text-gray-600 mb-2">Booking Code: <span class="font-mono font-semibold text-green-600">{{ $booking->book_code }}</span></p>
-                                                                                    <p class="text-sm text-gray-600">Penyewa: {{ $booking->booker_name }}</p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <!-- Booking Details -->
-                                                                        <div>
-                                                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Detail Sewa Paket</h4>
-                                                                            <div class="space-y-2 text-sm">
-                                                                                <div>
-                                                                                    <span class="text-gray-600">Mulai:</span>
-                                                                                    <p class="font-semibold text-gray-900">{{ $booking->checkin_appointment_start?->format('d M Y') }}</p>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <span class="text-gray-600">Berakhir:</span>
-                                                                                    <p class="font-semibold text-gray-900">{{ $booking->checkout_appointment_end?->format('d M Y') }}</p>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <span class="text-gray-600">Jumlah Unit:</span>
-                                                                                    <p class="font-semibold text-gray-900">1 paket</p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <!-- Status & Actions -->
-                                                                        <div>
-                                                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Status</h4>
-                                                                            <div class="flex flex-col items-start space-y-3">
-                                                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                                                    {{ ucfirst($booking->status) }}
-                                                                                </span>
-                                                                                @if($booking->status === 'pending')
-                                                                                    <p class="text-xs text-gray-600">Menunggu konfirmasi...</p>
-                                                                                @elseif($booking->status === 'confirmed')
-                                                                                    <p class="text-xs text-gray-600">Siap untuk diambil</p>
-                                                                                @elseif($booking->status === 'active')
-                                                                                    <p class="text-xs text-green-600 font-medium">Sedang disewa</p>
-                                                                                @elseif($booking->status === 'completed')
-                                                                                    <p class="text-xs text-gray-600">Penyewaan selesai</p>
-                                                                                @endif
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <!-- Contact Info -->
-                                                                    <div class="mt-6 pt-6 border-t">
-                                                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                                            <div>
-                                                                                <p class="text-xs text-gray-600 mb-1">Kontak Pemesan</p>
-                                                                                <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_email }}</p>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p class="text-xs text-gray-600 mb-1">Telepon</p>
-                                                                                <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_telp }}</p>
-                                                                            </div>
-                                                                            @if($booking->detailBooks && $booking->detailBooks->count())
-                                                                                <div>
-                                                                                    <p class="text-xs text-gray-600 mb-1">Metode Pengiriman</p>
-                                                                                    <p class="text-sm font-semibold text-gray-900">{{ ucfirst($booking->detailBooks->first()->shipping_method) }}</p>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <p class="text-xs text-gray-600 mb-1">Tanggal Pengiriman</p>
-                                                                                    <p class="text-sm font-semibold text-gray-900">{{ $booking->detailBooks->first()->shipping_date?->format('d M Y') }}</p>
-                                                                                </div>
-                                                                            @endif
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                            @endforeach
-                        @endif
-                            <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden border-l-4 
-                                @if($booking->status === 'pending') border-yellow-500
-                                @elseif($booking->status === 'confirmed') border-blue-500
-                                @elseif($booking->status === 'active') border-green-500
-                                @elseif($booking->status === 'completed') border-gray-500
-                                @else border-red-500
-                                @endif">
-                                
-                                <div class="p-6">
-                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                        <!-- Product Info -->
-                                        <div class="md:col-span-2">
-                                            <div class="flex items-start space-x-4">
-                                                @if($booking->product && $booking->product->image)
-                                                    <img src="{{ asset('storage/' . $booking->product->image) }}" alt="{{ $booking->product->name }}" class="w-20 h-20 rounded-lg object-cover">
-                                                @else
-                                                    <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
-                                                        <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
-                                                    </div>
-                                                @endif
-                                                
-                                                <div class="flex-1">
-                                                    <h3 class="text-lg font-bold text-gray-900">{{ $booking->product->name ?? 'Product Deleted' }}</h3>
-                                                    <p class="text-sm text-gray-600 mb-2">Booking Code: <span class="font-mono font-semibold text-green-600">{{ $booking->book_code }}</span></p>
-                                                    <p class="text-sm text-gray-600">Penyewa: {{ $booking->detailBookProduct?->full_name ?? $booking->booker_name }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Booking Details -->
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Detail Sewa</h4>
-                                            <div class="space-y-2 text-sm">
-                                                <div>
-                                                    <span class="text-gray-600">Mulai:</span>
-                                                    <p class="font-semibold text-gray-900">{{ $booking->detailBookProduct?->rental_start_at?->format('d M Y') ?? $booking->checkin_appointment_start->format('d M Y') }}</p>
-                                                </div>
-                                                <div>
-                                                    <span class="text-gray-600">Berakhir:</span>
-                                                    <p class="font-semibold text-gray-900">{{ $booking->detailBookProduct?->rental_end_at?->format('d M Y') ?? $booking->checkout_appointment_end->format('d M Y') }}</p>
-                                                </div>
-                                                <div>
-                                                    <span class="text-gray-600">Jumlah Unit:</span>
-                                                    <p class="font-semibold text-gray-900">{{ $booking->amount }} unit</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status & Actions -->
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Status</h4>
-                                            <div class="flex flex-col items-start space-y-3">
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                    @if($booking->status === 'pending') bg-yellow-100 text-yellow-800
-                                                    @elseif($booking->status === 'confirmed') bg-blue-100 text-blue-800
-                                                    @elseif($booking->status === 'active') bg-green-100 text-green-800
-                                                    @elseif($booking->status === 'completed') bg-gray-100 text-gray-800
-                                                    @else bg-red-100 text-red-800
-                                                    @endif">
-                                                    {{ ucfirst($booking->status) }}
-                                                </span>
-                                                
-                                                @if($booking->status === 'pending')
-                                                    <p class="text-xs text-gray-600">Menunggu konfirmasi...</p>
-                                                @elseif($booking->status === 'confirmed')
-                                                    <p class="text-xs text-gray-600">Siap untuk diambil</p>
-                                                @elseif($booking->status === 'active')
-                                                    <p class="text-xs text-green-600 font-medium">Sedang disewa</p>
-                                                @elseif($booking->status === 'completed')
-                                                    <p class="text-xs text-gray-600">Penyewaan selesai</p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Contact Info -->
-                                    <div class="mt-6 pt-6 border-t">
-                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div>
-                                                <p class="text-xs text-gray-600 mb-1">Kontak Pemesan</p>
-                                                <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_email }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs text-gray-600 mb-1">Telepon</p>
-                                                <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_telp }}</p>
-                                            </div>
-                                            @if($booking->detailBookProduct)
-                                                <div>
-                                                    <p class="text-xs text-gray-600 mb-1">Metode Pengiriman</p>
-                                                    <p class="text-sm font-semibold text-gray-900">{{ ucfirst($booking->detailBookProduct->shipping_method) }}</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-xs text-gray-600 mb-1">Tanggal Pengiriman</p>
-                                                    <p class="text-sm font-semibold text-gray-900">{{ $booking->detailBookProduct->shipping_date->format('d M Y') }}</p>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
                     </div>
                 @endif
 

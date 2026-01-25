@@ -3,11 +3,11 @@
     <div class="flex items-center space-x-6">
         <div class="flex items-center space-x-2">
             <x-heroicon-o-phone class="h-5 w-5" />
-            <span>0878 1200 0155</span>
+            <span>0878 0987 0155</span>
         </div>
         <div class="flex items-center space-x-2">
             <x-heroicon-o-envelope class="h-5 w-5" />
-            <span>forestaadventure@gmail.com</span>
+            <span>gearup@gmail.com</span>
         </div>
     </div>
     <div class="flex items-center space-x-4 mt-2 md:mt-0">

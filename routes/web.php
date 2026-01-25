@@ -149,10 +149,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/booking/cart', [App\Http\Controllers\User\BookingController::class, 'cartBooking'])->name('user.booking.cart');
     Route::post('/booking/cart', [App\Http\Controllers\User\BookingController::class, 'cartBooking']);
 
-    // User Product Detail Route
+
+    // User Product List & Detail Route
+    Route::get('/products', [App\Http\Controllers\User\ProductController::class, 'index'])->name('user.products.index');
     Route::get('/product/{product}', [App\Http\Controllers\User\ProductController::class, 'show'])->name('user.product.show');
 
-    // User Package Detail Route
+
+    // User Package List & Detail Route
+    Route::get('/packages', [App\Http\Controllers\User\PackageController::class, 'index'])->name('user.packages.index');
     Route::get('/package/{package}', [App\Http\Controllers\User\PackageController::class, 'show'])->name('user.package.show');
 
     // User Booking Routes

@@ -10,11 +10,11 @@
             <div class="flex items-center space-x-6">
                 <div class="flex items-center space-x-2">
                     <x-heroicon-o-phone class="h-5 w-5" />
-                    <span>0878 1200 0155</span>
+                    <span>0878 0987 0155</span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <x-heroicon-o-envelope class="h-5 w-5" />
-                    <span>forestaadventure@gmail.com</span>
+                    <span>gearup@gmail.com</span>
                 </div>
             </div>
             <div class="flex items-center space-x-4 mt-2 md:mt-0">
@@ -356,7 +356,7 @@
                     Pilihan paket hemat & praktis untuk petualanganmu!
                 </p>
             </div>
-            <a href="#" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-3 rounded-full shadow-sm transition whitespace-nowrap">
+            <a href="{{ route('user.packages.index') }}" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-3 rounded-full shadow-sm transition whitespace-nowrap">
                 <span>Lihat Semua Paket</span>
                 <x-heroicon-o-arrow-right class="h-5 w-5" />
             </a>
@@ -469,7 +469,7 @@
                 <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">Pilihan Terbaik Minggu Ini!</h2>
                 <p class="text-gray-600 text-lg" style="font-family: 'Inter', sans-serif;">Gear pilihan pendaki, siap temani petualanganmu.</p>
             </div>
-            <a href="#" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-3 rounded-full shadow-sm transition">
+            <a href="{{ route('user.products.index') }}" class="inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-3 rounded-full shadow-sm transition">
                 <span>Lihat Lainnya</span>
                 <x-heroicon-o-arrow-right class="h-5 w-5" />
             </a>

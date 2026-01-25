@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function index()
+    {
+        $products = Product::with(['category', 'brand', 'images'])->latest()->paginate(12);
+        return view('livewire.home.products', compact('products'));
+    }
+
     public function show(Product $product)
     {
         $product->load(['category', 'brand', 'images']);

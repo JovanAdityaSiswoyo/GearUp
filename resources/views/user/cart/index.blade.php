@@ -4,7 +4,7 @@
 <div class="max-w-4xl mx-auto py-10">
     <div class="bg-white rounded-xl shadow p-8">
         <h1 class="text-2xl font-bold mb-6">Cart Produk</h1>
-        <pre>{{ var_export(session('cart'), true) }}</pre>
+        {{-- <pre>{{ var_export(session('cart'), true) }}</pre> --}}
         @if(session('success'))
             <div class="mb-4 p-3 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
         @endif
