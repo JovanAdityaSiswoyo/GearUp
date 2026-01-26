@@ -151,6 +151,9 @@ Route::middleware('auth')->group(function () {
 
 
     // User Product List & Detail Route
+
+    // Produk berdasarkan brand
+    Route::get('/brand/{brand}', [App\Http\Controllers\User\ProductController::class, 'brandProducts'])->name('user.brand.products');
     Route::get('/products', [App\Http\Controllers\User\ProductController::class, 'index'])->name('user.products.index');
     Route::get('/product/{product}', [App\Http\Controllers\User\ProductController::class, 'show'])->name('user.product.show');
 

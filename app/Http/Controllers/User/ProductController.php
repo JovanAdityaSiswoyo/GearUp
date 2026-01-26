@@ -19,4 +19,10 @@ class ProductController extends Controller
         $product->load(['category', 'brand', 'images']);
         return view('user.product.show', compact('product'));
     }
+
+    public function brandProducts(\App\Models\Brand $brand)
+    {
+        $products = $brand->products()->with(['category', 'brand', 'images'])->latest()->get();
+        return view('user.brand-products', compact('brand', 'products'));
+    }
 }

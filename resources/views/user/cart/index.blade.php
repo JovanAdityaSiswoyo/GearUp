@@ -4,6 +4,24 @@
 <div class="max-w-4xl mx-auto py-10">
     <div class="bg-white rounded-xl shadow p-8">
         <h1 class="text-2xl font-bold mb-6">Cart Produk</h1>
+
+        {{-- Pilihan Brand --}}
+        @php
+            $brands = \App\Models\Brand::all();
+        @endphp
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold mb-2">Pilih Brand:</h2>
+            <div class="flex flex-wrap gap-3">
+                @foreach($brands as $brand)
+                    <a href="{{ route('user.brand.products', $brand->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-teal-100 rounded-lg border border-gray-200 shadow-sm transition">
+                        @if($brand->logo)
+                            <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->name }}" class="w-8 h-8 object-contain rounded">
+                        @endif
+                        <span class="font-medium">{{ $brand->name }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
         {{-- <pre>{{ var_export(session('cart'), true) }}</pre> --}}
         @if(session('success'))
             <div class="mb-4 p-3 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
@@ -20,7 +38,7 @@
                         </div>
                         <form action="{{ route('user.cart.remove', $product->id) }}" method="POST" class="form-remove-cart">
                             @csrf
-                            <button type="button" class="text-red-600 hover:text-red-800 font-semibold px-3 py-1 rounded btn-remove-cart">Hapus</button>
+                            <button type="submit" class="text-red-600 hover:text-red-800 font-semibold px-3 py-1 rounded btn-remove-cart">Hapus</button>
                         </form>
                     </li>
                 @endforeach

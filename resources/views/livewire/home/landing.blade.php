@@ -248,58 +248,19 @@
             </p>
         </div>
 
-        <!-- Brands Carousel -->
+
+        <!-- Brands Carousel Dinamis & Klikable -->
+        @php $brands = \App\Models\Brand::all(); @endphp
         <div class="relative overflow-hidden">
             <div id="brandsCarousel" class="flex gap-6 transition-transform duration-500 ease-in-out px-4 py-6">
-                <!-- REI -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Rei.jpeg" alt="REI" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- CONSINA -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Consina.jpg" alt="CONSINA" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- EIGER -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Eiger.jpg" alt="EIGER" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- THE NORTH FACE -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/The north face.jpg" alt="THE NORTH FACE" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- OSPREY -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Osprey.jpg" alt="OSPREY" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- QUECHUA -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Quechua.jpg" alt="QUECHUA" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- ARCTERYX -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Arcteryx.jpg" alt="ARCTERYX" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- MAMMUT -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Mammut.jpg" alt="MAMMUT" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- MONTBELL -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Montbell.jpg" alt="MONTBELL" class="w-24 h-auto object-contain">
-                </div>
-
-                <!-- PATAGONIA -->
-                <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex items-center justify-center h-40">
-                    <img src="/gallery/Patagonia.jpg" alt="PATAGONIA" class="w-24 h-auto object-contain">
-                </div>
+                @foreach($brands as $brand)
+                    <a href="{{ route('user.brand.products', $brand->id) }}" class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 xl:w-1/6 bg-white rounded-2xl shadow-sm hover:shadow-md transition p-8 flex flex-col items-center justify-center h-40 group">
+                        @if($brand->logo)
+                            <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->name }}" class="w-24 h-auto object-contain mb-2 group-hover:scale-105 transition-transform duration-200">
+                        @endif
+                        <span class="mt-2 text-base font-semibold text-gray-700 group-hover:text-teal-700 text-center">{{ $brand->name }}</span>
+                    </a>
+                @endforeach
             </div>
         </div>
 
