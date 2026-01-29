@@ -75,20 +75,29 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::get('/dashboard', function () {
         return view('officer.dashboard');
     })->name('dashboard');
-    
-    // Book Loans Management
+
+    // Equipment Loan Approvals
+    Route::get('/loan-approvals', [App\Http\Controllers\OfficerLoanApprovalController::class, 'index'])->name('loan-approvals.index');
+    Route::post('/loan-approvals/{id}/approve', [App\Http\Controllers\OfficerLoanApprovalController::class, 'approve'])->name('loans.approve');
+    Route::post('/loan-approvals/{id}/reject', [App\Http\Controllers\OfficerLoanApprovalController::class, 'reject'])->name('loans.reject');
+
+    // Returns Monitoring
+    Route::get('/returns-monitor', [App\Http\Controllers\OfficerReturnMonitorController::class, 'index'])->name('returns.monitor');
+    Route::post('/returns-monitor/{id}/process', [App\Http\Controllers\OfficerReturnMonitorController::class, 'process'])->name('returns.process');
+
+    // Print Reports
+    Route::get('/print-report', [App\Http\Controllers\OfficerReportController::class, 'print'])->name('reports.print');
+
+    // Book Loans Management (placeholder)
     Route::get('/books', function () { return 'Book Loans Index'; })->name('books.index');
     Route::get('/books/create', function () { return 'Create Book Loan'; })->name('books.create');
-    
-    // Product Loans Management
+
+    // Product Loans Management (placeholder)
     Route::get('/products', function () { return 'Product Loans Index'; })->name('products.index');
     Route::get('/products/create', function () { return 'Create Product Loan'; })->name('products.create');
-    
+
     // Payments Management
     Route::get('/payments', [App\Http\Controllers\OfficerPaymentController::class, 'index'])->name('payments.index');
-    
-    // Returns Management
-    Route::get('/returns', function () { return 'Returns Index'; })->name('returns.index');
 });
 
 // Courier Routes

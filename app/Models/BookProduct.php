@@ -13,6 +13,12 @@ class BookProduct extends Model
 
     protected $table = 'book_products';
 
+    // For compatibility with old blade: $loan->equipment
+    public function getEquipmentAttribute()
+    {
+        return $this->product;
+    }
+
     protected $fillable = [
         'id_user',
         'id_product',

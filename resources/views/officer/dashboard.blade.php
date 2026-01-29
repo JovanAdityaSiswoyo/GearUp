@@ -28,21 +28,21 @@
                     <x-heroicon-o-home class="h-5 w-5 mr-3" />
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('officer.books.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-book-open class="h-5 w-5 mr-3" />
-                    <span>Book Loans</span>
+                <a href="{{ route('officer.loan-approvals.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
+                    <x-heroicon-o-clipboard-document-list class="h-5 w-5 mr-3" />
+                    <span>Loan Approvals</span>
                 </a>
-                <a href="{{ route('officer.products.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-cube class="h-5 w-5 mr-3" />
-                    <span>Product Loans</span>
+                <a href="{{ route('officer.returns.monitor') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
+                    <x-heroicon-o-arrow-path class="h-5 w-5 mr-3" />
+                    <span>Monitor Returns</span>
+                </a>
+                <a href="{{ route('officer.reports.print') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
+                    <x-heroicon-o-printer class="h-5 w-5 mr-3" />
+                    <span>Print Report</span>
                 </a>
                 <a href="{{ route('officer.payments.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
                     <x-heroicon-o-credit-card class="h-5 w-5 mr-3" />
                     <span>Payments</span>
-                </a>
-                <a href="{{ route('officer.returns.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-arrow-path class="h-5 w-5 mr-3" />
-                    <span>Returns</span>
                 </a>
             </nav>
         </aside>
@@ -176,17 +176,17 @@
                     <div class="bg-white rounded-xl shadow-sm p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
                         <div class="grid grid-cols-2 gap-4">
-                            <a href="{{ route('officer.books.create') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-                                <x-heroicon-o-plus-circle class="h-8 w-8 text-blue-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">New Book Loan</span>
+                            <a href="{{ route('officer.loan-approvals.index') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
+                                <x-heroicon-o-clipboard-document-list class="h-8 w-8 text-blue-600 mb-2" />
+                                <span class="text-sm font-medium text-gray-700">Loan Approvals</span>
                             </a>
-                            <a href="{{ route('officer.products.create') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-                                <x-heroicon-o-cube class="h-8 w-8 text-blue-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">New Product Loan</span>
-                            </a>
-                            <a href="{{ route('officer.returns.index') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
+                            <a href="{{ route('officer.returns.monitor') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                                 <x-heroicon-o-arrow-path class="h-8 w-8 text-blue-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">Process Return</span>
+                                <span class="text-sm font-medium text-gray-700">Monitor Returns</span>
+                            </a>
+                            <a href="{{ route('officer.reports.print') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
+                                <x-heroicon-o-printer class="h-8 w-8 text-blue-600 mb-2" />
+                                <span class="text-sm font-medium text-gray-700">Print Report</span>
                             </a>
                             <a href="{{ route('officer.payments.index') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                                 <x-heroicon-o-credit-card class="h-8 w-8 text-blue-600 mb-2" />
