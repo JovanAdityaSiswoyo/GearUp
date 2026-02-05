@@ -438,7 +438,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @foreach ($bestPicks as $product)
-                <a href="{{ auth()->check() ? route('user.product.show', $product->id) : route('login') }}" class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
+                <a href="{{ route('user.product.show', $product->id) }}" class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 flex flex-col cursor-pointer block">
                     <div class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
                         @if($product->image)
                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover" loading="lazy">

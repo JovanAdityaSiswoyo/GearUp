@@ -7,6 +7,16 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+// Public Product & Package Lists + Detail
+Route::get('/products', [App\Http\Controllers\User\ProductController::class, 'index'])->name('user.products.index');
+Route::get('/product/{product}', [App\Http\Controllers\User\ProductController::class, 'show'])->name('user.product.show');
+Route::get('/packages', [App\Http\Controllers\User\PackageController::class, 'index'])->name('user.packages.index');
+Route::get('/package/{package}', [App\Http\Controllers\User\PackageController::class, 'show'])->name('user.package.show');
+Route::get('/brand/{brand}', [App\Http\Controllers\User\ProductController::class, 'brandProducts'])->name('user.brand.products');
+Route::get('/cart', [App\Http\Controllers\User\CartController::class, 'index'])->name('user.cart.index');
+Route::post('/cart/add/{product}', [App\Http\Controllers\User\CartController::class, 'add'])->name('user.cart.add');
+Route::post('/cart/remove/{product}', [App\Http\Controllers\User\CartController::class, 'remove'])->name('user.cart.remove');
+
 // Guest Routes (Not Authenticated)
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {
@@ -148,28 +158,12 @@ Route::middleware('auth')->group(function () {
 
 
     // User Cart Routes
-
-    Route::get('/cart', [App\Http\Controllers\User\CartController::class, 'index'])->name('user.cart.index');
-    Route::post('/cart/add/{product}', [App\Http\Controllers\User\CartController::class, 'add'])->name('user.cart.add');
-    Route::post('/cart/remove/{product}', [App\Http\Controllers\User\CartController::class, 'remove'])->name('user.cart.remove');
     Route::post('/cart/checkout', [App\Http\Controllers\User\CartController::class, 'checkout'])->name('user.cart.checkout');
 
     // Route for cart booking summary after checkout
     Route::get('/booking/cart', [App\Http\Controllers\User\BookingController::class, 'cartBooking'])->name('user.booking.cart');
     Route::post('/booking/cart', [App\Http\Controllers\User\BookingController::class, 'cartBooking']);
 
-
-    // User Product List & Detail Route
-
-    // Produk berdasarkan brand
-    Route::get('/brand/{brand}', [App\Http\Controllers\User\ProductController::class, 'brandProducts'])->name('user.brand.products');
-    Route::get('/products', [App\Http\Controllers\User\ProductController::class, 'index'])->name('user.products.index');
-    Route::get('/product/{product}', [App\Http\Controllers\User\ProductController::class, 'show'])->name('user.product.show');
-
-
-    // User Package List & Detail Route
-    Route::get('/packages', [App\Http\Controllers\User\PackageController::class, 'index'])->name('user.packages.index');
-    Route::get('/package/{package}', [App\Http\Controllers\User\PackageController::class, 'show'])->name('user.package.show');
 
     // User Booking Routes
     Route::get('/booking/create/{product}', [App\Http\Controllers\User\BookingController::class, 'create'])->name('user.booking.create');
