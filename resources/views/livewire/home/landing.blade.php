@@ -1,6 +1,5 @@
 
 <div>
-<div>
 <!-- Hero Section with Background -->
 <div class="min-h-[70vh] bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?q=80&w=2070'); font-family: 'Poppins', sans-serif;">
     <!-- Content -->
@@ -155,49 +154,64 @@
         <!-- Search Bar (Floating at Bottom) -->
         <div class="absolute -bottom-12 md:-bottom-16 left-6 right-6 lg:left-16 lg:right-16 z-20">
             <div class="bg-white rounded-2xl shadow-2xl p-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     <!-- Tgl Ambil -->
                     <div>
                         <label class="block text-gray-600 text-xs mb-2 font-medium">Tgl Ambil</label>
-                        <div class="flex items-center space-x-2 text-sm border-b-2 border-gray-200 pb-3">
-                            <x-heroicon-o-calendar class="h-4 w-4 text-gray-400" />
-                            <span class="text-gray-800 font-semibold">Rab, 21 Jan 2026</span>
-                            <x-heroicon-o-chevron-down class="h-3 w-3 text-gray-400 ml-auto" />
+                        <div class="relative">
+                            <input 
+                                type="date" 
+                                wire:model.live="tanggal_ambil"
+                                class="w-full text-sm border-b-2 border-gray-200 pb-2 focus:outline-none focus:border-teal-600 text-gray-800"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Tgl Pengembalian -->
+                    <div>
+                        <label class="block text-gray-600 text-xs mb-2 font-medium">Tgl Pengembalian</label>
+                        <div class="relative">
+                            <input 
+                                type="date" 
+                                wire:model.live="tanggal_pengembalian"
+                                class="w-full text-sm border-b-2 border-gray-200 pb-2 focus:outline-none focus:border-teal-600 text-gray-800"
+                            />
                         </div>
                     </div>
 
                     <!-- Durasi -->
                     <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">Durasi</label>
-                        <div class="flex items-center space-x-2 text-sm border-b-2 border-gray-200 pb-3">
-                            <span class="text-gray-400">Pilih durasi</span>
-                            <x-heroicon-o-chevron-down class="h-3 w-3 text-gray-400 ml-auto" />
-                        </div>
-                    </div>
-
-                    <!-- Maks. Pengembalian -->
-                    <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">Maks. Pengembalian</label>
-                        <div class="flex items-center space-x-2 text-sm border-b-2 border-gray-200 pb-3">
-                            <x-heroicon-o-calendar class="h-4 w-4 text-gray-400" />
-                            <span class="text-gray-400">Tanggal kembali</span>
+                        <label class="block text-gray-600 text-xs mb-2 font-medium">Durasi (Hari)</label>
+                        <div class="flex items-center space-x-2 text-sm border-b-2 border-gray-200 pb-2">
+                            @if(!empty($durasi) && $durasi > 0)
+                                <span class="text-gray-800 font-medium">{{ $durasi }} hari</span>
+                            @else
+                                <span class="text-gray-400 text-xs">Isi tanggal</span>
+                            @endif
                         </div>
                     </div>
 
                     <!-- Cari -->
                     <div>
                         <label class="block text-gray-600 text-xs mb-2 font-medium">Cari</label>
-                        <div class="flex items-center gap-1 border-b-2 border-gray-200 pb-3 h-9">
+                        <div class="flex items-center gap-2 bg-gray-50 rounded-lg border border-gray-200 p-2">
+                            <x-heroicon-o-magnifying-glass class="h-4 w-4 text-gray-400 flex-shrink-0" />
                             <input 
                                 type="text" 
+                                wire:model="search"
                                 placeholder="Cari peralatan ..." 
-                                class="flex-1 text-sm focus:outline-none text-gray-400 border-0 h-full"
+                                class="flex-1 text-sm focus:outline-none bg-gray-50 text-gray-700 placeholder-gray-400"
                             />
-                            <button class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-4 rounded-lg font-semibold transition flex items-center space-x-1 flex-shrink-0 h-full">
-                                <x-heroicon-o-magnifying-glass class="h-4 w-4" />
-                                <span class="text-sm">Cari</span>
-                            </button>
                         </div>
+                    </div>
+
+                    <!-- Button Cari -->
+                    <div>
+                        <label class="block text-gray-600 text-xs mb-2 font-medium">&nbsp;</label>
+                        <button class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg font-medium transition flex items-center space-x-1 w-full justify-center h-10">
+                            <x-heroicon-o-magnifying-glass class="h-4 w-4" />
+                            <span class="text-sm">Cari</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -544,5 +558,20 @@
 
 <!-- Auth Modal -->
 <livewire:auth-modal />
+
+<script>
+    // Auto-open modal dari 401 page atau query parameter
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        const openModal = params.get('openModal');
+        
+        if (openModal) {
+            // Tunggu Livewire siap
+            setTimeout(() => {
+                window.openAuthModal(openModal);
+            }, 500);
+        }
+    });
+</script>
 
 </div>

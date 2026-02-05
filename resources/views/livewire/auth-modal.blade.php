@@ -1,4 +1,4 @@
-<div>
+<div @openAuthModal.window="openModal($event.detail.tab ?? 'login')">
     @if($isOpen)
         <!-- Modal Overlay -->
         <div 
