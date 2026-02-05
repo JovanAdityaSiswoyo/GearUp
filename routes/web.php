@@ -10,11 +10,11 @@ Route::get('/', function () {
 // Guest Routes (Not Authenticated)
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {
-        return view('auth.login');
+        return redirect('/');
     })->name('login');
     
     Route::get('/register', function () {
-        return view('auth.register');
+        return redirect('/');
     })->name('register');
 });
 

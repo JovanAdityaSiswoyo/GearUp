@@ -97,10 +97,10 @@
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
+                    <button onclick="openAuthModal('login')" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold transition flex items-center space-x-2">
                         <x-heroicon-o-user class="h-5 w-5" />
                         <span>Masuk</span>
-                    </a>
+                    </button>
                 @endauth
                 <!-- Cart Icon (linked & dynamic count) -->
                 @php
@@ -541,5 +541,8 @@
         </div>
     </div>
 </footer>
+
+<!-- Auth Modal -->
+<livewire:auth-modal />
 
 </div>
