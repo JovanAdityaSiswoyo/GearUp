@@ -178,4 +178,66 @@ class BookingController extends Controller
 
         return view('user.booking.my-booking', compact('bookings', 'packageBookings'));
     }
+
+    public function myReturns()
+    {
+        $returnNeededStatuses = [
+            OrderStatus::DELIVERED->value,
+            OrderStatus::OVERDUE->value,
+        ];
+
+        $returnInProcessStatuses = [
+            OrderStatus::PICKUP_SCHEDULED->value,
+            OrderStatus::ON_PROCESS_RETURN->value,
+            OrderStatus::PENDING_REVIEW->value,
+        ];
+
+        $returnCompletedStatuses = [
+            OrderStatus::COMPLETED->value,
+            OrderStatus::ISSUE_DETECTED->value,
+        ];
+
+        $productBookings = BookProduct::with(['product', 'detailBookProduct', 'courier'])
+            ->where('id_user', auth()->id())
+            ->latest()
+            ->get();
+
+        $packageBookings = \App\Models\Book::with(['package', 'detailBooks', 'courier'])
+            ->where('id_user', auth()->id())
+            ->latest()
+            ->get();
+
+        $productReturnNeeded = $productBookings->filter(function ($booking) use ($returnNeededStatuses) {
+            return in_array($booking->order_status?->value, $returnNeededStatuses, true);
+        })->values();
+
+        $packageReturnNeeded = $packageBookings->filter(function ($booking) use ($returnNeededStatuses) {
+            return in_array($booking->order_status?->value, $returnNeededStatuses, true);
+        })->values();
+
+        $productReturnInProcess = $productBookings->filter(function ($booking) use ($returnInProcessStatuses) {
+            return in_array($booking->order_status?->value, $returnInProcessStatuses, true);
+        })->values();
+
+        $packageReturnInProcess = $packageBookings->filter(function ($booking) use ($returnInProcessStatuses) {
+            return in_array($booking->order_status?->value, $returnInProcessStatuses, true);
+        })->values();
+
+        $productReturnCompleted = $productBookings->filter(function ($booking) use ($returnCompletedStatuses) {
+            return in_array($booking->order_status?->value, $returnCompletedStatuses, true);
+        })->values();
+
+        $packageReturnCompleted = $packageBookings->filter(function ($booking) use ($returnCompletedStatuses) {
+            return in_array($booking->order_status?->value, $returnCompletedStatuses, true);
+        })->values();
+
+        return view('user.booking.returns', [
+            'productReturnNeeded' => $productReturnNeeded,
+            'packageReturnNeeded' => $packageReturnNeeded,
+            'productReturnInProcess' => $productReturnInProcess,
+            'packageReturnInProcess' => $packageReturnInProcess,
+            'productReturnCompleted' => $productReturnCompleted,
+            'packageReturnCompleted' => $packageReturnCompleted,
+        ]);
+    }
 }

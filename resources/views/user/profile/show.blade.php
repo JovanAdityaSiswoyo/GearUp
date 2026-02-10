@@ -31,6 +31,12 @@
                         <x-heroicon-o-calendar class="h-5 w-5" />
                         <span>{{ __('profile.my_booking') }}</span>
                     </a>
+
+                    <!-- My Returns Menu -->
+                    <a href="{{ route('user.my-returns') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+                        <x-heroicon-o-arrow-uturn-left class="h-5 w-5" />
+                        <span>Pengembalian Saya</span>
+                    </a>
                     
                     <!-- Setting Menu -->
                     <a href="#settings" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition">

@@ -218,6 +218,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/photo', [App\Http\Controllers\User\ProfileController::class, 'updatePhoto'])->name('profile.update-photo');
     Route::post('/profile/language', [App\Http\Controllers\User\ProfileController::class, 'switchLanguage'])->name('profile.switch-language');
     Route::get('/my-booking', [App\Http\Controllers\User\BookingController::class, 'myBooking'])->name('user.my-booking');
+    Route::get('/my-returns', [App\Http\Controllers\User\BookingController::class, 'myReturns'])->name('user.my-returns');
 
 
     // User Cart Routes
