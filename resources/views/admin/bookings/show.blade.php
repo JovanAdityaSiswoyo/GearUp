@@ -206,19 +206,25 @@
     
     <!-- Edit Modal -->
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
             <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Status</h3>
             <form id="editForm">
                 <div class="space-y-4 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select id="editStatus" name="status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <select id="editStatus" name="status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" onchange="showAdminStatusInfo()">
+                            <option value="">-- Select Status --</option>
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
                             <option value="active">Active</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
+                    </div>
+                    <!-- Status Info Box -->
+                    <div id="statusInfo" class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 hidden">
+                        <p class="font-semibold mb-1" id="statusTitle"></p>
+                        <p id="statusDescription" class="text-xs leading-relaxed"></p>
                     </div>
                 </div>
                 <div class="flex space-x-2">
@@ -239,6 +245,32 @@
         function openEditModal() {
             document.getElementById('editStatus').value = '{{ $booking->status }}';
             document.getElementById('editModal').classList.remove('hidden');
+            showAdminStatusInfo();
+        }
+
+        function showAdminStatusInfo() {
+            const select = document.getElementById('editStatus');
+            const value = select.value;
+            const infoBox = document.getElementById('statusInfo');
+            const titleEl = document.getElementById('statusTitle');
+            const descEl = document.getElementById('statusDescription');
+
+            const statusDescriptions = {
+                'pending': { title: '⏳ Pending', desc: 'Booking menunggu untuk diproses dan dikonfirmasi' },
+                'confirmed': { title: '✅ Confirmed', desc: 'Booking sudah dikonfirmasi dan siap untuk diproses lebih lanjut' },
+                'active': { title: '🔄 Active', desc: 'Proses booking sedang berjalan, periode sewa mulai' },
+                'completed': { title: '🎉 Completed', desc: 'Proses booking selesai dengan sukses, semua transaksi selesai' },
+                'cancelled': { title: '❌ Cancelled', desc: 'Booking dibatalkan, tidak ada transaksi lebih lanjut' }
+            };
+
+            if (value && statusDescriptions[value]) {
+                const desc = statusDescriptions[value];
+                titleEl.textContent = desc.title;
+                descEl.textContent = desc.desc;
+                infoBox.classList.remove('hidden');
+            } else {
+                infoBox.classList.add('hidden');
+            }
         }
 
         function closeEditModal() {

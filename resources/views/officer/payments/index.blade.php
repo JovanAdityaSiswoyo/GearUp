@@ -1,75 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payments - Officer</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-gradient-to-b from-blue-600 to-cyan-500 text-white">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold">Officer Panel</h1>
-                <p class="text-sm opacity-80">AplikasiPinjam</p>
-            </div>
-            
-            <nav class="mt-6">
-                <a href="{{ route('officer.dashboard') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-home class="h-5 w-5 mr-3" />
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('officer.books.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-book-open class="h-5 w-5 mr-3" />
-                    <span>Book Loans</span>
-                </a>
-                <a href="{{ route('officer.products.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-cube class="h-5 w-5 mr-3" />
-                    <span>Product Loans</span>
-                </a>
-                <a href="{{ route('officer.packing.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-square-3-stack-3d class="h-5 w-5 mr-3" />
-                    <span>Packing</span>
-                </a>
-                <a href="{{ route('officer.payments.index') }}" class="flex items-center px-6 py-3 bg-white/20 border-r-4 border-white">
-                    <x-heroicon-o-credit-card class="h-5 w-5 mr-3" />
-                    <span>Payments</span>
-                </a>
-                <a href="{{ route('officer.returns.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
-                    <x-heroicon-o-arrow-path class="h-5 w-5 mr-3" />
-                    <span>Returns</span>
-                </a>
-            </nav>
-        </aside>
+@extends('layouts.officer')
 
-        <!-- Main Content -->
-        <div class="flex-1">
-            <!-- Header -->
-            <header class="bg-white shadow-sm">
-                <div class="px-8 py-4 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Payments</h2>
-                        <p class="text-sm text-gray-600">View and manage payment records</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-600">Officer: {{ auth()->guard('officer')->user()->name ?? 'Unknown' }}</span>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </header>
+@section('title', 'Payments')
 
-            <main class="p-8">
+@section('content')
                 <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="bg-white rounded-xl shadow-sm p-6">
@@ -214,8 +147,4 @@
                         {{ $payments->links() }}
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
-</body>
-</html>
+@endsection

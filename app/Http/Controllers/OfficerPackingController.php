@@ -18,32 +18,83 @@ class OfficerPackingController extends Controller
     }
 
     /**
-     * Tampilkan daftar package bookings yang perlu packing
+     * Tampilkan daftar bookings yang perlu packing (both products and packages)
      */
     public function index(Request $request): View
     {
         $search = $request->get('search');
         
-        $query = Book::with(['package', 'user', 'bookPackageProducts.product', 'bookPackageProducts.unit'])
+        // Get individual product bookings
+        $productBookings = \App\Models\BookProduct::with(['product.category', 'user'])
             ->whereIn('order_status', [
                 \App\Enums\OrderStatus::CONFIRMED,
                 \App\Enums\OrderStatus::READY_FOR_PICKUP,
             ])
-            ->latest();
+            ->get()
+            ->map(function($booking) {
+                return (object)[
+                    'id' => $booking->id,
+                    'book_code' => $booking->book_code,
+                    'booker_name' => $booking->booker_name,
+                    'item_name' => $booking->product->name ?? 'N/A',
+                    'item_type' => 'Product',
+                    'order_status' => $booking->order_status,
+                    'checkin_date' => $booking->checkin_appointment_start,
+                    'created_at' => $booking->created_at,
+                    'type' => 'book-product',
+                ];
+            });
+        
+        // Get package bookings
+        $packageBookings = \App\Models\Book::with(['package', 'user'])
+            ->whereIn('order_status', [
+                \App\Enums\OrderStatus::CONFIRMED,
+                \App\Enums\OrderStatus::READY_FOR_PICKUP,
+            ])
+            ->get()
+            ->map(function($booking) {
+                return (object)[
+                    'id' => $booking->id,
+                    'book_code' => $booking->book_code,
+                    'booker_name' => $booking->booker_name,
+                    'item_name' => $booking->package->name_package ?? 'N/A',
+                    'item_type' => 'Package',
+                    'order_status' => $booking->order_status,
+                    'checkin_date' => $booking->checkin_appointment_start,
+                    'created_at' => $booking->created_at,
+                    'type' => 'book',
+                ];
+            });
+
+        // Merge and filter by search
+        $bookings = $productBookings->merge($packageBookings)
+            ->sortByDesc('created_at');
 
         if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('booking_code', 'like', "%{$search}%")
-                  ->orWhere('booker_name', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+            $bookings = $bookings->filter(function($booking) use ($search) {
+                return stripos($booking->book_code, $search) !== false ||
+                       stripos($booking->booker_name, $search) !== false ||
+                       stripos($booking->item_name, $search) !== false;
             });
         }
 
-        $bookings = $query->paginate(10);
+        // Manual pagination
+        $perPage = 10;
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        
+        $total = $bookings->count();
+        $bookings = $bookings->slice($offset, $perPage)->values();
+        
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $bookings,
+            $total,
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        return view('officer.packing.index', compact('bookings'));
+        return view('officer.packing.index', ['bookings' => $paginator]);
     }
 
     /**

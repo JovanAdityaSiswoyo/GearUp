@@ -103,7 +103,7 @@
                         <!-- Created -->
                         <div class="flex items-start space-x-4">
                             <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <x-heroicon-o-clipboard-check class="h-5 w-5 text-gray-600" />
+                                <x-heroicon-o-clipboard-document-check class="h-5 w-5 text-gray-600" />
                             </div>
                             <div class="flex-1">
                                 <p class="font-semibold text-gray-900">Booking Dibuat</p>

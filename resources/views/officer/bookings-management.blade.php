@@ -1,12 +1,12 @@
-@extends('layouts.app')
+@extends('layouts.officer')
+
+@section('title', 'Booking Management')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8 px-4 lg:px-16">
-    <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
             <div class="flex items-center space-x-3 mb-2">
-                <x-heroicon-o-clipboard-check class="h-8 w-8 text-blue-600" />
+                <x-heroicon-o-clipboard-document-check class="h-8 w-8 text-blue-600" />
                 <h1 class="text-3xl font-bold text-gray-900">Manajemen Booking</h1>
             </div>
             <p class="text-gray-600">Kelola semua booking produk dan paket</p>
@@ -211,8 +211,6 @@
                 @endforelse
             </div>
         </div>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection

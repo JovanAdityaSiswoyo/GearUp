@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.officer')
+
+@section('title', 'Detail Booking')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8 px-4 lg:px-16">
-    <div class="max-w-5xl mx-auto">
         <!-- Header -->
         <div class="mb-8 flex items-center justify-between">
             <div>
@@ -276,13 +276,14 @@
 
 <!-- Edit Modal -->
 <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
         <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Status Order</h3>
         <form id="editForm">
             <div class="space-y-4 mb-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="editStatus" name="order_status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <select id="editStatus" name="order_status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" onchange="showStatusInfo()">
+                        <option value="">-- Pilih Status --</option>
                         <option value="Draft">Draft</option>
                         <option value="Awaiting Validation">Awaiting Validation</option>
                         <option value="Confirmed">Confirmed</option>
@@ -295,6 +296,11 @@
                         <option value="Completed">Completed</option>
                         <option value="Issue Detected">Issue Detected</option>
                     </select>
+                </div>
+                <!-- Status Info Box -->
+                <div id="statusInfo" class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 hidden">
+                    <p class="font-semibold mb-1" id="statusTitle"></p>
+                    <p id="statusDescription" class="text-xs leading-relaxed"></p>
                 </div>
             </div>
             <div class="flex space-x-2">
@@ -375,6 +381,38 @@
     function openEditModal() {
         document.getElementById('editStatus').value = '{{ $booking->order_status->value }}';
         document.getElementById('editModal').classList.remove('hidden');
+        showStatusInfo();
+    }
+
+    function showStatusInfo() {
+        const select = document.getElementById('editStatus');
+        const value = select.value;
+        const infoBox = document.getElementById('statusInfo');
+        const titleEl = document.getElementById('statusTitle');
+        const descEl = document.getElementById('statusDescription');
+
+        const statusDescriptions = {
+            'Draft': { title: '📝 Draft', desc: 'Order baru dibuat, menunggu pembayaran dari customer' },
+            'Awaiting Validation': { title: '⏳ Awaiting Validation', desc: 'Pembayaran sudah diterima, petugas perlu validasi ketersediaan barang' },
+            'Confirmed': { title: '✅ Confirmed', desc: 'Order sah dan stok barang sudah dipotong dari sistem' },
+            'Ready for Pickup': { title: '📦 Ready for Pickup', desc: 'Barang sudah dipacking dan siap diambil kurir' },
+            'Out for Delivery': { title: '🚚 Out for Delivery', desc: 'Kurir sedang dalam perjalanan mengantar barang ke customer' },
+            'Delivered': { title: '🏠 Delivered', desc: 'Barang sudah diterima customer, menunggu pengembalian barang' },
+            'Pickup Scheduled': { title: '📅 Pickup Scheduled', desc: 'Kurir dijadwalkan untuk jemput barang kembali dari customer' },
+            'On Process Return': { title: '↩️ On Process Return', desc: 'Kurir sedang mengantar barang kembali ke gudang' },
+            'Pending Review': { title: '👀 Pending Review', desc: 'Barang sudah sampai gudang, menunggu QC dari petugas' },
+            'Completed': { title: '🎉 Completed', desc: 'Proses sewa selesai, barang lengkap, deposit dikembalikan' },
+            'Issue Detected': { title: '⚠️ Issue Detected', desc: 'Ada barang rusak/kurang, tagihan denda atau penahanan deposit' }
+        };
+
+        if (value && statusDescriptions[value]) {
+            const desc = statusDescriptions[value];
+            titleEl.textContent = desc.title;
+            descEl.textContent = desc.desc;
+            infoBox.classList.remove('hidden');
+        } else {
+            infoBox.classList.add('hidden');
+        }
     }
 
     function closeEditModal() {
