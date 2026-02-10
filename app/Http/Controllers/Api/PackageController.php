@@ -35,15 +35,22 @@ class PackageController extends Controller
             'publish_end' => 'required|date|after:publish_start',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'uuid|exists:products,id',
+            'product_qtys' => 'nullable|array',
+            'product_qtys.*' => 'integer|min:1',
         ]);
 
         $productIds = $validated['product_ids'] ?? [];
-        unset($validated['product_ids']);
+        $productQtys = $validated['product_qtys'] ?? [];
+        unset($validated['product_ids'], $validated['product_qtys']);
 
         $package = Package::create($validated);
         
         if (!empty($productIds)) {
-            $package->products()->attach($productIds);
+            $productsWithQty = [];
+            foreach ($productIds as $index => $productId) {
+                $productsWithQty[$productId] = ['qty' => $productQtys[$index] ?? 1];
+            }
+            $package->products()->attach($productsWithQty);
         }
 
         return response()->json($package->load('products'), 201);
@@ -71,15 +78,22 @@ class PackageController extends Controller
             'publish_end' => 'sometimes|date|after:publish_start',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'uuid|exists:products,id',
+            'product_qtys' => 'nullable|array',
+            'product_qtys.*' => 'integer|min:1',
         ]);
 
         $productIds = $validated['product_ids'] ?? null;
-        unset($validated['product_ids']);
+        $productQtys = $validated['product_qtys'] ?? [];
+        unset($validated['product_ids'], $validated['product_qtys']);
 
         $package->update($validated);
         
         if ($productIds !== null) {
-            $package->products()->sync($productIds);
+            $productsWithQty = [];
+            foreach ($productIds as $index => $productId) {
+                $productsWithQty[$productId] = ['qty' => $productQtys[$index] ?? 1];
+            }
+            $package->products()->sync($productsWithQty);
         }
 
         return response()->json($package->load('products'));

@@ -85,11 +85,17 @@
                                                 <span class="text-xs text-gray-500 ml-2">({{ $product->category->categories ?? $product->category->name ?? 'N/A' }})</span>
                                                 <span class="text-xs text-purple-600 ml-2">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}/day</span>
                                             </div>
+                                            <div class="ml-3">
+                                                <input type="number" name="products_qty[]" value="{{ old('products_qty.' . $loop->index, 1) }}" min="1" 
+                                                    class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm qty-input"
+                                                    placeholder="Qty">
+                                            </div>
                                         </label>
                                         @endforeach
                                     </div>
                                     @error('products') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-                                    <p class="text-sm text-gray-500 mt-2">Select at least one product for this package</p>
+                                    @error('products_qty') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    <p class="text-sm text-gray-500 mt-2">Select at least one product and set quantity for this package</p>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">

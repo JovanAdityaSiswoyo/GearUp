@@ -29,7 +29,9 @@ class Package extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'package_products', 'id_package', 'id_product');
+        return $this->belongsToMany(Product::class, 'package_products', 'id_package', 'id_product')
+            ->withPivot('qty')
+            ->withTimestamps();
     }
 
     public function images()

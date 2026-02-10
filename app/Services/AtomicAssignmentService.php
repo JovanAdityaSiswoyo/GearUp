@@ -36,8 +36,8 @@ class AtomicAssignmentService
             $assignedUnits = [];
             $failures = [];
 
-            // Get all products in package
-            $packageProducts = $package->products()->withPivot('qty')->get();
+            // Get all products in package with qty from pivot
+            $packageProducts = $package->products()->get();
 
             foreach ($packageProducts as $product) {
                 $requiredQty = $product->pivot->qty ?? 1;

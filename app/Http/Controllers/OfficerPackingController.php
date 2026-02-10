@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Services\AtomicAssignmentService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -111,10 +112,16 @@ class OfficerPackingController extends Controller
             'bookPackageProducts.packedByOfficer'
         ])->findOrFail($bookingId);
 
+        $packageProducts = DB::table('package_products')
+            ->join('products', 'package_products.id_product', '=', 'products.id')
+            ->where('package_products.id_package', $booking->id_package)
+            ->select('products.id', 'products.name')
+            ->get();
+
         $packingList = $this->atomicService->getPackingList($booking);
         $packingProgress = $this->getPackingProgress($booking);
 
-        return view('officer.packing.show', compact('booking', 'packingList', 'packingProgress'));
+        return view('officer.packing.show', compact('booking', 'packingList', 'packingProgress', 'packageProducts'));
     }
 
     /**
@@ -200,7 +207,11 @@ class OfficerPackingController extends Controller
      */
     private function getPackingProgress(Book $booking): array
     {
-        $totalItems = \App\Models\BookPackageProduct::where('id_book', $booking->id)->count();
+        $assignedItems = \App\Models\BookPackageProduct::where('id_book', $booking->id)->count();
+        $packageItems = DB::table('package_products')
+            ->where('id_package', $booking->id_package)
+            ->count();
+        $totalItems = max($assignedItems, $packageItems);
         $packedItems = \App\Models\BookPackageProduct::where('id_book', $booking->id)
             ->where('is_packed', true)
             ->count();

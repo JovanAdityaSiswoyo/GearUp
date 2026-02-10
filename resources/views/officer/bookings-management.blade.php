@@ -12,22 +12,41 @@
             <p class="text-gray-600">Kelola semua booking produk dan paket</p>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
-            <div class="flex flex-wrap gap-2">
-                <a href="?filter=all" class="px-4 py-2 rounded-lg bg-blue-600 text-white">Semua</a>
-                <a href="?filter=draft" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Draft</a>
-                <a href="?filter=awaiting_validation" class="px-4 py-2 rounded-lg bg-yellow-200 text-yellow-800 hover:bg-yellow-300">Menunggu Validasi</a>
-                <a href="?filter=confirmed" class="px-4 py-2 rounded-lg bg-blue-200 text-blue-800 hover:bg-blue-300">Terkonfirmasi</a>
-                <a href="?filter=delivery" class="px-4 py-2 rounded-lg bg-green-200 text-green-800 hover:bg-green-300">Pengiriman</a>
-                <a href="?filter=return" class="px-4 py-2 rounded-lg bg-orange-200 text-orange-800 hover:bg-orange-300">Pengembalian</a>
-                <a href="?filter=completed" class="px-4 py-2 rounded-lg bg-emerald-200 text-emerald-800 hover:bg-emerald-300">Selesai</a>
-            </div>
+        <!-- Search Bar -->
+        <div class="mb-6 bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">Pencarian Booking</h3>
+            <form method="GET" class="flex gap-3">
+                <div class="flex-1 flex gap-3">
+                    <select name="search_type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all" {{ $searchType === 'all' ? 'selected' : '' }}>Cari Semua</option>
+                        <option value="booking_id" {{ $searchType === 'booking_id' ? 'selected' : '' }}>ID Booking</option>
+                        <option value="user_name" {{ $searchType === 'user_name' ? 'selected' : '' }}>Nama User</option>
+                        <option value="product_name" {{ $searchType === 'product_name' ? 'selected' : '' }}>Nama Produk/Paket</option>
+                    </select>
+                    <input type="text" name="search_query" placeholder="Masukkan kata kunci pencarian..." 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        value="{{ $searchQuery }}">
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition flex items-center gap-2">
+                        <x-heroicon-o-magnifying-glass class="h-5 w-5" />
+                        Cari
+                    </button>
+                </div>
+                @if($searchQuery)
+                    <a href="{{ route('officer.bookings.index') }}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-medium transition">
+                        Reset
+                    </a>
+                @endif
+            </form>
         </div>
 
         <!-- Product Bookings -->
         <div class="mb-12">
-            <h2 class="text-2xl font-bold text-green-700 mb-4">Booking Produk</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-green-700">Booking Produk</h2>
+                @if($searchQuery)
+                    <span class="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full">Hasil pencarian: {{ $bookProducts->count() }} ditemukan</span>
+                @endif
+            </div>
             <div class="space-y-4">
                 @forelse($bookProducts as $booking)
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition border-l-4 
@@ -117,11 +136,21 @@
                 </div>
                 @endforelse
             </div>
+            @if($bookProducts instanceof \Illuminate\Pagination\Paginator)
+                <div class="mt-6">
+                    {{ $bookProducts->links('pagination::tailwind', ['pageName' => 'product_page']) }}
+                </div>
+            @endif
         </div>
 
         <!-- Package Bookings -->
         <div>
-            <h2 class="text-2xl font-bold text-blue-700 mb-4">Booking Paket</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-blue-700">Booking Paket</h2>
+                @if($searchQuery)
+                    <span class="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full">Hasil pencarian: {{ $books->count() }} ditemukan</span>
+                @endif
+            </div>
             <div class="space-y-4">
                 @forelse($books as $booking)
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition border-l-4 
@@ -210,6 +239,11 @@
                 </div>
                 @endforelse
             </div>
+            @if($books instanceof \Illuminate\Pagination\Paginator)
+                <div class="mt-6">
+                    {{ $books->links('pagination::tailwind', ['pageName' => 'package_page']) }}
+                </div>
+            @endif
         </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

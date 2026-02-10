@@ -18,56 +18,99 @@ class OfficerBookingController extends Controller
     public function index(): View
     {
         $filter = request('filter', 'all');
+        $searchType = request('search_type', 'all');
+        $searchQuery = request('search_query', '');
+        $perPage = 5;
 
-        $query = collect();
-        $bookQuery = collect();
+        // Base queries with relations
+        $bookProductsQuery = BookProduct::with(['product.category', 'product.brand', 'user']);
+        $booksQuery = Book::with(['package', 'user']);
 
-        // Filter product bookings
-        if ($filter === 'all') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->latest()->get();
-            $books = Book::with(['package', 'user'])->latest()->get();
-        } elseif ($filter === 'draft') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->where('order_status', OrderStatus::DRAFT)->latest()->get();
-            $books = Book::with(['package', 'user'])->where('order_status', OrderStatus::DRAFT)->latest()->get();
+        // Apply search filter if search query exists
+        if ($searchQuery) {
+            if ($searchType === 'booking_id') {
+                $bookProductsQuery->where('book_code', 'LIKE', "%{$searchQuery}%");
+                $booksQuery->where('book_code', 'LIKE', "%{$searchQuery}%");
+            } elseif ($searchType === 'user_name') {
+                $bookProductsQuery->where('booker_name', 'LIKE', "%{$searchQuery}%")
+                    ->orWhere('booker_telp', 'LIKE', "%{$searchQuery}%");
+                $booksQuery->where('booker_name', 'LIKE', "%{$searchQuery}%")
+                    ->orWhere('booker_telp', 'LIKE', "%{$searchQuery}%");
+            } elseif ($searchType === 'product_name') {
+                $bookProductsQuery->whereHas('product', function ($q) use ($searchQuery) {
+                    $q->where('name', 'LIKE', "%{$searchQuery}%");
+                });
+                $booksQuery->whereHas('package', function ($q) use ($searchQuery) {
+                    $q->where('name_package', 'LIKE', "%{$searchQuery}%");
+                });
+            } elseif ($searchType === 'all') {
+                // Search across all fields
+                $bookProductsQuery->where(function ($q) use ($searchQuery) {
+                    $q->where('book_code', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('booker_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('booker_telp', 'LIKE', "%{$searchQuery}%")
+                        ->orWhereHas('product', function ($subQ) use ($searchQuery) {
+                            $subQ->where('name', 'LIKE', "%{$searchQuery}%");
+                        });
+                });
+
+                $booksQuery->where(function ($q) use ($searchQuery) {
+                    $q->where('book_code', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('booker_name', 'LIKE', "%{$searchQuery}%")
+                        ->orWhere('booker_telp', 'LIKE', "%{$searchQuery}%")
+                        ->orWhereHas('package', function ($subQ) use ($searchQuery) {
+                            $subQ->where('name_package', 'LIKE', "%{$searchQuery}%");
+                        });
+                });
+            }
+        }
+
+        // Apply status filter and pagination
+        if ($filter === 'draft') {
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::DRAFT)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::DRAFT)->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'awaiting_validation') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->where('order_status', OrderStatus::AWAITING_VALIDATION)->latest()->get();
-            $books = Book::with(['package', 'user'])->where('order_status', OrderStatus::AWAITING_VALIDATION)->latest()->get();
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::AWAITING_VALIDATION)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::AWAITING_VALIDATION)->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'confirmed') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->where('order_status', OrderStatus::CONFIRMED)->latest()->get();
-            $books = Book::with(['package', 'user'])->where('order_status', OrderStatus::CONFIRMED)->latest()->get();
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::CONFIRMED)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::CONFIRMED)->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'delivery') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->whereIn('order_status', [
+            $bookProducts = $bookProductsQuery->whereIn('order_status', [
                 OrderStatus::READY_FOR_PICKUP,
                 OrderStatus::OUT_FOR_DELIVERY,
                 OrderStatus::DELIVERED
-            ])->latest()->get();
-            $books = Book::with(['package', 'user'])->whereIn('order_status', [
+            ])->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->whereIn('order_status', [
                 OrderStatus::READY_FOR_PICKUP,
                 OrderStatus::OUT_FOR_DELIVERY,
                 OrderStatus::DELIVERED
-            ])->latest()->get();
+            ])->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'return') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->whereIn('order_status', [
+            $bookProducts = $bookProductsQuery->whereIn('order_status', [
                 OrderStatus::PICKUP_SCHEDULED,
                 OrderStatus::ON_PROCESS_RETURN,
                 OrderStatus::PENDING_REVIEW
-            ])->latest()->get();
-            $books = Book::with(['package', 'user'])->whereIn('order_status', [
+            ])->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->whereIn('order_status', [
                 OrderStatus::PICKUP_SCHEDULED,
                 OrderStatus::ON_PROCESS_RETURN,
                 OrderStatus::PENDING_REVIEW
-            ])->latest()->get();
+            ])->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'completed') {
-            $bookProducts = BookProduct::with(['product.category', 'product.brand', 'user'])->where('order_status', OrderStatus::COMPLETED)->latest()->get();
-            $books = Book::with(['package', 'user'])->where('order_status', OrderStatus::COMPLETED)->latest()->get();
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::COMPLETED)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::COMPLETED)->latest()->paginate($perPage, ['*'], 'package_page');
         } else {
-            $bookProducts = collect();
-            $books = collect();
+            // Default to 'all' filter
+            $bookProducts = $bookProductsQuery->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->latest()->paginate($perPage, ['*'], 'package_page');
         }
 
         return view('officer.bookings-management', [
             'bookProducts' => $bookProducts ?? collect(),
             'books' => $books ?? collect(),
+            'searchQuery' => $searchQuery,
+            'searchType' => $searchType,
         ]);
     }
 

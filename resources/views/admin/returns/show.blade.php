@@ -49,9 +49,18 @@
                             </div>
 
                             <div>
-                                <h3 class="text-sm font-medium text-gray-500 mb-2">Product</h3>
+                                <h3 class="text-sm font-medium text-gray-500 mb-2">Item</h3>
                                 <div class="space-y-2">
-                                    <p class="text-gray-900"><span class="font-medium">Name:</span> {{ $return->product->name ?? 'N/A' }}</p>
+                                    <p class="text-gray-900">
+                                        <span class="font-medium">Type:</span>
+                                        {{ ($return->item_type ?? 'product') === 'package' ? 'Package' : 'Product' }}
+                                    </p>
+                                    <p class="text-gray-900">
+                                        <span class="font-medium">Name:</span>
+                                        {{ ($return->item_type ?? 'product') === 'package'
+                                            ? ($return->package->name_package ?? 'N/A')
+                                            : ($return->product->name ?? 'N/A') }}
+                                    </p>
                                     <p class="text-gray-900"><span class="font-medium">Amount:</span> {{ $return->amount }} pcs</p>
                                 </div>
                             </div>
@@ -75,6 +84,23 @@
                             </div>
                         </div>
 
+                        @if(($return->item_type ?? 'product') === 'package')
+                        @if($return->detailBooks && $return->detailBooks->count() > 0)
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Additional Details</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                                @foreach($return->detailBooks as $detail)
+                                <div class="grid grid-cols-2 gap-4">
+                                    <p><span class="font-medium">Full Name:</span> {{ $detail->full_name }}</p>
+                                    <p><span class="font-medium">Phone:</span> {{ $detail->phone_number }}</p>
+                                    <p><span class="font-medium">Emergency Contact:</span> {{ $detail->emergency_phone_number }}</p>
+                                    <p><span class="font-medium">Shipping Method:</span> {{ $detail->shipping_method }}</p>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                        @else
                         @if($return->detailBookProducts && $return->detailBookProducts->count() > 0)
                         <div class="mb-8">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Additional Details</h3>
@@ -90,10 +116,11 @@
                             </div>
                         </div>
                         @endif
+                        @endif
 
                         <div class="flex items-center space-x-4">
                             @if($return->status === 'active')
-                            <form action="{{ route('admin.returns.process', $return->id) }}" method="POST" id="completeForm">
+                            <form action="{{ route('admin.returns.process', ['type' => $return->item_type ?? 'product', 'return' => $return->id]) }}" method="POST" id="completeForm">
                                 @csrf
                                 <input type="hidden" name="status" value="completed">
                                 <button type="button" onclick="confirmComplete()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">

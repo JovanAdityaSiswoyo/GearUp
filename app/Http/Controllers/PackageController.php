@@ -35,6 +35,8 @@ class PackageController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'products' => 'required|array|min:1',
             'products.*' => 'exists:products,id',
+            'products_qty' => 'required|array',
+            'products_qty.*' => 'integer|min:1',
         ]);
 
         // Calculate duration from start and end dates
@@ -72,8 +74,12 @@ class PackageController extends Controller
             }
         }
 
-        // Sync products to package
-        $package->products()->sync($validated['products']);
+        // Sync products to package with quantities
+        $productsWithQty = [];
+        foreach ($validated['products'] as $index => $productId) {
+            $productsWithQty[$productId] = ['qty' => $validated['products_qty'][$index] ?? 1];
+        }
+        $package->products()->sync($productsWithQty);
 
         // Log activity
         ActivityLog::create([
@@ -111,6 +117,8 @@ class PackageController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'products' => 'required|array|min:1',
             'products.*' => 'exists:products,id',
+            'products_qty' => 'required|array',
+            'products_qty.*' => 'integer|min:1',
         ]);
 
         // Calculate duration from start and end dates
@@ -152,8 +160,12 @@ class PackageController extends Controller
             }
         }
 
-        // Sync products to package
-        $package->products()->sync($validated['products']);
+        // Sync products to package with quantities
+        $productsWithQty = [];
+        foreach ($validated['products'] as $index => $productId) {
+            $productsWithQty[$productId] = ['qty' => $validated['products_qty'][$index] ?? 1];
+        }
+        $package->products()->sync($productsWithQty);
 
         // Log activity
         ActivityLog::create([

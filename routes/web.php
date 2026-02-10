@@ -51,13 +51,33 @@ Route::prefix('admin')->middleware(['auth:web,admin'])->name('admin.')->group(fu
     Route::resource('packages', App\Http\Controllers\PackageController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     
     // Bookings/Peminjaman Management
-    Route::resource('bookings', App\Http\Controllers\BookingController::class);
-    Route::post('/bookings/{booking}/update-data', [App\Http\Controllers\BookingController::class, 'updateData'])->name('booking-update.store');
+    Route::get('/bookings', [App\Http\Controllers\BookingController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings/create', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
+    Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+    Route::get('/bookings/{type}/{booking}', [App\Http\Controllers\BookingController::class, 'show'])
+        ->where('type', 'product|package')
+        ->name('bookings.show');
+    Route::get('/bookings/{type}/{booking}/edit', [App\Http\Controllers\BookingController::class, 'edit'])
+        ->where('type', 'product|package')
+        ->name('bookings.edit');
+    Route::put('/bookings/{type}/{booking}', [App\Http\Controllers\BookingController::class, 'update'])
+        ->where('type', 'product|package')
+        ->name('bookings.update');
+    Route::delete('/bookings/{type}/{booking}', [App\Http\Controllers\BookingController::class, 'destroy'])
+        ->where('type', 'product|package')
+        ->name('bookings.destroy');
+    Route::post('/bookings/{type}/{booking}/update-data', [App\Http\Controllers\BookingController::class, 'updateData'])
+        ->where('type', 'product|package')
+        ->name('booking-update.store');
     
     // Returns/Pengembalian Management
     Route::get('/returns', [App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
-    Route::get('/returns/{return}', [App\Http\Controllers\ReturnController::class, 'show'])->name('returns.show');
-    Route::post('/returns/{return}/process', [App\Http\Controllers\ReturnController::class, 'process'])->name('returns.process');
+    Route::get('/returns/{type}/{return}', [App\Http\Controllers\ReturnController::class, 'show'])
+        ->where('type', 'product|package')
+        ->name('returns.show');
+    Route::post('/returns/{type}/{return}/process', [App\Http\Controllers\ReturnController::class, 'process'])
+        ->where('type', 'product|package')
+        ->name('returns.process');
     
     // Payments Management
     Route::get('/payments', [App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
@@ -122,6 +142,23 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::post('/packing/scan-unit', [App\Http\Controllers\OfficerPackingController::class, 'scanUnit'])->name('packing.scan');
     Route::post('/packing/{booking}/finalize', [App\Http\Controllers\OfficerPackingController::class, 'finalizePacking'])->name('packing.finalize');
 });
+
+// Officer Booking Status Actions (POST routes)
+Route::post('/book-products/{id}/validate', [App\Http\Controllers\OfficerBookingStatusController::class, 'validateProduct'])->middleware(['auth:web,officer']);
+Route::post('/book-products/{id}/confirm', [App\Http\Controllers\OfficerBookingStatusController::class, 'confirmProduct'])->middleware(['auth:web,officer']);
+Route::post('/book-products/{id}/prepare-pickup', [App\Http\Controllers\OfficerBookingStatusController::class, 'preparePickupProduct'])->middleware(['auth:web,officer']);
+Route::post('/book-products/{id}/schedule-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'scheduleReturnProduct'])->middleware(['auth:web,officer']);
+Route::post('/book-products/{id}/complete', [App\Http\Controllers\OfficerBookingStatusController::class, 'completeProduct'])->middleware(['auth:web,officer']);
+Route::post('/book-products/{id}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssueProduct'])->middleware(['auth:web,officer']);
+Route::post('/book-products/{id}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelProduct'])->middleware(['auth:web,officer']);
+
+Route::post('/book-packages/{id}/validate', [App\Http\Controllers\OfficerBookingStatusController::class, 'validatePackage'])->middleware(['auth:web,officer']);
+Route::post('/book-packages/{id}/confirm', [App\Http\Controllers\OfficerBookingStatusController::class, 'confirmPackage'])->middleware(['auth:web,officer']);
+Route::post('/book-packages/{id}/prepare-pickup', [App\Http\Controllers\OfficerBookingStatusController::class, 'preparePickupPackage'])->middleware(['auth:web,officer']);
+Route::post('/book-packages/{id}/schedule-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'scheduleReturnPackage'])->middleware(['auth:web,officer']);
+Route::post('/book-packages/{id}/complete', [App\Http\Controllers\OfficerBookingStatusController::class, 'completePackage'])->middleware(['auth:web,officer']);
+Route::post('/book-packages/{id}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssuePackage'])->middleware(['auth:web,officer']);
+Route::post('/book-packages/{id}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelPackage'])->middleware(['auth:web,officer']);
 
 // Courier Routes
 Route::prefix('courier')->middleware(['auth:web,courier'])->name('courier.')->group(function () {

@@ -16,7 +16,10 @@ class PackageSeeder extends Seeder
             foreach ($products as $product) {
                 $package->products()->attach(
                     $product->id,
-                    ['id' => Str::uuid()]
+                    [
+                        'id' => Str::uuid(),
+                        'qty' => rand(1, 3)
+                    ]
                 );
             }
         });

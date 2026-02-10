@@ -56,6 +56,44 @@
                     </div>
                 </div>
 
+                <!-- Items Summary -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500 sub-header mb-1">Items to Pack</p>
+                            <p class="text-lg font-semibold text-gray-800">Daftar isi paket yang harus dipacking</p>
+                        </div>
+                        <span class="text-sm text-gray-600">
+                            Total: {{ $packageProducts->count() }} items
+                        </span>
+                    </div>
+
+                    @if($packageProducts->count() > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            @foreach($packageProducts as $product)
+                                <div class="flex items-start justify-between rounded-lg border border-gray-200 px-4 py-3">
+                                    <div>
+                                        <p class="font-semibold text-gray-800">{{ $product->name }}</p>
+                                        <p class="text-sm text-gray-600">Produk paket</p>
+                                    </div>
+                                    <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                                        Wajib
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @if(!$packingList || count($packingList) === 0)
+                            <p class="text-sm text-gray-600 mt-4">
+                                Assign units terlebih dahulu agar serial number muncul untuk proses scan.
+                            </p>
+                        @endif
+                    @else
+                        <p class="text-gray-600">Belum ada item di paket ini.</p>
+                        <p class="text-sm text-gray-500 mt-2">Pastikan paket memiliki item sebelum proses packing.</p>
+                    @endif
+                </div>
+
                 <!-- Packing Checklist -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-4">

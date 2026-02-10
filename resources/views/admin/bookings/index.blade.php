@@ -29,10 +29,18 @@
 
                 <!-- Filter & Search -->
                 <form method="GET" action="{{ route('admin.bookings.index') }}" class="mb-6 bg-white p-6 rounded-xl shadow-sm">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by code, name, email..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by code, name, or email..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                            <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="">All Types</option>
+                                <option value="product" {{ request('type') == 'product' ? 'selected' : '' }}>Product</option>
+                                <option value="package" {{ request('type') == 'package' ? 'selected' : '' }}>Package</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -64,7 +72,8 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Book Code</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -83,7 +92,15 @@
                                     <div class="text-xs text-gray-500">{{ $booking->booker_email }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $booking->product->name ?? 'N/A' }}</div>
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {{ $booking->item_type === 'product' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                        {{ ucfirst($booking->item_type) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">
+                                        {{ $booking->item_type === 'product' ? ($booking->product->name ?? 'N/A') : ($booking->package->name_package ?? 'N/A') }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $booking->checkin_appointment_start->format('M d') }}</div>
@@ -104,9 +121,9 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <a href="{{ route('admin.bookings.show', $booking->id) }}" class="text-blue-600 hover:text-blue-900 font-medium">View</a>
-                                    <button onclick="openEditModal('{{ $booking->id }}', '{{ $booking->status }}')" class="text-purple-600 hover:text-purple-900 font-medium">Quick Edit</button>
-                                    <form action="{{ route('admin.bookings.destroy', $booking->id) }}" method="POST" class="inline" id="delete-form-{{ $booking->id }}">
+                                    <a href="{{ route('admin.bookings.show', [$booking->item_type, $booking->id]) }}" class="text-blue-600 hover:text-blue-900 font-medium">View</a>
+                                    <button onclick="openEditModal('{{ $booking->id }}', '{{ $booking->item_type }}', '{{ $booking->status }}')" class="text-purple-600 hover:text-purple-900 font-medium">Quick Edit</button>
+                                    <form action="{{ route('admin.bookings.destroy', [$booking->item_type, $booking->id]) }}" method="POST" class="inline" id="delete-form-{{ $booking->id }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="text-red-600 hover:text-red-900" onclick='confirmDelete("{{ $booking->id }}")'>Delete</button>
@@ -115,7 +132,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -167,9 +184,11 @@
 
     <script>
         let currentEditingBookingId = null;
+        let currentEditingBookingType = null;
 
-        function openEditModal(bookingId, currentStatus) {
+        function openEditModal(bookingId, bookingType, currentStatus) {
             currentEditingBookingId = bookingId;
+            currentEditingBookingType = bookingType;
             document.getElementById('editStatus').value = currentStatus;
             document.getElementById('editModal').classList.remove('hidden');
             showAdminStatusInfo();
@@ -204,6 +223,7 @@
             document.getElementById('editModal').classList.add('hidden');
             document.getElementById('editForm').reset();
             currentEditingBookingId = null;
+            currentEditingBookingType = null;
         }
 
         function submitEdit() {
@@ -215,8 +235,8 @@
                 return;
             }
 
-            if (!currentEditingBookingId) {
-                Swal.fire('Error!', 'Booking ID not found', 'error');
+            if (!currentEditingBookingId || !currentEditingBookingType) {
+                Swal.fire('Error!', 'Booking ID or Type not found', 'error');
                 return;
             }
 
@@ -224,7 +244,7 @@
                 status: statusValue
             };
             
-            const url = `/admin/bookings/${currentEditingBookingId}/update-data`;
+            const url = `/admin/bookings/${currentEditingBookingType}/${currentEditingBookingId}/update-data`;
             console.log('Sending data:', data);
             console.log('URL:', url);
 

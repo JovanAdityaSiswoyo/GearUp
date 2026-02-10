@@ -63,32 +63,61 @@
                             </div>
                         </div>
 
-                        <!-- Product Info -->
+                        <!-- Product/Package Info -->
                         <div class="bg-white rounded-lg shadow p-6">
-                            <h2 class="text-lg font-bold text-gray-900 mb-4">Product Details</h2>
+                            <h2 class="text-lg font-bold text-gray-900 mb-4">{{ $booking->item_type === 'product' ? 'Product Details' : 'Package Details' }}</h2>
                             <div class="flex space-x-4">
-                                @if($booking->product && $booking->product->image)
-                                    <img src="{{ asset('storage/' . $booking->product->image) }}" alt="{{ $booking->product->name }}" class="w-24 h-24 rounded-lg object-cover">
+                                @if($booking->item_type === 'product')
+                                    @if($booking->product && $booking->product->image)
+                                        <img src="{{ asset('storage/' . $booking->product->image) }}" alt="{{ $booking->product->name }}" class="w-24 h-24 rounded-lg object-cover">
+                                    @else
+                                        <div class="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
+                                            <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
+                                        </div>
+                                    @endif
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-600">Product</p>
+                                        <h3 class="font-bold text-gray-900 text-lg">{{ $booking->product->name ?? 'Product Deleted' }}</h3>
+                                        <p class="text-sm text-gray-700 mt-2">{{ $booking->product->description ?? '-' }}</p>
+                                        <div class="mt-3 flex space-x-4">
+                                            <div>
+                                                <p class="text-xs text-gray-600">Category</p>
+                                                <p class="font-semibold">{{ $booking->product->category->name ?? '-' }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-600">Brand</p>
+                                                <p class="font-semibold">{{ $booking->product->brand->name ?? '-' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @else
-                                    <div class="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
-                                        <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
+                                    @if($booking->package && $booking->package->image)
+                                        <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-24 h-24 rounded-lg object-cover">
+                                    @else
+                                        <div class="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
+                                            <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
+                                        </div>
+                                    @endif
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-600">Package</p>
+                                        <h3 class="font-bold text-gray-900 text-lg">{{ $booking->package->name_package ?? 'Package Deleted' }}</h3>
+                                        <p class="text-sm text-gray-700 mt-2">{{ $booking->package->description ?? '-' }}</p>
+                                        
+                                        @if($booking->detailBooks && $booking->detailBooks->count() > 0)
+                                            <div class="mt-3">
+                                                <p class="text-xs text-gray-600 mb-2">Package Items:</p>
+                                                <div class="space-y-1">
+                                                    @foreach($booking->detailBooks as $detail)
+                                                        <div class="text-xs bg-gray-50 px-2 py-1 rounded">
+                                                            <span class="font-semibold">{{ $detail->product->name ?? 'N/A' }}</span>
+                                                            <span class="text-gray-500">x{{ $detail->amount }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
-                                <div class="flex-1">
-                                    <p class="text-sm text-gray-600">Product</p>
-                                    <h3 class="font-bold text-gray-900 text-lg">{{ $booking->product->name ?? 'Product Deleted' }}</h3>
-                                    <p class="text-sm text-gray-700 mt-2">{{ $booking->product->description ?? '-' }}</p>
-                                    <div class="mt-3 flex space-x-4">
-                                        <div>
-                                            <p class="text-xs text-gray-600">Category</p>
-                                            <p class="font-semibold">{{ $booking->product->category->name ?? '-' }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-gray-600">Brand</p>
-                                            <p class="font-semibold">{{ $booking->product->brand->name ?? '-' }}</p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -175,7 +204,7 @@
                                 <button onclick="openEditModal()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded transition">
                                     ✏️ Edit
                                 </button>
-                                <form action="{{ route('admin.bookings.destroy', $booking->id) }}" method="POST" class="w-full" id="delete-form">
+                                <form action="{{ route('admin.bookings.destroy', [$booking->item_type, $booking->id]) }}" method="POST" class="w-full" id="delete-form">
                                     @csrf
                                     @method('DELETE')
                                     <button type="button" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-3 rounded transition" onclick="confirmDeleteBooking()">
@@ -291,10 +320,11 @@
                 status: statusValue
             };
             
+            const url = `/admin/bookings/{{ $booking->item_type }}/{{ $booking->id }}/update-data`;
             console.log('Sending data:', data);
-            console.log('URL:', '{{ route("admin.booking-update.store", $booking->id) }}');
+            console.log('URL:', url);
 
-            fetch('{{ route("admin.booking-update.store", $booking->id) }}', {
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,

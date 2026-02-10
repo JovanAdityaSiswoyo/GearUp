@@ -27,7 +27,7 @@ class CourierDeliveryController extends Controller
      */
     public function index(): View
     {
-        $courier = auth()->user()->courier;
+        $courier = auth()->user();
 
         // Delivery Tasks (Pengiriman)
         $deliveryBookings = collect();
@@ -122,7 +122,7 @@ class CourierDeliveryController extends Controller
      */
     public function returns(): View
     {
-        $courier = auth()->user()->courier;
+        $courier = auth()->user();
 
         // Return Tasks (Pengembalian)
         $returnBookings = collect();
@@ -178,7 +178,7 @@ class CourierDeliveryController extends Controller
      */
     public function show(string $type, BookProduct|Book $booking): View
     {
-        $courier = auth()->user()->courier;
+        $courier = auth()->user();
         
         // Validasi bahwa booking ini adalah milik courier
         if ($booking->id_courier !== $courier?->id) {
@@ -196,7 +196,7 @@ class CourierDeliveryController extends Controller
      */
     public function history(): View
     {
-        $courier = auth()->user()->courier;
+        $courier = auth()->user();
         $filter = request('filter', 'all');
         $search = request('search');
 
@@ -280,7 +280,7 @@ class CourierDeliveryController extends Controller
         try {
             $booking = BookProduct::findOrFail($id);
             
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
+            if ($booking->id_courier !== auth()->user()?->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -288,7 +288,7 @@ class CourierDeliveryController extends Controller
             $this->transitionService->transitionItemStatus(
                 $booking,
                 ItemStatus::PICKED_UP,
-                ['courier_id' => auth()->user()->courier->id]
+                ['courier_id' => auth()->user()->id]
             );
 
             // Sync order status
@@ -316,7 +316,7 @@ class CourierDeliveryController extends Controller
         try {
             $booking = BookProduct::findOrFail($id);
             
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
+            if ($booking->id_courier !== auth()->user()?->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -351,7 +351,7 @@ class CourierDeliveryController extends Controller
         try {
             $booking = BookProduct::findOrFail($id);
             
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
+            if ($booking->id_courier !== auth()->user()?->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -378,7 +378,7 @@ class CourierDeliveryController extends Controller
         try {
             $booking = BookProduct::findOrFail($id);
             
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
+            if ($booking->id_courier !== auth()->user()?->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -406,7 +406,7 @@ class CourierDeliveryController extends Controller
         try {
             $booking = Book::findOrFail($id);
             
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
+            if ($booking->id_courier !== auth()->user()?->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -417,31 +417,6 @@ class CourierDeliveryController extends Controller
             }
 
             $booking->order_status = OrderStatus::OUT_FOR_DELIVERY;
-            $booking->save();
-
-            return response()->json(['success' => true, 'message' => 'Barang berhasil diambil untuk pengiriman']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function completeDeliveryPackage($id)
-    {
-        try {
-            $booking = Book::findOrFail($id);
-            
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-            }
-
-            if (request()->hasFile('photo')) {
-                $photo = request()->file('photo');
-                $path = $photo->store('courier/delivery', 'public');
-                $booking->delivery_photo = $path;
-            }
-
-            $booking->order_status = OrderStatus::DELIVERED;
-            $booking->delivery_at = now();
             $booking->save();
 
             return response()->json(['success' => true, 'message' => 'Pengiriman berhasil diselesaikan']);
@@ -455,31 +430,7 @@ class CourierDeliveryController extends Controller
         try {
             $booking = Book::findOrFail($id);
             
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-            }
-
-            if (request()->hasFile('photo')) {
-                $photo = request()->file('photo');
-                $path = $photo->store('courier/return-pickup', 'public');
-                $booking->return_pickup_photo = $path;
-            }
-
-            $booking->order_status = OrderStatus::ON_PROCESS_RETURN;
-            $booking->save();
-
-            return response()->json(['success' => true, 'message' => 'Barang berhasil diambil untuk pengembalian']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function completeReturnPackage($id)
-    {
-        try {
-            $booking = Book::findOrFail($id);
-            
-            if ($booking->id_courier !== auth()->user()->courier?->id) {
+            if ($booking->id_courier !== auth()->user()?->id) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
 
@@ -504,7 +455,7 @@ class CourierDeliveryController extends Controller
      */
     public function routeMap(): View
     {
-        $courier = auth()->user()->courier;
+        $courier = auth()->user();
         
         return view('courier.route-map', compact('courier'));
     }
@@ -514,7 +465,7 @@ class CourierDeliveryController extends Controller
      */
     public function routeMapData(): JsonResponse
     {
-        $courier = auth()->user()->courier;
+        $courier = auth()->user();
         
         if (!$courier) {
             return response()->json(['error' => 'Courier not found'], 404);

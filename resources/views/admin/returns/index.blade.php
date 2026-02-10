@@ -18,15 +18,23 @@
             <main class="p-8">
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Manage Returns</h2>
-                    <p class="text-gray-600">Process product returns and completions</p>
+                    <p class="text-gray-600">Process product and package returns</p>
                 </div>
 
                 <!-- Filter & Search -->
                 <form method="GET" action="{{ route('admin.returns.index') }}" class="mb-6 bg-white p-6 rounded-xl shadow-sm">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by code or name..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by code, name, or email..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                            <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="">All Types</option>
+                                <option value="product" {{ request('type') == 'product' ? 'selected' : '' }}>Product</option>
+                                <option value="package" {{ request('type') == 'package' ? 'selected' : '' }}>Package</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -55,7 +63,7 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Book Code</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rental Period</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -74,7 +82,14 @@
                                     <div class="text-xs text-gray-500">{{ $return->booker_email }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $return->product->name ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-900">
+                                        {{ ($return->item_type ?? 'product') === 'package'
+                                            ? ($return->package->name_package ?? 'N/A')
+                                            : ($return->product->name ?? 'N/A') }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ ($return->item_type ?? 'product') === 'package' ? 'Package' : 'Product' }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $return->checkin_appointment_start->format('M d') }}</div>
@@ -100,9 +115,9 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <a href="{{ route('admin.returns.show', $return->id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                    <a href="{{ route('admin.returns.show', ['type' => $return->item_type ?? 'product', 'return' => $return->id]) }}" class="text-blue-600 hover:text-blue-900">View</a>
                                     @if($return->status === 'active')
-                                    <button onclick="processReturn('{{ $return->id }}')" class="text-green-600 hover:text-green-900">Complete</button>
+                                    <button onclick="processReturn('{{ $return->id }}', '{{ $return->item_type ?? 'product' }}')" class="text-green-600 hover:text-green-900">Complete</button>
                                     @endif
                                 </td>
                             </tr>
@@ -122,7 +137,7 @@
     </div>
 
     <script>
-        function processReturn(id) {
+        function processReturn(id, type) {
             Swal.fire({
                 title: 'Complete Return?',
                 text: "Mark this rental as completed and returned?",
@@ -136,7 +151,7 @@
                     // Create form and submit
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = '/admin/returns/' + id + '/process';
+                    form.action = '/admin/returns/' + type + '/' + id + '/process';
                     
                     const csrfToken = document.createElement('input');
                     csrfToken.type = 'hidden';

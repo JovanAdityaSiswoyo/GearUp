@@ -65,6 +65,11 @@ class Book extends Model
         return $this->hasMany(DetailBook::class, 'id_book');
     }
 
+    public function detailBook()
+    {
+        return $this->hasOne(DetailBook::class, 'id_book');
+    }
+
     public function detailBookProducts()
     {
         return $this->hasMany(DetailBookProduct::class, 'id_book_product');

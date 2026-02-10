@@ -7,48 +7,48 @@
         <!-- Officer Status Controls -->
         <div class="space-y-2 mt-4 pt-4 border-t">
             <!-- Validate Order -->
-            @if($booking->order_status == OrderStatus::DRAFT)
-            <button onclick="validateOrder({{ $booking->id }}, 'product')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Draft')
+            <button onclick="validateOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Validasi Order
             </button>
             @endif
 
             <!-- Confirm Order -->
-            @if($booking->order_status == OrderStatus::AWAITING_VALIDATION)
-            <button onclick="confirmOrder({{ $booking->id }}, 'product')" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Awaiting Validation')
+            <button onclick="confirmOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Konfirmasi Order
             </button>
             @endif
 
             <!-- Prepare for Pickup -->
-            @if($booking->order_status == OrderStatus::CONFIRMED)
-            <button onclick="preparePickup({{ $booking->id }}, 'product')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Confirmed')
+            <button onclick="preparePickup({{ $booking->id }}, '{{ $type }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 📦 Siapkan Pengambilan
             </button>
             @endif
 
             <!-- Schedule Return -->
-            @if($booking->order_status == OrderStatus::DELIVERED)
-            <button onclick="scheduleReturn({{ $booking->id }}, 'product')" class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Delivered')
+            <button onclick="scheduleReturn({{ $booking->id }}, '{{ $type }}')" class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 📅 Jadwalkan Penjemputan
             </button>
             @endif
 
             <!-- Complete Order -->
-            @if($booking->order_status == OrderStatus::PENDING_REVIEW)
+            @if($booking->order_status->value == 'Pending Review')
             <div class="space-y-2">
-                <button onclick="completeOrder({{ $booking->id }}, 'product')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+                <button onclick="completeOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                     ✓ Selesaikan Order
                 </button>
-                <button onclick="detectIssue({{ $booking->id }}, 'product')" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+                <button onclick="detectIssue({{ $booking->id }}, '{{ $type }}')" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                     ⚠️ Deteksi Masalah
                 </button>
             </div>
             @endif
 
             <!-- Cancel Order -->
-            @if($booking->order_status->isActive() && !in_array($booking->order_status, [OrderStatus::OUT_FOR_DELIVERY, OrderStatus::ON_PROCESS_RETURN]))
-            <button onclick="cancelOrder({{ $booking->id }}, 'product')" class="w-full bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if(!in_array($booking->order_status->value, ['Completed', 'Cancelled', 'Out for Delivery', 'On Process Return']))
+            <button onclick="cancelOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✕ Batalkan
             </button>
             @endif
@@ -57,31 +57,31 @@
     @elseif(auth()->user()->hasRole('courier'))
         <!-- Courier Status Controls (Hanya untuk delivery/return) -->
         <div class="space-y-2 mt-4 pt-4 border-t">
-            @if($booking->order_status == OrderStatus::READY_FOR_PICKUP && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierPickupDelivery({{ $booking->id }}, 'product')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Ready for Pickup' && $booking->id_courier == auth()->user()->courier?->id)
+            <button onclick="courierPickupDelivery({{ $booking->id }}, '{{ $type }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 🚚 Ambil Barang untuk Dikirim
             </button>
             @endif
 
-            @if($booking->order_status == OrderStatus::OUT_FOR_DELIVERY && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierCompleteDelivery({{ $booking->id }}, 'product')" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Out for Delivery' && $booking->id_courier == auth()->user()->courier?->id)
+            <button onclick="courierCompleteDelivery({{ $booking->id }}, '{{ $type }}')" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Konfirmasi Pengiriman
             </button>
             @endif
 
-            @if($booking->order_status == OrderStatus::PICKUP_SCHEDULED && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierPickupReturn({{ $booking->id }}, 'product')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'Pickup Scheduled' && $booking->id_courier == auth()->user()->courier?->id)
+            <button onclick="courierPickupReturn({{ $booking->id }}, '{{ $type }}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 📦 Ambil Barang untuk Dikembalikan
             </button>
             @endif
 
-            @if($booking->order_status == OrderStatus::ON_PROCESS_RETURN && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierCompleteReturn({{ $booking->id }}, 'product')" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            @if($booking->order_status->value == 'On Process Return' && $booking->id_courier == auth()->user()->courier?->id)
+            <button onclick="courierCompleteReturn({{ $booking->id }}, '{{ $type }}')" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Konfirmasi Pengembalian
             </button>
             @endif
 
-            @if(!in_array($booking->order_status, [OrderStatus::READY_FOR_PICKUP, OrderStatus::OUT_FOR_DELIVERY, OrderStatus::PICKUP_SCHEDULED, OrderStatus::ON_PROCESS_RETURN]))
+            @if(!in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Pickup Scheduled', 'On Process Return']))
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p class="text-xs text-blue-800">Menunggu status untuk aksi kurir...</p>
             </div>

@@ -43,6 +43,7 @@ class BookingPackageController extends Controller
         $booking->id_user = Auth::id();
         $booking->id_package = $package->id;
         $booking->book_code = 'BK-' . strtoupper(uniqid());
+        $booking->status = 'pending'; // or whatever initial string your DB expects
         $booking->order_status = OrderStatus::AWAITING_VALIDATION; // Menunggu validasi officer
         $booking->checkin_appointment_start = $validated['rental_start_at'];
         $booking->checkout_appointment_end = $validated['rental_end_at'];
