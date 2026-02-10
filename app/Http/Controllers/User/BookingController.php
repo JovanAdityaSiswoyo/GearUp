@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BookProduct;
 use App\Models\DetailBookProduct;
 use App\Models\Product;
+use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -40,7 +41,7 @@ class BookingController extends Controller
                     'book_code' => 'BK-' . strtoupper(Str::random(8)),
                     'id_user' => auth()->id(),
                     'id_product' => $productId,
-                    'status' => 'pending',
+                    'order_status' => OrderStatus::AWAITING_VALIDATION, // Menunggu validasi officer
                     'checkin_appointment_start' => $validated['rental_start_at'],
                     'checkout_appointment_end' => $validated['rental_end_at'],
                     'amount' => $validated['amount'],
@@ -134,7 +135,7 @@ class BookingController extends Controller
                 'book_code' => 'BK-' . strtoupper(Str::random(8)),
                 'id_user' => auth()->id(),
                 'id_product' => $productId,
-                'status' => 'pending',
+                'order_status' => OrderStatus::AWAITING_VALIDATION, // Menunggu validasi officer
                 'checkin_appointment_start' => $validated['rental_start_at'],
                 'checkout_appointment_end' => $validated['rental_end_at'],
                 'amount' => $amount,

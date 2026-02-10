@@ -11,7 +11,7 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BookProduct::with(['user', 'product'])->latest();
+        $query = BookProduct::with(['user', 'product.category'])->latest();
         
         // Filter by status
         if ($request->filled('status')) {
@@ -88,10 +88,41 @@ class BookingController extends Controller
         return redirect()->route('admin.bookings.index');
     }
 
+    public function show(BookProduct $booking)
+    {
+        $booking->load('user', 'product.category', 'product.brand');
+        return view('admin.bookings.show', compact('booking'));
+    }
+
     public function destroy(BookProduct $booking)
     {
         $booking->delete();
         alert()->success('Deleted', 'Booking deleted successfully!');
         return redirect()->route('admin.bookings.index');
+    }
+
+    /**
+     * Update booking data via AJAX (from detail modal)
+     */
+    public function updateData(Request $request, BookProduct $booking)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:pending,confirmed,active,completed,cancelled',
+            ]);
+
+            $booking->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking status updated successfully',
+                'data' => ['status' => ucfirst($booking->status)]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

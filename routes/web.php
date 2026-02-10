@@ -51,7 +51,8 @@ Route::prefix('admin')->middleware(['auth:web,admin'])->name('admin.')->group(fu
     Route::resource('packages', App\Http\Controllers\PackageController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     
     // Bookings/Peminjaman Management
-    Route::resource('bookings', App\Http\Controllers\BookingController::class)->except(['show']);
+    Route::resource('bookings', App\Http\Controllers\BookingController::class);
+    Route::post('/bookings/{booking}/update-data', [App\Http\Controllers\BookingController::class, 'updateData'])->name('booking-update.store');
     
     // Returns/Pengembalian Management
     Route::get('/returns', [App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
@@ -108,28 +109,49 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
 
     // Payments Management
     Route::get('/payments', [App\Http\Controllers\OfficerPaymentController::class, 'index'])->name('payments.index');
+
+    // Booking Management (New)
+    Route::get('/bookings', [App\Http\Controllers\OfficerBookingController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings/{bookingId}', [App\Http\Controllers\OfficerBookingController::class, 'show'])->name('bookings.show')->where('bookingId', '[0-9]+');
+    Route::post('/bookings/{bookingId}', [App\Http\Controllers\OfficerBookingController::class, 'updateBookingData'])->name('booking-detail.update')->where('bookingId', '[0-9]+');
+
+    // Packing Management (Atomic Assignment)
+    Route::get('/packing', [App\Http\Controllers\OfficerPackingController::class, 'index'])->name('packing.index');
+    Route::get('/packing/{booking}', [App\Http\Controllers\OfficerPackingController::class, 'show'])->name('packing.show');
+    Route::post('/packing/{booking}/assign-units', [App\Http\Controllers\OfficerPackingController::class, 'assignUnits'])->name('packing.assign');
+    Route::post('/packing/scan-unit', [App\Http\Controllers\OfficerPackingController::class, 'scanUnit'])->name('packing.scan');
+    Route::post('/packing/{booking}/finalize', [App\Http\Controllers\OfficerPackingController::class, 'finalizePacking'])->name('packing.finalize');
 });
 
 // Courier Routes
 Route::prefix('courier')->middleware(['auth:web,courier'])->name('courier.')->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', function() {
         return view('courier.dashboard');
     })->name('dashboard');
     
-    // Deliveries Management
-    Route::get('/deliveries', function () { return 'Deliveries Index'; })->name('deliveries.index');
-    Route::get('/deliveries/create', function () { return 'Create Delivery'; })->name('deliveries.create');
-    
-    // Pickups Management
-    Route::get('/pickups', function () { return 'Pickups Index'; })->name('pickups.index');
-    Route::get('/pickups/create', function () { return 'Create Pickup'; })->name('pickups.create');
+    // Deliveries Management (New)
+    Route::get('/deliveries', [App\Http\Controllers\CourierDeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('/deliveries/history', [App\Http\Controllers\CourierDeliveryController::class, 'history'])->name('deliveries.history');
+    Route::get('/deliveries/{type}/{id}', [App\Http\Controllers\CourierDeliveryController::class, 'show'])->name('deliveries.show');
     
     // Returns Management
-    Route::get('/returns', function () { return 'Returns Index'; })->name('returns.index');
+    Route::get('/returns', [App\Http\Controllers\CourierDeliveryController::class, 'returns'])->name('returns.index');
     
-    // Tracking Management
-    Route::get('/tracking', function () { return 'Tracking Index'; })->name('tracking.index');
+    // Route Batching / Map View
+    Route::get('/route-map', [App\Http\Controllers\CourierDeliveryController::class, 'routeMap'])->name('route.map');
+    Route::get('/route-map/data', [App\Http\Controllers\CourierDeliveryController::class, 'routeMapData'])->name('route.map.data');
 });
+
+// Courier Actions (POST routes outside auth middleware to allow AJAX)
+Route::post('/book-products/{id}/courier/pickup-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'pickupDelivery'])->middleware(['auth:web,courier']);
+Route::post('/book-products/{id}/courier/complete-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'completeDelivery'])->middleware(['auth:web,courier']);
+Route::post('/book-products/{id}/courier/pickup-return', [App\Http\Controllers\CourierDeliveryController::class, 'pickupReturn'])->middleware(['auth:web,courier']);
+Route::post('/book-products/{id}/courier/complete-return', [App\Http\Controllers\CourierDeliveryController::class, 'completeReturn'])->middleware(['auth:web,courier']);
+
+Route::post('/book-packages/{id}/courier/pickup-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'pickupDeliveryPackage'])->middleware(['auth:web,courier']);
+Route::post('/book-packages/{id}/courier/complete-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'completeDeliveryPackage'])->middleware(['auth:web,courier']);
+Route::post('/book-packages/{id}/courier/pickup-return', [App\Http\Controllers\CourierDeliveryController::class, 'pickupReturnPackage'])->middleware(['auth:web,courier']);
+Route::post('/book-packages/{id}/courier/complete-return', [App\Http\Controllers\CourierDeliveryController::class, 'completeReturnPackage'])->middleware(['auth:web,courier']);
 
 // Logout Route (Available for all guards)
 Route::post('/logout', function () {
@@ -173,4 +195,7 @@ Route::middleware('auth')->group(function () {
     // User Booking Package Routes
     Route::get('/booking/package/{package}', [App\Http\Controllers\User\BookingPackageController::class, 'create'])->name('user.booking.package.create');
     Route::post('/booking/package/{package}', [App\Http\Controllers\User\BookingPackageController::class, 'store'])->name('user.booking.package.store');
+
+    // Booking Status Routes (Status management untuk courier, officer, admin)
+    require __DIR__ . '/booking-status.php';
 });

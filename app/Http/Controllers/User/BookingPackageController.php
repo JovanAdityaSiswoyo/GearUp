@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Package;
 use App\Models\Book;
 use App\Models\DetailBook;
+use App\Enums\OrderStatus;
 use Illuminate\Support\Facades\Auth;
 
 class BookingPackageController extends Controller
@@ -42,7 +43,7 @@ class BookingPackageController extends Controller
         $booking->id_user = Auth::id();
         $booking->id_package = $package->id;
         $booking->book_code = 'BK-' . strtoupper(uniqid());
-        $booking->status = 'pending';
+        $booking->order_status = OrderStatus::AWAITING_VALIDATION; // Menunggu validasi officer
         $booking->checkin_appointment_start = $validated['rental_start_at'];
         $booking->checkout_appointment_end = $validated['rental_end_at'];
         $booking->amount = 1;

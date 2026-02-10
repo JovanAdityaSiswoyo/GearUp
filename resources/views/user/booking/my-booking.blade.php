@@ -102,21 +102,8 @@
                                                 </div>
                                                 <!-- Status & Actions -->
                                                 <div>
-                                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Status</h4>
-                                                    <div class="flex flex-col items-start space-y-3">
-                                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                            {{ ucfirst($booking->status) }}
-                                                        </span>
-                                                        @if($booking->status === 'pending')
-                                                            <p class="text-xs text-gray-600">Menunggu konfirmasi...</p>
-                                                        @elseif($booking->status === 'confirmed')
-                                                            <p class="text-xs text-gray-600">Siap untuk diambil</p>
-                                                        @elseif($booking->status === 'active')
-                                                            <p class="text-xs text-green-600 font-medium">Sedang disewa</p>
-                                                        @elseif($booking->status === 'completed')
-                                                            <p class="text-xs text-gray-600">Penyewaan selesai</p>
-                                                        @endif
-                                                    </div>
+                                                    <x-booking-status-card :booking="$booking" />
+                                                    <x-booking-status-actions :booking="$booking" type="package" />
                                                 </div>
                                             </div>
                                             <!-- Contact Info -->
@@ -200,27 +187,8 @@
                                                 </div>
                                                 <!-- Status & Actions -->
                                                 <div>
-                                                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Status</h4>
-                                                    <div class="flex flex-col items-start space-y-3">
-                                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                            @if($booking->status === 'pending') bg-yellow-100 text-yellow-800
-                                                            @elseif($booking->status === 'confirmed') bg-blue-100 text-blue-800
-                                                            @elseif($booking->status === 'active') bg-green-100 text-green-800
-                                                            @elseif($booking->status === 'completed') bg-gray-100 text-gray-800
-                                                            @else bg-red-100 text-red-800
-                                                            @endif">
-                                                            {{ ucfirst($booking->status) }}
-                                                        </span>
-                                                        @if($booking->status === 'pending')
-                                                            <p class="text-xs text-gray-600">Menunggu konfirmasi...</p>
-                                                        @elseif($booking->status === 'confirmed')
-                                                            <p class="text-xs text-gray-600">Siap untuk diambil</p>
-                                                        @elseif($booking->status === 'active')
-                                                            <p class="text-xs text-green-600 font-medium">Sedang disewa</p>
-                                                        @elseif($booking->status === 'completed')
-                                                            <p class="text-xs text-gray-600">Penyewaan selesai</p>
-                                                        @endif
-                                                    </div>
+                                                    <x-booking-status-card :booking="$booking" />
+                                                    <x-booking-status-actions :booking="$booking" type="product" />
                                                 </div>
                                             </div>
                                             <!-- Contact Info -->

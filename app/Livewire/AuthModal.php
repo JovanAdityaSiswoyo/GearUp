@@ -7,6 +7,9 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Admin;
+use App\Models\Officer;
+use App\Models\Courier;
 
 class AuthModal extends Component
 {
@@ -121,7 +124,7 @@ class AuthModal extends Component
         }
 
         // Try to login as Courier
-        $courier = User::where('email', $this->loginEmail)->first();
+        $courier = Courier::where('email', $this->loginEmail)->first();
         if ($courier && Auth::guard('courier')->attempt(
             ['email' => $this->loginEmail, 'password' => $this->loginPassword],
             $this->loginRemember

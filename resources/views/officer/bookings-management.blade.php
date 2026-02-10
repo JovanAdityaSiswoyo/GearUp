@@ -1,0 +1,218 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="min-h-screen bg-gray-50 py-8 px-4 lg:px-16">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center space-x-3 mb-2">
+                <x-heroicon-o-clipboard-check class="h-8 w-8 text-blue-600" />
+                <h1 class="text-3xl font-bold text-gray-900">Manajemen Booking</h1>
+            </div>
+            <p class="text-gray-600">Kelola semua booking produk dan paket</p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
+            <div class="flex flex-wrap gap-2">
+                <a href="?filter=all" class="px-4 py-2 rounded-lg bg-blue-600 text-white">Semua</a>
+                <a href="?filter=draft" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">Draft</a>
+                <a href="?filter=awaiting_validation" class="px-4 py-2 rounded-lg bg-yellow-200 text-yellow-800 hover:bg-yellow-300">Menunggu Validasi</a>
+                <a href="?filter=confirmed" class="px-4 py-2 rounded-lg bg-blue-200 text-blue-800 hover:bg-blue-300">Terkonfirmasi</a>
+                <a href="?filter=delivery" class="px-4 py-2 rounded-lg bg-green-200 text-green-800 hover:bg-green-300">Pengiriman</a>
+                <a href="?filter=return" class="px-4 py-2 rounded-lg bg-orange-200 text-orange-800 hover:bg-orange-300">Pengembalian</a>
+                <a href="?filter=completed" class="px-4 py-2 rounded-lg bg-emerald-200 text-emerald-800 hover:bg-emerald-300">Selesai</a>
+            </div>
+        </div>
+
+        <!-- Product Bookings -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-green-700 mb-4">Booking Produk</h2>
+            <div class="space-y-4">
+                @forelse($bookProducts as $booking)
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition border-l-4 
+                    @if($booking->order_status->value == 'Draft') border-gray-400
+                    @elseif($booking->order_status->value == 'Awaiting Validation') border-yellow-400
+                    @elseif($booking->order_status->value == 'Confirmed') border-blue-400
+                    @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) border-green-400
+                    @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) border-orange-400
+                    @elseif($booking->order_status->value == 'Completed') border-emerald-400
+                    @elseif($booking->order_status->value == 'Issue Detected') border-red-400
+                    @else border-gray-400
+                    @endif">
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                            <!-- Basic Info -->
+                            <div class="lg:col-span-2">
+                                <div class="flex items-start space-x-4">
+                                    @if($booking->product && $booking->product->image)
+                                        <img src="{{ asset('storage/' . $booking->product->image) }}" alt="{{ $booking->product->name }}" class="w-16 h-16 rounded-lg object-cover">
+                                    @else
+                                        <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                                            <x-heroicon-o-photo class="h-6 w-6 text-gray-400" />
+                                        </div>
+                                    @endif
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-bold text-gray-900">{{ $booking->product->name ?? 'Produk Dihapus' }}</h3>
+                                        <p class="text-sm text-gray-600">Kode: <span class="font-mono font-semibold text-green-600">{{ $booking->book_code }}</span></p>
+                                        <p class="text-sm text-gray-600">Kategori: <strong>{{ $booking->product->category->name ?? '-' }}</strong></p>
+                                        <p class="text-sm text-gray-600">Penyewa: <strong>{{ $booking->booker_name }}</strong></p>
+                                        <p class="text-sm text-gray-600">{{ $booking->booker_telp }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dates -->
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Periode Sewa</h4>
+                                <div class="space-y-1 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">Mulai:</span>
+                                        <p class="font-semibold">{{ $booking->checkin_appointment_start->format('d M Y') }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Berakhir:</span>
+                                        <p class="font-semibold">{{ $booking->checkout_appointment_end->format('d M Y') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Status</h4>
+                                <div class="space-y-2">
+                                    <span class="px-2 py-1 inline-block text-xs font-semibold rounded 
+                                        @if($booking->order_status->value == 'Draft') bg-gray-100 text-gray-800
+                                        @elseif($booking->order_status->value == 'Awaiting Validation') bg-yellow-100 text-yellow-800
+                                        @elseif($booking->order_status->value == 'Confirmed') bg-blue-100 text-blue-800
+                                        @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) bg-green-100 text-green-800
+                                        @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) bg-orange-100 text-orange-800
+                                        @elseif($booking->order_status->value == 'Completed') bg-emerald-100 text-emerald-800
+                                        @elseif($booking->order_status->value == 'Issue Detected') bg-red-100 text-red-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif">
+                                        {{ $booking->order_status->label() }}
+                                    </span>
+                                    <p class="text-xs text-gray-600 mt-2">{{ $booking->item_status->label() }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Aksi</h4>
+                                <div class="space-y-2">
+                                    <a href="{{ route('officer.bookings.show', $booking->id) }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-2 px-3 rounded transition block text-center">
+                                        👁️ Lihat Detail
+                                    </a>
+                                    <x-booking-status-actions :booking="$booking" type="product" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="bg-white rounded-lg shadow p-8 text-center">
+                    <x-heroicon-o-inbox class="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p class="text-gray-600">Tidak ada booking produk</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- Package Bookings -->
+        <div>
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">Booking Paket</h2>
+            <div class="space-y-4">
+                @forelse($books as $booking)
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition border-l-4 
+                    @if($booking->order_status->value == 'Draft') border-gray-400
+                    @elseif($booking->order_status->value == 'Awaiting Validation') border-yellow-400
+                    @elseif($booking->order_status->value == 'Confirmed') border-blue-400
+                    @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) border-green-400
+                    @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) border-orange-400
+                    @elseif($booking->order_status->value == 'Completed') border-emerald-400
+                    @elseif($booking->order_status->value == 'Issue Detected') border-red-400
+                    @else border-gray-400
+                    @endif">
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                            <!-- Basic Info -->
+                            <div class="lg:col-span-2">
+                                <div class="flex items-start space-x-4">
+                                    @if($booking->package && $booking->package->image)
+                                        <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-16 h-16 rounded-lg object-cover">
+                                    @else
+                                        <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                                            <x-heroicon-o-photo class="h-6 w-6 text-gray-400" />
+                                        </div>
+                                    @endif
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-bold text-gray-900">{{ $booking->package->name_package ?? 'Paket Dihapus' }}</h3>
+                                        <p class="text-sm text-gray-600">Kode: <span class="font-mono font-semibold text-blue-600">{{ $booking->book_code }}</span></p>
+                                        <p class="text-sm text-gray-600">Penyewa: <strong>{{ $booking->booker_name }}</strong></p>
+                                        <p class="text-sm text-gray-600">{{ $booking->booker_telp }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dates -->
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Periode Sewa</h4>
+                                <div class="space-y-1 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">Mulai:</span>
+                                        <p class="font-semibold">{{ $booking->checkin_appointment_start->format('d M Y') }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Berakhir:</span>
+                                        <p class="font-semibold">{{ $booking->checkout_appointment_end->format('d M Y') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Status</h4>
+                                <div class="space-y-2">
+                                    <span class="px-2 py-1 inline-block text-xs font-semibold rounded 
+                                        @if($booking->order_status->value == 'Draft') bg-gray-100 text-gray-800
+                                        @elseif($booking->order_status->value == 'Awaiting Validation') bg-yellow-100 text-yellow-800
+                                        @elseif($booking->order_status->value == 'Confirmed') bg-blue-100 text-blue-800
+                                        @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) bg-green-100 text-green-800
+                                        @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) bg-orange-100 text-orange-800
+                                        @elseif($booking->order_status->value == 'Completed') bg-emerald-100 text-emerald-800
+                                        @elseif($booking->order_status->value == 'Issue Detected') bg-red-100 text-red-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif">
+                                        {{ $booking->order_status->label() }}
+                                    </span>
+                                    <p class="text-xs text-gray-600 mt-2">{{ $booking->item_status->label() }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Aksi</h4>
+                                <div class="space-y-2">
+                                    <a href="{{ route('officer.bookings.show', $booking->id) }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-2 px-3 rounded transition block text-center">
+                                        👁️ Lihat Detail
+                                    </a>
+                                    <x-booking-status-actions :booking="$booking" type="package" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="bg-white rounded-lg shadow p-8 text-center">
+                    <x-heroicon-o-inbox class="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p class="text-gray-600">Tidak ada booking paket</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endsection

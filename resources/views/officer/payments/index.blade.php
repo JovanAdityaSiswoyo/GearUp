@@ -33,6 +33,10 @@
                     <x-heroicon-o-cube class="h-5 w-5 mr-3" />
                     <span>Product Loans</span>
                 </a>
+                <a href="{{ route('officer.packing.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
+                    <x-heroicon-o-square-3-stack-3d class="h-5 w-5 mr-3" />
+                    <span>Packing</span>
+                </a>
                 <a href="{{ route('officer.payments.index') }}" class="flex items-center px-6 py-3 bg-white/20 border-r-4 border-white">
                     <x-heroicon-o-credit-card class="h-5 w-5 mr-3" />
                     <span>Payments</span>

@@ -12,20 +12,34 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable()->after('phone');
+            if (!Schema::hasColumn('users', 'profile_photo')) {
+                $table->string('profile_photo')->nullable()->after('phone');
+            }
         });
 
-        Schema::table('admins', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable()->after('password');
-        });
+        if (Schema::hasTable('admins')) {
+            Schema::table('admins', function (Blueprint $table) {
+                if (!Schema::hasColumn('admins', 'profile_photo')) {
+                    $table->string('profile_photo')->nullable()->after('password');
+                }
+            });
+        }
 
-        Schema::table('officers', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable()->after('password');
-        });
+        if (Schema::hasTable('officers')) {
+            Schema::table('officers', function (Blueprint $table) {
+                if (!Schema::hasColumn('officers', 'profile_photo')) {
+                    $table->string('profile_photo')->nullable()->after('password');
+                }
+            });
+        }
 
-        Schema::table('couriers', function (Blueprint $table) {
-            $table->string('profile_photo')->nullable()->after('address');
-        });
+        if (Schema::hasTable('couriers')) {
+            Schema::table('couriers', function (Blueprint $table) {
+                if (!Schema::hasColumn('couriers', 'profile_photo')) {
+                    $table->string('profile_photo')->nullable()->after('address');
+                }
+            });
+        }
     }
 
     /**

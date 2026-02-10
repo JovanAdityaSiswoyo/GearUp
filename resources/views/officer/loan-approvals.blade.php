@@ -27,6 +27,10 @@
                     <x-heroicon-o-clipboard-document-list class="h-5 w-5 mr-3" />
                     <span>Loan Approvals</span>
                 </a>
+                <a href="{{ route('officer.packing.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
+                    <x-heroicon-o-square-3-stack-3d class="h-5 w-5 mr-3" />
+                    <span>Packing</span>
+                </a>
                 <a href="{{ route('officer.returns.monitor') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition">
                     <x-heroicon-o-arrow-path class="h-5 w-5 mr-3" />
                     <span>Monitor Returns</span>

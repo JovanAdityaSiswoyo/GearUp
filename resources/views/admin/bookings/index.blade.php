@@ -104,7 +104,8 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="text-purple-600 hover:text-purple-900">Edit</a>
+                                    <a href="{{ route('admin.bookings.show', $booking->id) }}" class="text-blue-600 hover:text-blue-900 font-medium">View</a>
+                                    <button onclick="openEditModal('{{ $booking->id }}', '{{ $booking->status }}')" class="text-purple-600 hover:text-purple-900 font-medium">Quick Edit</button>
                                     <form action="{{ route('admin.bookings.destroy', $booking->id) }}" method="POST" class="inline" id="delete-form-{{ $booking->id }}">
                                         @csrf
                                         @method('DELETE')
@@ -127,7 +128,102 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Status</h3>
+            <form id="editForm">
+                <div class="space-y-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select id="editStatus" name="status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="closeEditModal()" 
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 rounded transition">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="submitEdit()" 
+                        class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 rounded transition">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        let currentEditingBookingId = null;
+
+        function openEditModal(bookingId, currentStatus) {
+            currentEditingBookingId = bookingId;
+            document.getElementById('editStatus').value = currentStatus;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editForm').reset();
+            currentEditingBookingId = null;
+        }
+
+        function submitEdit() {
+            const statusValue = document.getElementById('editStatus').value;
+            console.log('Status value:', statusValue);
+            
+            if (!statusValue) {
+                Swal.fire('Error!', 'Status is required', 'error');
+                return;
+            }
+
+            if (!currentEditingBookingId) {
+                Swal.fire('Error!', 'Booking ID not found', 'error');
+                return;
+            }
+
+            const data = {
+                status: statusValue
+            };
+            
+            const url = `/admin/bookings/${currentEditingBookingId}/update-data`;
+            console.log('Sending data:', data);
+            console.log('URL:', url);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    Swal.fire('Success!', data.message, 'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
+            });
+        }
+
         function confirmDelete(id) {
             Swal.fire({
                 title: 'Are you sure?',

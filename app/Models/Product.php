@@ -53,4 +53,17 @@ class Product extends Model
     {
         return $this->belongsToMany(Package::class, 'package_products', 'id_product', 'id_package');
     }
+
+    public function units()
+    {
+        return $this->hasMany(Unit::class, 'id_product');
+    }
+
+    /**
+     * Get available units count
+     */
+    public function availableUnitsCount()
+    {
+        return $this->units()->where('status', 'available')->count();
+    }
 }

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Payment;
+use App\Enums\ItemStatus;
+use App\Enums\OrderStatus;
 
 class BookProduct extends Model
 {
@@ -25,8 +27,13 @@ class BookProduct extends Model
         'book_code',
         'code',
         'status',
+        'item_status',
+        'order_status',
+        'id_courier',
         'checkin_appointment_start',
         'checkout_appointment_end',
+        'delivery_at',
+        'returned_at',
         'rental_date',
         'amount',
         'total_price',
@@ -38,6 +45,10 @@ class BookProduct extends Model
     protected $casts = [
         'checkin_appointment_start' => 'datetime',
         'checkout_appointment_end' => 'datetime',
+        'delivery_at' => 'datetime',
+        'returned_at' => 'datetime',
+        'item_status' => ItemStatus::class,
+        'order_status' => OrderStatus::class,
     ];
 
     public function user()
@@ -48,6 +59,11 @@ class BookProduct extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'id_product');
+    }
+
+    public function courier()
+    {
+        return $this->belongsTo(Courier::class, 'id_courier');
     }
 
     public function detailBookProducts()
