@@ -25,6 +25,10 @@
             <x-heroicon-o-cube class="h-5 w-5 mr-3" />
             <span>Products</span>
         </a>
+        <a href="{{ route('admin.units.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.units.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
+            <x-heroicon-o-squares-2x2 class="h-5 w-5 mr-3" />
+            <span>Units</span>
+        </a>
         <a href="{{ route('admin.packages.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.packages.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
             <x-heroicon-o-cube-transparent class="h-5 w-5 mr-3" />
             <span>Packages</span>

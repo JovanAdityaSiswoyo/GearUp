@@ -89,6 +89,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                         <button type="button" onclick='showDetail(@json($product->name), @json($product->category->categories ?? $product->category->name ?? "N/A"), @json($product->description), @json($product->price_per_day), @json($product->stock))' class="text-blue-600 hover:text-blue-900">View</button>
                                         <a href="{{ route('admin.products.edit', $product->id) }}" class="text-purple-600 hover:text-purple-900">Edit</a>
+                                        <a href="{{ route('admin.units.index') }}?product_id={{ $product->id }}" class="text-green-600 hover:text-green-900" title="View Units ({{ $product->units()->count() }})">Units ({{ $product->units()->count() }})</a>
                                         <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="inline" id="delete-form-{{ $product->id }}">
                                             @csrf
                                             @method('DELETE')

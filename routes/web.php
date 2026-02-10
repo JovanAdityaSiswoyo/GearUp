@@ -41,6 +41,10 @@ Route::prefix('admin')->middleware(['auth:web,admin'])->name('admin.')->group(fu
     Route::resource('products', App\Http\Controllers\ProductController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::patch('products/{product}/stock', [App\Http\Controllers\ProductController::class, 'addStock'])->name('products.stock');
     
+    // Units Management
+    Route::resource('units', App\Http\Controllers\UnitController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('products/{product}/units/bulk', [App\Http\Controllers\UnitController::class, 'bulkCreate'])->name('products.units.bulk');
+    
     // Categories Management
     Route::resource('categories', App\Http\Controllers\CategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     
