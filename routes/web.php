@@ -145,6 +145,10 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::post('/packing/{booking}/assign-units', [App\Http\Controllers\OfficerPackingController::class, 'assignUnits'])->name('packing.assign');
     Route::post('/packing/scan-unit', [App\Http\Controllers\OfficerPackingController::class, 'scanUnit'])->name('packing.scan');
     Route::post('/packing/{booking}/finalize', [App\Http\Controllers\OfficerPackingController::class, 'finalizePacking'])->name('packing.finalize');
+    
+    // Assign Courier
+    Route::get('/assign-courier', [App\Http\Controllers\OfficerAssignCourierController::class, 'index'])->name('assign-courier.index');
+    Route::post('/assign-courier', [App\Http\Controllers\OfficerAssignCourierController::class, 'store'])->name('assign-courier.store');
 });
 
 // Officer Booking Status Actions (POST routes)
