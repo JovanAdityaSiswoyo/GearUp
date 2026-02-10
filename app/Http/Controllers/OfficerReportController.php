@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\BookProduct;
 use App\Models\Book;
+use App\Enums\OrderStatus;
 
 class OfficerReportController extends Controller
 {
@@ -13,14 +14,31 @@ class OfficerReportController extends Controller
         $to = $request->input('to');
         $type = $request->input('type', 'all');
 
-        $query = BookProduct::query()->with(['user', 'product']);
+        $query = BookProduct::query()->with(['user', 'product', 'courier']);
+        
+        // Filter by date range
         if ($from) $query->whereDate('created_at', '>=', $from);
         if ($to) $query->whereDate('created_at', '<=', $to);
-        if ($type == 'loan') $query->where('status', 'approved');
-        if ($type == 'return') $query->where('status', 'returned');
+        
+        // Filter by type
+        if ($type == 'loan') {
+            // Loan: barang yang sudah dikirim ke user
+            $query->whereIn('order_status', [
+                OrderStatus::DELIVERED->value,
+                OrderStatus::OUT_FOR_DELIVERY->value,
+                OrderStatus::READY_FOR_PICKUP->value,
+            ]);
+        } elseif ($type == 'return') {
+            // Return: barang yang sudah atau sedang dikembalikan
+            $query->whereIn('order_status', [
+                OrderStatus::PICKUP_SCHEDULED->value,
+                OrderStatus::ON_PROCESS_RETURN->value,
+                OrderStatus::PENDING_REVIEW->value,
+                OrderStatus::COMPLETED->value,
+            ]);
+        }
 
-        $reports = $query->paginate(5);
-        // $reports is now a paginator of BookProduct, so use $report->created_at, $report->user, $report->equipment, $report->status, etc in the view
+        $reports = $query->orderBy('created_at', 'desc')->paginate(20);
         return view('officer.print-report', compact('reports'));
     }
 }
