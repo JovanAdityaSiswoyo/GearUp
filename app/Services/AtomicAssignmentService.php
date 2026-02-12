@@ -221,6 +221,20 @@ class AtomicAssignmentService
                 'packed_by' => $officerId,
             ]);
 
+            // Log unit scan action
+            if ($bpp->unit) {
+                $qrCodeService = app(\App\Services\QrCodeService::class);
+                $officer = \App\Models\Officer::find($officerId);
+                if ($officer) {
+                    $qrCodeService->logScan(
+                        $bpp->unit,
+                        'packed',
+                        $officer,
+                        'Unit di-scan untuk packing'
+                    );
+                }
+            }
+
             Log::info("Item packed", [
                 'book_package_product_id' => $bookPackageProductId,
                 'officer_id' => $officerId,

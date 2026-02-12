@@ -55,6 +55,22 @@ class Unit extends Model
     }
 
     /**
+     * Get all scan logs for this unit
+     */
+    public function logs()
+    {
+        return $this->hasMany(UnitLog::class, 'unit_id');
+    }
+
+    /**
+     * Get the actor who last scanned this unit (polymorphic)
+     */
+    public function lastScannedBy()
+    {
+        return $this->morphTo(__FUNCTION__, 'last_scanned_by_type', 'last_scanned_by_id');
+    }
+
+    /**
      * Lock unit untuk booking
      */
     public function lock()

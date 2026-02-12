@@ -5,10 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Unit;
 use App\Models\Product;
 use App\Models\ActivityLog;
+use App\Services\QrCodeService;
 use Illuminate\Http\Request;
 
 class UnitController extends Controller
 {
+    protected QrCodeService $qrCodeService;
+
+    public function __construct(QrCodeService $qrCodeService)
+    {
+        $this->qrCodeService = $qrCodeService;
+    }
+
     public function index(Request $request)
     {
         $query = Unit::with('product');
@@ -72,7 +80,21 @@ class UnitController extends Controller
         ]);
 
         alert()->success('Success', 'Unit created successfully!');
-        return redirect()->route('admin.units.index');
+        
+        // Redirect ke detail unit dengan QR code
+        return redirect()->route('admin.units.show', ['unit' => $unit->id]);
+    }
+
+    /**
+     * Show detail unit dengan QR code
+     */
+    public function show(Unit $unit)
+    {
+        $unit->load('product', 'logs.actor');
+        $qrCode = $this->qrCodeService->generateQrCode($unit);
+        $unitData = $this->qrCodeService->getUnitDetailData($unit);
+
+        return view('admin.units.show', compact('unit', 'qrCode', 'unitData'));
     }
 
     public function edit(Unit $unit)
@@ -197,4 +219,34 @@ class UnitController extends Controller
         alert()->success('Success', "{$created} units created successfully!");
         return back();
     }
+
+    /**
+     * Bulk print QR code labels
+     */
+    public function bulkPrint(Request $request)
+    {
+        $unitIds = $request->query('unit_ids', []);
+
+        if (empty($unitIds)) {
+            return abort(400, 'No units selected');
+        }
+
+        $units = Unit::with('product')
+            ->whereIn('id', $unitIds)
+            ->get();
+
+        if ($units->isEmpty()) {
+            return abort(404, 'No units found');
+        }
+
+        // Generate QR codes for each unit
+        $qrCodes = [];
+        foreach ($units as $unit) {
+            $url = route('scan-unit.show', $unit->id);
+            $qrCodes[$unit->id] = $this->qrCodeService->generateQrCode($unit);
+        }
+
+        return view('admin.units.print-labels', compact('units', 'qrCodes'));
+    }
 }
+

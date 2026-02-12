@@ -42,7 +42,8 @@ Route::prefix('admin')->middleware(['auth:web,admin'])->name('admin.')->group(fu
     Route::patch('products/{product}/stock', [App\Http\Controllers\ProductController::class, 'addStock'])->name('products.stock');
     
     // Units Management
-    Route::resource('units', App\Http\Controllers\UnitController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('units/bulk-print', [App\Http\Controllers\UnitController::class, 'bulkPrint'])->name('units.bulk-print');
+    Route::resource('units', App\Http\Controllers\UnitController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::post('products/{product}/units/bulk', [App\Http\Controllers\UnitController::class, 'bulkCreate'])->name('products.units.bulk');
     
     // Categories Management
@@ -214,6 +215,14 @@ Route::post('/logout', function () {
     request()->session()->regenerateToken();
     return redirect()->route('home');
 })->name('logout');
+
+// Scan Unit Routes (Public - accessible to all authenticated users)
+Route::middleware(['auth:web,admin,officer,courier'])->group(function () {
+    Route::get('/scan-unit/{unit}', [App\Http\Controllers\ScanUnitController::class, 'show'])->name('scan-unit.show');
+    Route::get('/scan-unit/{unit}/history', [App\Http\Controllers\ScanUnitController::class, 'history'])->name('scan-unit.history');
+    Route::post('/scan-unit/{unit}/start-packing', [App\Http\Controllers\ScanUnitController::class, 'startPacking'])->name('scan-unit.start-packing')->middleware('auth:web,officer');
+    Route::post('/scan-unit/{unit}/pickup', [App\Http\Controllers\ScanUnitController::class, 'pickupUnit'])->name('scan-unit.pickup')->middleware('auth:web,courier');
+});
 
 // User Profile Routes (Protected)
 Route::middleware('auth')->group(function () {

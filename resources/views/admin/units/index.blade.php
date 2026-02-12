@@ -21,10 +21,21 @@
                         <h2 class="text-2xl font-bold text-gray-800">Manage Units</h2>
                         <p class="text-gray-600">Track individual product units and their status</p>
                     </div>
-                    <a href="{{ route('admin.units.create') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition">
-                        <x-heroicon-o-plus class="h-5 w-5" />
-                        <span>Add Unit</span>
-                    </a>
+                    <div class="flex gap-2">
+                        <button 
+                            id="print-selected-btn" 
+                            onclick="printSelected()" 
+                            disabled
+                            class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition"
+                        >
+                            <x-heroicon-o-printer class="h-5 w-5" />
+                            <span>Print Selected (<span id="selected-count">0</span>)</span>
+                        </button>
+                        <a href="{{ route('admin.units.create') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition">
+                            <x-heroicon-o-plus class="h-5 w-5" />
+                            <span>Add Unit</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Filters -->
@@ -74,6 +85,9 @@
                         <table class="w-full">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" id="select-all" onchange="toggleAllCheckboxes()" class="rounded">
+                                    </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -85,6 +99,9 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($units as $unit)
                                 <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" name="unit_ids" value="{{ $unit->id }}" class="unit-checkbox rounded" onchange="updateSelectedCount()">
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-mono font-semibold text-gray-900">{{ $unit->serial_number }}</div>
                                         <div class="text-xs text-gray-500">Created {{ $unit->created_at->diffForHumans() }}</div>
@@ -136,7 +153,12 @@
                                             {{ $unit->notes ?? '-' }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex items-center gap-2">
+                                        <!-- QR Icon/Button -->
+                                        <a href="{{ route('admin.units.show', $unit->id) }}" class="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1 px-2 py-1 hover:bg-blue-50 rounded" title="View & Download QR Code">
+                                            <x-heroicon-o-qr-code class="h-4 w-4" />
+                                            <span class="text-xs">QR</span>
+                                        </a>
                                         <a href="{{ route('admin.units.edit', $unit->id) }}" class="text-purple-600 hover:text-purple-900">Edit</a>
                                         <form action="{{ route('admin.units.destroy', $unit->id) }}" method="POST" class="inline" id="delete-form-{{ $unit->id }}">
                                             @csrf
@@ -183,6 +205,40 @@
                     document.getElementById('delete-form-' + id).submit();
                 }
             });
+        }
+
+        function toggleAllCheckboxes() {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.unit-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.unit-checkbox:checked');
+            const count = checkboxes.length;
+            document.getElementById('selected-count').textContent = count;
+            
+            // Enable/disable print button
+            const printBtn = document.getElementById('print-selected-btn');
+            printBtn.disabled = count === 0;
+        }
+
+        function printSelected() {
+            const checkboxes = document.querySelectorAll('.unit-checkbox:checked');
+            const unitIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (unitIds.length === 0) {
+                alert('Please select at least one unit');
+                return;
+            }
+
+            // Make request to generate print
+            const url = new URL('{{ route("admin.units.bulk-print") }}');
+            unitIds.forEach(id => url.searchParams.append('unit_ids[]', id));
+            window.open(url.toString(), '_blank');
         }
     </script>
 </body>
