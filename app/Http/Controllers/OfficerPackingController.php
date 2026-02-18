@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\ActivityLog;
+use App\Models\Unit;
+use App\Models\Officer;
 use App\Services\AtomicAssignmentService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -170,6 +173,23 @@ class OfficerPackingController extends Controller
         $success = $this->atomicService->markAsPacked($validated['book_package_product_id'], $officerId);
 
         if ($success) {
+            // Log to activity log
+            ActivityLog::create([
+                'log_name' => 'packing',
+                'description' => 'Unit scanned and marked as packed: ' . $bookPackageProduct->unit->serial_number,
+                'subject_type' => Unit::class,
+                'subject_id' => $bookPackageProduct->unit->id,
+                'causer_type' => Officer::class,
+                'causer_id' => $officerId,
+                'event' => 'scanned',
+                'properties' => json_encode([
+                    'book_id' => $bookPackageProduct->id_book,
+                    'book_package_product_id' => $bookPackageProduct->id,
+                    'product_name' => $bookPackageProduct->unit->product->name ?? 'N/A',
+                    'unit_serial' => $bookPackageProduct->unit->serial_number,
+                ]),
+            ]);
+
             $message = '✅ Unit berhasil discan dan ditandai sebagai packed!';
             
             if ($request->expectsJson()) {

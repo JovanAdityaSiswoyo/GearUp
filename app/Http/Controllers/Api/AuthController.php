@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +29,22 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        ActivityLog::create([
+            'log_name' => 'auth',
+            'description' => 'Register API berhasil: ' . ($user->email ?? 'unknown'),
+            'subject_type' => get_class($user),
+            'subject_id' => (string) $user->id,
+            'causer_type' => get_class($user),
+            'causer_id' => (string) $user->id,
+            'event' => 'register',
+            'properties' => [
+                'guard' => 'sanctum',
+                'email' => $user->email ?? null,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ],
+        ]);
 
         return response()->json([
             'user' => $user,
@@ -56,6 +73,22 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        ActivityLog::create([
+            'log_name' => 'auth',
+            'description' => 'Login API berhasil: ' . ($user->email ?? 'unknown'),
+            'subject_type' => get_class($user),
+            'subject_id' => (string) $user->id,
+            'causer_type' => get_class($user),
+            'causer_id' => (string) $user->id,
+            'event' => 'login',
+            'properties' => [
+                'guard' => 'sanctum',
+                'email' => $user->email ?? null,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ],
+        ]);
+
         return response()->json([
             'user' => $user,
             'access_token' => $token,
@@ -68,7 +101,30 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $actor = $request->user();
+
+        $token = $actor?->currentAccessToken();
+        if ($token) {
+            $token->delete();
+        }
+
+        if ($actor) {
+            ActivityLog::create([
+                'log_name' => 'auth',
+                'description' => 'Logout API berhasil: ' . ($actor->email ?? 'unknown'),
+                'subject_type' => get_class($actor),
+                'subject_id' => (string) $actor->id,
+                'causer_type' => get_class($actor),
+                'causer_id' => (string) $actor->id,
+                'event' => 'logout',
+                'properties' => [
+                    'guard' => 'sanctum',
+                    'email' => $actor->email ?? null,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ],
+            ]);
+        }
 
         return response()->json([
             'message' => 'Logged out successfully'

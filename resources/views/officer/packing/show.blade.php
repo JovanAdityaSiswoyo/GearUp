@@ -253,16 +253,38 @@
     function handleScanSubmit(event, itemId) {
         event.preventDefault();
         const form = event.target;
+        const serialInput = form.querySelector('input[name="unit_serial"]');
+        if (serialInput) {
+            serialInput.value = serialInput.value.trim();
+        }
         const formData = new FormData(form);
 
         fetch('{{ route("officer.packing.scan") }}', {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(async (response) => {
+            const contentType = response.headers.get('content-type') || '';
+            let data = {
+                success: false,
+                message: 'Terjadi kesalahan saat memproses scan.',
+            };
+
+            if (contentType.includes('application/json')) {
+                data = await response.json();
+            }
+
+            if (!response.ok && !data.message) {
+                data.message = 'Gagal scan unit.';
+            }
+
+            return data;
+        })
         .then(data => {
             if (data.success) {
                 Swal.fire({

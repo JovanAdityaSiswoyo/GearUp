@@ -201,14 +201,42 @@ Route::post('/book-packages/{id}/courier/complete-return', [App\Http\Controllers
 
 // Logout Route (Available for all guards)
 Route::post('/logout', function () {
+    $guard = 'web';
+    $actor = null;
+
     if (auth()->guard('admin')->check()) {
+        $guard = 'admin';
+        $actor = auth()->guard('admin')->user();
         auth()->guard('admin')->logout();
     } elseif (auth()->guard('officer')->check()) {
+        $guard = 'officer';
+        $actor = auth()->guard('officer')->user();
         auth()->guard('officer')->logout();
     } elseif (auth()->guard('courier')->check()) {
+        $guard = 'courier';
+        $actor = auth()->guard('courier')->user();
         auth()->guard('courier')->logout();
     } else {
+        $actor = auth()->guard('web')->user();
         auth()->guard('web')->logout();
+    }
+
+    if ($actor) {
+        \App\Models\ActivityLog::create([
+            'log_name' => 'auth',
+            'description' => 'Logout berhasil: ' . ($actor->email ?? 'unknown') . ' via guard ' . $guard,
+            'subject_type' => get_class($actor),
+            'subject_id' => (string) $actor->id,
+            'causer_type' => get_class($actor),
+            'causer_id' => (string) $actor->id,
+            'event' => 'logout',
+            'properties' => [
+                'guard' => $guard,
+                'email' => $actor->email ?? null,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ],
+        ]);
     }
     
     request()->session()->invalidate();

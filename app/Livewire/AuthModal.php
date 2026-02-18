@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Admin;
 use App\Models\Officer;
 use App\Models\Courier;
+use App\Models\ActivityLog;
 
 class AuthModal extends Component
 {
@@ -89,6 +90,8 @@ class AuthModal extends Component
             request()->session()->regenerate();
             $user = Auth::guard('web')->user();
 
+            $this->logLoginActivity($user, 'web');
+
             // Check user role and redirect accordingly
             if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
                 $this->closeModal();
@@ -109,6 +112,7 @@ class AuthModal extends Component
             $this->loginRemember
         )) {
             request()->session()->regenerate();
+            $this->logLoginActivity(Auth::guard('officer')->user(), 'officer');
             $this->closeModal();
             return redirect()->route('officer.dashboard');
         }
@@ -119,6 +123,7 @@ class AuthModal extends Component
             $this->loginRemember
         )) {
             request()->session()->regenerate();
+            $this->logLoginActivity(Auth::guard('admin')->user(), 'admin');
             $this->closeModal();
             return redirect()->route('admin.dashboard');
         }
@@ -130,6 +135,7 @@ class AuthModal extends Component
             $this->loginRemember
         )) {
             request()->session()->regenerate();
+            $this->logLoginActivity(Auth::guard('courier')->user(), 'courier');
             $this->closeModal();
             return redirect()->route('courier.dashboard');
         }
@@ -156,6 +162,29 @@ class AuthModal extends Component
         Auth::login($user);
         $this->closeModal();
         return redirect()->route('home');
+    }
+
+    private function logLoginActivity($actor, string $guard): void
+    {
+        if (!$actor) {
+            return;
+        }
+
+        ActivityLog::create([
+            'log_name' => 'auth',
+            'description' => 'Login berhasil: ' . ($actor->email ?? 'unknown') . ' via guard ' . $guard,
+            'subject_type' => get_class($actor),
+            'subject_id' => (string) $actor->id,
+            'causer_type' => get_class($actor),
+            'causer_id' => (string) $actor->id,
+            'event' => 'login',
+            'properties' => [
+                'guard' => $guard,
+                'email' => $actor->email ?? null,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ],
+        ]);
     }
 
     public function render()
