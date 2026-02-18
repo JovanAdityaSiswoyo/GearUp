@@ -8,7 +8,6 @@
         <!-- Header -->
         <div class="mb-8">
             <div class="flex items-center space-x-3 mb-2">
-                <x-heroicon-o-truck class="h-8 w-8 text-blue-600" />
                 <h1 class="text-3xl font-bold text-gray-900">Assign Courier</h1>
             </div>
             <p class="text-gray-600">Assign courier untuk pengiriman dan penjemputan barang</p>
@@ -18,10 +17,10 @@
         <div class="mb-6 border-b border-gray-200">
             <nav class="-mb-px flex space-x-8">
                 <a href="?tab=delivery" class="@if($tab === 'delivery') border-blue-500 text-blue-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                    📦 Perlu Pengiriman ({{ $needDelivery->count() }})
+                    Perlu Pengiriman ({{ $needDelivery->count() }})
                 </a>
                 <a href="?tab=return" class="@if($tab === 'return') border-blue-500 text-blue-600 @else border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 @endif whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                    🔄 Perlu Penjemputan ({{ $needReturn->count() }})
+                    Perlu Penjemputan ({{ $needReturn->count() }})
                 </a>
             </nav>
         </div>
@@ -41,7 +40,6 @@
                                     <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-20 h-20 rounded-lg object-cover">
                                 @else
                                     <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
-                                        <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
                                     </div>
                                 @endif
                                 <div class="flex-1">
@@ -49,8 +47,8 @@
                                         {{ $booking->product->name ?? $booking->package->name_package ?? 'Barang Dihapus' }}
                                     </h3>
                                     <p class="text-sm text-gray-600">Kode: <span class="font-mono font-semibold text-blue-600">{{ $booking->book_code }}</span></p>
-                                    <p class="text-sm text-gray-600">📍 {{ $booking->booker_name }}</p>
-                                    <p class="text-sm text-gray-600">📱 {{ $booking->booker_telp }}</p>
+                                    <p class="text-sm text-gray-600">{{ $booking->booker_name }}</p>
+                                    <p class="text-sm text-gray-600">{{ $booking->booker_telp }}</p>
                                     <p class="text-xs text-gray-500 mt-2">Status: <span class="font-semibold">{{ $booking->order_status->label() }}</span></p>
                                     @if($booking->id_courier)
                                         <p class="text-xs text-green-600 mt-1">✓ Courier sudah di-assign</p>
@@ -67,8 +65,8 @@
                                 <input type="hidden" name="booking_type" value="{{ $booking instanceof \App\Models\BookProduct ? 'product' : 'package' }}">
                                 <input type="hidden" name="assignment_type" value="delivery">
                                 
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Courier</label>
-                                <select name="courier_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 text-center">Pilih Courier</label>
+                                <select name="courier_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center" required>
                                     <option value="">-- Pilih Courier --</option>
                                     @foreach($couriers as $courier)
                                         <option value="{{ $courier->id }}" @if($booking->id_courier === $courier->id) selected @endif>
@@ -86,7 +84,6 @@
                 </div>
                 @empty
                 <div class="bg-white rounded-lg shadow p-8 text-center">
-                    <x-heroicon-o-inbox class="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p class="text-gray-600">Tidak ada booking yang perlu assign courier untuk pengiriman</p>
                 </div>
                 @endforelse
@@ -106,7 +103,6 @@
                                     <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-20 h-20 rounded-lg object-cover">
                                 @else
                                     <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
-                                        <x-heroicon-o-photo class="h-8 w-8 text-gray-400" />
                                     </div>
                                 @endif
                                 <div class="flex-1">
@@ -114,8 +110,8 @@
                                         {{ $booking->product->name ?? $booking->package->name_package ?? 'Barang Dihapus' }}
                                     </h3>
                                     <p class="text-sm text-gray-600">Kode: <span class="font-mono font-semibold text-blue-600">{{ $booking->book_code }}</span></p>
-                                    <p class="text-sm text-gray-600">📍 {{ $booking->booker_name }}</p>
-                                    <p class="text-sm text-gray-600">📱 {{ $booking->booker_telp }}</p>
+                                    <p class="text-sm text-gray-600">{{ $booking->booker_name }}</p>
+                                    <p class="text-sm text-gray-600">{{ $booking->booker_telp }}</p>
                                     <p class="text-xs text-gray-500 mt-2">Status: <span class="font-semibold">{{ $booking->order_status->label() }}</span></p>
                                     @if($booking->id_courier)
                                         <p class="text-xs text-green-600 mt-1">✓ Courier sudah di-assign</p>
@@ -151,7 +147,6 @@
                 </div>
                 @empty
                 <div class="bg-white rounded-lg shadow p-8 text-center">
-                    <x-heroicon-o-inbox class="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p class="text-gray-600">Tidak ada booking yang perlu assign courier untuk penjemputan</p>
                 </div>
                 @endforelse
