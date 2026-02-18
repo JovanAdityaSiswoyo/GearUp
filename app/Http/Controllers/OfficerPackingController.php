@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\BookProduct;
 use App\Models\ActivityLog;
 use App\Models\Unit;
 use App\Models\Officer;
@@ -113,7 +114,24 @@ class OfficerPackingController extends Controller
             'bookPackageProducts.product',
             'bookPackageProducts.unit',
             'bookPackageProducts.packedByOfficer'
-        ])->findOrFail($bookingId);
+        ])->find($bookingId);
+
+        if (!$booking) {
+            $productBooking = BookProduct::with(['product', 'user', 'detailBookProduct'])->findOrFail($bookingId);
+
+            $packingProgress = [
+                'total' => 1,
+                'packed' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 1 : 0,
+                'remaining' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 0 : 1,
+                'percentage' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 100 : 0,
+                'is_complete' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP,
+            ];
+
+            return view('officer.packing.show-product', [
+                'booking' => $productBooking,
+                'packingProgress' => $packingProgress,
+            ]);
+        }
 
         $packageProducts = DB::table('package_products')
             ->join('products', 'package_products.id_product', '=', 'products.id')
@@ -278,6 +296,17 @@ class OfficerPackingController extends Controller
      */
     public function finalizePacking(string $bookingId): JsonResponse
     {
+        $productBooking = BookProduct::find($bookingId);
+        if ($productBooking) {
+            $productBooking->order_status = \App\Enums\OrderStatus::READY_FOR_PICKUP;
+            $productBooking->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Packing produk selesai! Booking siap untuk pickup oleh courier.',
+            ]);
+        }
+
         $booking = Book::findOrFail($bookingId);
 
         if (!$this->atomicService->isPackingComplete($booking)) {
