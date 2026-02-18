@@ -387,9 +387,7 @@
     }
 
     function openPackingFlow() {
-        const bookingId = '{{ $booking->id }}';
-        const type = '{{ $booking instanceof \App\Models\BookProduct ? "book-product" : "book" }}';
-        window.location.href = `/officer/packing/${bookingId}`;
+        window.location.href = '{{ route("officer.packing.show.by-type", ["type" => $bookingType, "booking" => $booking->id]) }}';
     }
 
     function openEditModal() {

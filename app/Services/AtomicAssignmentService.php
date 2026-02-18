@@ -179,6 +179,7 @@ class AtomicAssignmentService
     public function getPackingList(Book $book): array
     {
         $bookPackageProducts = BookPackageProduct::where('id_book', $book->id)
+            ->whereNotNull('id_unit')
             ->with(['product', 'unit'])
             ->get();
 
@@ -260,8 +261,11 @@ class AtomicAssignmentService
      */
     public function isPackingComplete(Book $book): bool
     {
-        $totalItems = BookPackageProduct::where('id_book', $book->id)->count();
+        $totalItems = BookPackageProduct::where('id_book', $book->id)
+            ->whereNotNull('id_unit')
+            ->count();
         $packedItems = BookPackageProduct::where('id_book', $book->id)
+            ->whereNotNull('id_unit')
             ->where('is_packed', true)
             ->count();
 

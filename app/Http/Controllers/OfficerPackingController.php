@@ -46,7 +46,7 @@ class OfficerPackingController extends Controller
                     'order_status' => $booking->order_status,
                     'checkin_date' => $booking->checkin_appointment_start,
                     'created_at' => $booking->created_at,
-                    'type' => 'book-product',
+                    'type' => 'product',
                 ];
             });
         
@@ -67,7 +67,7 @@ class OfficerPackingController extends Controller
                     'order_status' => $booking->order_status,
                     'checkin_date' => $booking->checkin_appointment_start,
                     'created_at' => $booking->created_at,
-                    'type' => 'book',
+                    'type' => 'package',
                 ];
             });
 
@@ -100,6 +100,49 @@ class OfficerPackingController extends Controller
         );
 
         return view('officer.packing.index', ['bookings' => $paginator]);
+    }
+
+    /**
+     * Tampilkan detail packing checklist berdasarkan tipe booking
+     */
+    public function showByType(string $type, string $bookingId): View
+    {
+        if ($type === 'product') {
+            $productBooking = BookProduct::with(['product', 'user', 'detailBookProduct'])->findOrFail($bookingId);
+
+            $packingProgress = [
+                'total' => 1,
+                'packed' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 1 : 0,
+                'remaining' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 0 : 1,
+                'percentage' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 100 : 0,
+                'is_complete' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP,
+            ];
+
+            return view('officer.packing.show-product', [
+                'booking' => $productBooking,
+                'packingProgress' => $packingProgress,
+            ]);
+        }
+
+        $booking = Book::with([
+            'package.products',
+            'user',
+            'detailBook',
+            'bookPackageProducts.product',
+            'bookPackageProducts.unit',
+            'bookPackageProducts.packedByOfficer'
+        ])->findOrFail($bookingId);
+
+        $packageProducts = DB::table('package_products')
+            ->join('products', 'package_products.id_product', '=', 'products.id')
+            ->where('package_products.id_package', $booking->id_package)
+            ->select('products.id', 'products.name')
+            ->get();
+
+        $packingList = $this->atomicService->getPackingList($booking);
+        $packingProgress = $this->getPackingProgress($booking);
+
+        return view('officer.packing.show', compact('booking', 'packingList', 'packingProgress', 'packageProducts'));
     }
 
     /**
@@ -240,8 +283,19 @@ class OfficerPackingController extends Controller
     {
         $booking = Book::findOrFail($bookingId);
 
-        // Check if already assigned
-        $existingAssignments = \App\Models\BookPackageProduct::where('id_book', $booking->id)->count();
+        // Check if already assigned (ignore legacy rows without unit)
+        $existingAssignments = \App\Models\BookPackageProduct::where('id_book', $booking->id)
+            ->whereNotNull('id_unit')
+            ->count();
+
+        // Cleanup legacy placeholders without assigned unit before fresh assignment
+        if ($existingAssignments === 0) {
+            \App\Models\BookPackageProduct::where('id_book', $booking->id)
+                ->whereNull('id_unit')
+                ->where('is_packed', false)
+                ->delete();
+        }
+
         if ($existingAssignments > 0) {
             return response()->json([
                 'success' => false,
@@ -271,12 +325,15 @@ class OfficerPackingController extends Controller
      */
     private function getPackingProgress(Book $booking): array
     {
-        $assignedItems = \App\Models\BookPackageProduct::where('id_book', $booking->id)->count();
+        $assignedItems = \App\Models\BookPackageProduct::where('id_book', $booking->id)
+            ->whereNotNull('id_unit')
+            ->count();
         $packageItems = DB::table('package_products')
             ->where('id_package', $booking->id_package)
             ->count();
         $totalItems = max($assignedItems, $packageItems);
         $packedItems = \App\Models\BookPackageProduct::where('id_book', $booking->id)
+            ->whereNotNull('id_unit')
             ->where('is_packed', true)
             ->count();
 

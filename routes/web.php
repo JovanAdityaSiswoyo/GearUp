@@ -163,7 +163,9 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
 
     // Packing Management (Atomic Assignment)
     Route::get('/packing', [App\Http\Controllers\OfficerPackingController::class, 'index'])->name('packing.index');
-    Route::get('/packing/{booking}', [App\Http\Controllers\OfficerPackingController::class, 'show'])->name('packing.show');
+    Route::get('/packing/{type}/{booking}', [App\Http\Controllers\OfficerPackingController::class, 'showByType'])
+        ->where('type', 'product|package')
+        ->name('packing.show.by-type');
     Route::post('/packing/{booking}/assign-units', [App\Http\Controllers\OfficerPackingController::class, 'assignUnits'])->name('packing.assign');
     Route::post('/packing/scan-unit', [App\Http\Controllers\OfficerPackingController::class, 'scanUnit'])->name('packing.scan');
     Route::post('/packing/{booking}/finalize', [App\Http\Controllers\OfficerPackingController::class, 'finalizePacking'])->name('packing.finalize');

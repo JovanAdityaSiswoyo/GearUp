@@ -182,9 +182,20 @@
                         <a href="{{ route('officer.packing.index') }}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg transition text-center font-semibold">
                             ← Back
                         </a>
-                        @if($packingProgress['is_complete'])
+                        @if($booking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP)
                             <button 
-                                onclick="finalizePacking()"
+                                type="button"
+                                disabled
+                                class="flex-1 bg-gray-300 text-gray-600 px-6 py-3 rounded-lg cursor-not-allowed font-semibold flex items-center justify-center gap-2"
+                                title="Packing sudah selesai"
+                            >
+                                <x-heroicon-o-check-circle class="h-5 w-5" />
+                                Sudah Selesai Packing
+                            </button>
+                        @elseif($packingProgress['is_complete'])
+                            <button 
+                                id="finalize-packing-button"
+                                onclick="finalizePacking(this)"
                                 class="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition font-semibold flex items-center justify-center gap-2"
                             >
                                 <x-heroicon-o-check-circle class="h-5 w-5" />
@@ -315,7 +326,12 @@
         });
     }
 
-    function finalizePacking() {
+    function finalizePacking(buttonElement) {
+        const finalizeButton = buttonElement || document.getElementById('finalize-packing-button');
+        if (finalizeButton) {
+            finalizeButton.classList.add('hidden');
+        }
+
         Swal.fire({
             title: 'Finalize Packing?',
             text: 'Booking status akan berubah menjadi READY_FOR_PICKUP',
@@ -347,13 +363,23 @@
                             location.href = '{{ route("officer.packing.index") }}';
                         });
                     } else {
+                        if (finalizeButton) {
+                            finalizeButton.classList.remove('hidden');
+                        }
                         Swal.fire('Error', data.message, 'error');
                     }
                 })
                 .catch(error => {
+                    if (finalizeButton) {
+                        finalizeButton.classList.remove('hidden');
+                    }
                     console.error('Error:', error);
                     Swal.fire('Error', 'Gagal finalize packing', 'error');
                 });
+            } else {
+                if (finalizeButton) {
+                    finalizeButton.classList.remove('hidden');
+                }
             }
         });
     }

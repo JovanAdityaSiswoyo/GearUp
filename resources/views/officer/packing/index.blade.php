@@ -80,7 +80,7 @@
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4">
-                                                <a href="{{ route('officer.packing.show', $booking->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                                                <a href="{{ route('officer.packing.show.by-type', ['type' => $booking->type, 'booking' => $booking->id]) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
                                                     <x-heroicon-o-arrow-right class="h-4 w-4 mr-2" />
                                                     Packing
                                                 </a>
