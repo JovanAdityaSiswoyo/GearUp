@@ -94,4 +94,12 @@ class ScanUnitController extends Controller
 
         return view('scan-unit.history', compact('unit', 'history'));
     }
+
+    /**
+     * Camera-based QR code scanner (for packing workflows)
+     */
+    public function camera(Request $request)
+    {
+        return view('scan-unit.camera');
+    }
 }

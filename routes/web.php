@@ -224,6 +224,14 @@ Route::middleware(['auth:web,admin,officer,courier'])->group(function () {
     Route::post('/scan-unit/{unit}/pickup', [App\Http\Controllers\ScanUnitController::class, 'pickupUnit'])->name('scan-unit.pickup')->middleware('auth:web,courier');
 });
 
+// QR Code Camera Scanner (for inline scanning in packing, etc.)
+Route::get('/scan-unit-camera', [App\Http\Controllers\ScanUnitController::class, 'camera'])->name('scan-unit-camera')->middleware('auth:web,officer');
+
+// API for unit lookup (for QR scanner)
+Route::get('/api/units/{unit}', [App\Http\Controllers\UnitController::class, 'getUnitData'])
+    ->middleware('auth:web,admin,officer')
+    ->name('api.units.show');
+
 // User Profile Routes (Protected)
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\User\ProfileController::class, 'show'])->name('profile.show');

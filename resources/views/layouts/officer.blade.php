@@ -96,6 +96,39 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Display session messages as SweetAlert
+        @if(session('success'))
+            Swal.fire({
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                icon: 'success',
+                confirmButtonColor: '#3b82f6',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                title: 'Error!',
+                text: '{{ session('error') }}',
+                icon: 'error',
+                confirmButtonColor: '#3b82f6'
+            });
+        @endif
+
+        @if($errors->any())
+            Swal.fire({
+                title: 'Validation Error!',
+                text: '{{ $errors->first() }}',
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6'
+            });
+        @endif
+    </script>
+
     @yield('scripts')
 </body>
 </html>

@@ -127,7 +127,7 @@ class OfficerPackingController extends Controller
     /**
      * Scan & mark unit sebagai packed
      */
-    public function scanUnit(Request $request): JsonResponse
+    public function scanUnit(Request $request): JsonResponse | \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'book_package_product_id' => 'required|uuid|exists:book_package_products,id',
@@ -138,35 +138,61 @@ class OfficerPackingController extends Controller
 
         // Verify serial number matches
         if (!$bookPackageProduct->unit || $bookPackageProduct->unit->serial_number !== $validated['unit_serial']) {
-            return response()->json([
-                'success' => false,
-                'message' => '❌ Serial number tidak sesuai! Expected: ' . ($bookPackageProduct->unit->serial_number ?? 'N/A'),
-            ], 400);
+            $message = '❌ Serial number tidak sesuai! Expected: ' . ($bookPackageProduct->unit->serial_number ?? 'N/A');
+            
+            // Return JSON for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 400);
+            }
+            
+            // Redirect with error for direct access
+            return back()->with('error', $message);
         }
 
         // Check if already packed
         if ($bookPackageProduct->is_packed) {
-            return response()->json([
-                'success' => false,
-                'message' => '⚠️ Unit ini sudah dipacking sebelumnya.',
-            ], 400);
+            $message = '⚠️ Unit ini sudah dipacking sebelumnya.';
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 400);
+            }
+            
+            return back()->with('error', $message);
         }
 
         $officerId = auth()->guard('officer')->id();
         $success = $this->atomicService->markAsPacked($validated['book_package_product_id'], $officerId);
 
         if ($success) {
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Unit berhasil discan dan ditandai sebagai packed!',
-                'packed_at' => now()->format('d M Y H:i'),
-            ]);
+            $message = '✅ Unit berhasil discan dan ditandai sebagai packed!';
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'packed_at' => now()->format('d M Y H:i'),
+                ]);
+            }
+            
+            return back()->with('success', $message);
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => '❌ Gagal menyimpan data packing.',
-        ], 500);
+        $message = '❌ Gagal menyimpan data packing.';
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 500);
+        }
+        
+        return back()->with('error', $message);
     }
 
     /**

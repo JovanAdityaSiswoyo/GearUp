@@ -3,6 +3,7 @@
 @section('title', 'Packing Checklist')
 
 @section('content')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .progress-bar {
         background: linear-gradient(to right, #3b82f6 0%, #06b6d4 100%);
@@ -143,6 +144,14 @@
                                                 <x-heroicon-o-qr-code class="h-4 w-4" />
                                                 Scan
                                             </button>
+                                            <button 
+                                                type="button"
+                                                onclick="openQRScanner(this)"
+                                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm"
+                                                title="Scan QR code dengan kamera"
+                                            >
+                                                📱 Camera
+                                            </button>
                                         </form>
                                     @else
                                         <div class="text-right">
@@ -198,31 +207,47 @@
 
     <script>
     function assignUnits() {
-        if (confirm('Assign units untuk booking ini?')) {
-            fetch('{{ route("officer.packing.assign", $booking->id) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ ' + data.message);
-                    location.reload();
-                } else {
-                    alert('❌ ' + data.message);
-                    if (data.failures) {
-                        console.log('Failures:', data.failures);
+        Swal.fire({
+            title: 'Assign Units?',
+            text: 'Assign units untuk booking ini?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, assign it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{{ route("officer.packing.assign", $booking->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('❌ Error assigning units');
-            });
-        }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#3b82f6',
+                            timer: 2000,
+                            timerProgressBar: true
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Gagal assign units', 'error');
+                });
+            }
+        });
     }
 
     function handleScanSubmit(event, itemId) {
@@ -240,43 +265,140 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Show success message
-                alert('✅ ' + data.message);
-                location.reload();
+                Swal.fire({
+                    title: 'Success!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    timer: 2000,
+                    timerProgressBar: true
+                }).then(() => {
+                    location.reload();
+                });
             } else {
-                alert('❌ ' + data.message);
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonColor: '#3b82f6'
+                });
                 form.reset();
                 form.querySelector('input[name="unit_serial"]').focus();
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('❌ Error scanning unit');
+            Swal.fire('Error', 'Gagal scan unit', 'error');
             form.reset();
         });
     }
 
     function finalizePacking() {
-        if (confirm('Finalize packing? Booking akan status menjadi READY_FOR_PICKUP')) {
-            fetch('{{ route("officer.packing.finalize", $booking->id) }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ ' + data.message);
-                    location.href = '{{ route("officer.packing.index") }}';
-                } else {
-                    alert('❌ ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('❌ Error finalizing packing');
-            });
+        Swal.fire({
+            title: 'Finalize Packing?',
+            text: 'Booking status akan berubah menjadi READY_FOR_PICKUP',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, finalize it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{{ route("officer.packing.finalize", $booking->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981',
+                            timer: 2000,
+                            timerProgressBar: true
+                        }).then(() => {
+                            location.href = '{{ route("officer.packing.index") }}';
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Gagal finalize packing', 'error');
+                });
+            }
+        });
+    }
+
+    // QR Scanner Implementation
+    let currentScannerButton = null;
+
+    function openQRScanner(button) {
+        currentScannerButton = button;
+        const form = button.closest('form');
+        const serialInput = form.querySelector('input[name="unit_serial"]');
+        
+        // Create overlay modal
+        const overlay = document.createElement('div');
+        overlay.id = 'scanner-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="background: white; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 90vh; overflow: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin: 0; font-size: 20px; font-weight: 600;">📱 Scan QR Code</h3>
+                    <button onclick="closeQRScanner()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
+                </div>
+                <iframe src="/scan-unit-camera?mode=packing" style="width: 100%; height: 500px; border: 1px solid #ddd; border-radius: 8px;"></iframe>
+                <p style="text-align: center; color: #666; font-size: 14px; margin-top: 12px;">
+                    Arahkan kamera ke QR code untuk scan
+                </p>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Listen for postMessage from iframe
+        window.addEventListener('message', handleScanMessage);
+    }
+
+    function closeQRScanner() {
+        const overlay = document.getElementById('scanner-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        window.removeEventListener('message', handleScanMessage);
+    }
+
+    function handleScanMessage(event) {
+        if (event.data.action === 'qr_scanned') {
+            const serialNumber = event.data.serial;
+            if (currentScannerButton) {
+                const form = currentScannerButton.closest('form');
+                const serialInput = form.querySelector('input[name="unit_serial"]');
+                serialInput.value = serialNumber;
+                serialInput.focus();
+                closeQRScanner();
+                // Auto-submit
+                setTimeout(() => form.submit(), 200);
+            }
         }
     }
     </script>

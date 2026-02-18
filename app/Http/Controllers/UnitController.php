@@ -248,5 +248,21 @@ class UnitController extends Controller
 
         return view('admin.units.print-labels', compact('units', 'qrCodes'));
     }
+
+    /**
+     * Get unit data via API (for QR scanner)
+     */
+    public function getUnitData(Unit $unit)
+    {
+        return response()->json([
+            'id' => $unit->id,
+            'serial_number' => $unit->serial_number,
+            'status' => $unit->status,
+            'product' => $unit->product ? [
+                'id' => $unit->product->id,
+                'name' => $unit->product->name,
+            ] : null,
+        ]);
+    }
 }
 
