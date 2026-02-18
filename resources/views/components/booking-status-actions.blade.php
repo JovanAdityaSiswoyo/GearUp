@@ -2,34 +2,39 @@
     use App\Enums\OrderStatus;
 @endphp
 
-@if(auth()->check())
-    @if(auth()->user()->hasRole('officer'))
+@php
+    $isOfficer = auth('officer')->check() || (auth()->check() && auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('officer'));
+    $isCourier = auth('courier')->check() || (auth()->check() && auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('courier'));
+@endphp
+
+@if($isOfficer || $isCourier)
+    @if($isOfficer)
         <!-- Officer Status Controls -->
         <div class="space-y-2 mt-4 pt-4 border-t">
             <!-- Validate Order -->
             @if($booking->order_status->value == 'Draft')
-            <button onclick="validateOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="validateOrder(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Validasi Order
             </button>
             @endif
 
             <!-- Confirm Order -->
             @if($booking->order_status->value == 'Awaiting Validation')
-            <button onclick="confirmOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="confirmOrder(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Konfirmasi Order
             </button>
             @endif
 
             <!-- Prepare for Pickup -->
             @if($booking->order_status->value == 'Confirmed')
-            <button onclick="preparePickup({{ $booking->id }}, '{{ $type }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="preparePickup(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 📦 Siapkan Pengambilan
             </button>
             @endif
 
             <!-- Schedule Return -->
             @if($booking->order_status->value == 'Delivered')
-            <button onclick="scheduleReturn({{ $booking->id }}, '{{ $type }}')" class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="scheduleReturn(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 📅 Jadwalkan Penjemputan
             </button>
             @endif
@@ -37,10 +42,10 @@
             <!-- Complete Order -->
             @if($booking->order_status->value == 'Pending Review')
             <div class="space-y-2">
-                <button onclick="completeOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+                <button onclick="completeOrder(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                     ✓ Selesaikan Order
                 </button>
-                <button onclick="detectIssue({{ $booking->id }}, '{{ $type }}')" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+                <button onclick="detectIssue(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                     ⚠️ Deteksi Masalah
                 </button>
             </div>
@@ -48,35 +53,35 @@
 
             <!-- Cancel Order -->
             @if(!in_array($booking->order_status->value, ['Completed', 'Cancelled', 'Out for Delivery', 'On Process Return']))
-            <button onclick="cancelOrder({{ $booking->id }}, '{{ $type }}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="cancelOrder(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✕ Batalkan
             </button>
             @endif
         </div>
 
-    @elseif(auth()->user()->hasRole('courier'))
+    @elseif($isCourier)
         <!-- Courier Status Controls (Hanya untuk delivery/return) -->
         <div class="space-y-2 mt-4 pt-4 border-t">
             @if($booking->order_status->value == 'Ready for Pickup' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierPickupDelivery({{ $booking->id }}, '{{ $type }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="courierPickupDelivery(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 🚚 Ambil Barang untuk Dikirim
             </button>
             @endif
 
             @if($booking->order_status->value == 'Out for Delivery' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierCompleteDelivery({{ $booking->id }}, '{{ $type }}')" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="courierCompleteDelivery(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Konfirmasi Pengiriman
             </button>
             @endif
 
             @if($booking->order_status->value == 'Pickup Scheduled' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierPickupReturn({{ $booking->id }}, '{{ $type }}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="courierPickupReturn(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 📦 Ambil Barang untuk Dikembalikan
             </button>
             @endif
 
             @if($booking->order_status->value == 'On Process Return' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierCompleteReturn({{ $booking->id }}, '{{ $type }}')" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+            <button onclick="courierCompleteReturn(@js((string) $booking->id), '{{ $type }}')" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                 ✓ Konfirmasi Pengembalian
             </button>
             @endif
@@ -91,6 +96,10 @@
 @endif
 
 <script>
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @js(csrf_token());
+}
+
 function validateOrder(bookingId, type) {
     Swal.fire({
         title: 'Validasi Order',
@@ -102,7 +111,7 @@ function validateOrder(bookingId, type) {
         confirmButtonText: 'Ya, Validasi'
     }).then((result) => {
         if (result.isConfirmed) {
-            submitStatusChange(`/book-${type}s/${bookingId}/validate`);
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/validate`);
         }
     });
 }
@@ -118,7 +127,7 @@ function confirmOrder(bookingId, type) {
         confirmButtonText: 'Ya, Konfirmasi'
     }).then((result) => {
         if (result.isConfirmed) {
-            submitStatusChange(`/book-${type}s/${bookingId}/confirm`);
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/confirm`);
         }
     });
 }
@@ -134,7 +143,7 @@ function preparePickup(bookingId, type) {
         confirmButtonText: 'Ya, Siapkan'
     }).then((result) => {
         if (result.isConfirmed) {
-            submitStatusChange(`/book-${type}s/${bookingId}/prepare-pickup`);
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/prepare-pickup`);
         }
     });
 }
@@ -150,7 +159,7 @@ function scheduleReturn(bookingId, type) {
         confirmButtonText: 'Ya, Jadwalkan'
     }).then((result) => {
         if (result.isConfirmed) {
-            submitStatusChange(`/book-${type}s/${bookingId}/schedule-return`);
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/schedule-return`);
         }
     });
 }
@@ -166,7 +175,7 @@ function completeOrder(bookingId, type) {
         confirmButtonText: 'Ya, Selesaikan'
     }).then((result) => {
         if (result.isConfirmed) {
-            submitStatusChange(`/book-${type}s/${bookingId}/complete`);
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/complete`);
         }
     });
 }
@@ -198,9 +207,9 @@ function detectIssue(bookingId, type) {
             
             const formData = new FormData();
             formData.append('issue_notes', notes);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('_token', getCsrfToken());
             
-            fetch(`/book-${type}s/${bookingId}/detect-issue`, {
+            fetch(`/officer/book-${type}s/${bookingId}/detect-issue`, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -245,9 +254,9 @@ function cancelOrder(bookingId, type) {
             
             const formData = new FormData();
             formData.append('reason', reason);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('_token', getCsrfToken());
             
-            fetch(`/book-${type}s/${bookingId}/cancel`, {
+            fetch(`/officer/book-${type}s/${bookingId}/cancel`, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -272,7 +281,7 @@ function courierPickupDelivery(bookingId, type) {
         (file) => {
             const formData = new FormData();
             formData.append('photo', file);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('_token', getCsrfToken());
             
             fetch(`/book-${type}s/${bookingId}/courier/pickup-delivery`, {
                 method: 'POST',
@@ -299,7 +308,7 @@ function courierCompleteDelivery(bookingId, type) {
         (file) => {
             const formData = new FormData();
             formData.append('photo', file);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('_token', getCsrfToken());
             
             fetch(`/book-${type}s/${bookingId}/courier/complete-delivery`, {
                 method: 'POST',
@@ -326,7 +335,7 @@ function courierPickupReturn(bookingId, type) {
         (file) => {
             const formData = new FormData();
             formData.append('photo', file);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('_token', getCsrfToken());
             
             fetch(`/book-${type}s/${bookingId}/courier/pickup-return`, {
                 method: 'POST',
@@ -353,7 +362,7 @@ function courierCompleteReturn(bookingId, type) {
         (file) => {
             const formData = new FormData();
             formData.append('photo', file);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('_token', getCsrfToken());
             
             fetch(`/book-${type}s/${bookingId}/courier/complete-return`, {
                 method: 'POST',
@@ -441,7 +450,7 @@ function submitStatusChange(url) {
         method: 'POST',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': getCsrfToken()
         }
     }).then(response => response.json())
     .then(data => {

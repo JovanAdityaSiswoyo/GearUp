@@ -4,12 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\BookProduct;
 use App\Models\Book;
+use App\Models\ActivityLog;
 use App\Enums\OrderStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class OfficerBookingStatusController extends Controller
 {
+    private function hasAuthenticatedActor(): bool
+    {
+        return auth('officer')->check() || auth('admin')->check() || auth('web')->check();
+    }
+
     /**
      * Validate BookProduct order
      */
@@ -18,7 +24,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::AWAITING_VALIDATION,
-            'Order berhasil divalidasi'
+            'Order berhasil divalidasi',
+            'validate'
         );
     }
 
@@ -30,7 +37,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::CONFIRMED,
-            'Order berhasil dikonfirmasi'
+            'Order berhasil dikonfirmasi',
+            'confirm'
         );
     }
 
@@ -42,7 +50,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::READY_FOR_PICKUP,
-            'Barang siap diambil kurir'
+            'Barang siap diambil kurir',
+            'prepare_pickup'
         );
     }
 
@@ -54,7 +63,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::PICKUP_SCHEDULED,
-            'Penjemputan berhasil dijadwalkan'
+            'Penjemputan berhasil dijadwalkan',
+            'schedule_return'
         );
     }
 
@@ -66,7 +76,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::COMPLETED,
-            'Order berhasil diselesaikan'
+            'Order berhasil diselesaikan',
+            'complete'
         );
     }
 
@@ -82,7 +93,7 @@ class OfficerBookingStatusController extends Controller
             return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
         }
 
-        if (!auth()->user()->can('update', $booking)) {
+        if (!$this->hasAuthenticatedActor()) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
         }
 
@@ -92,6 +103,15 @@ class OfficerBookingStatusController extends Controller
                 'order_status' => OrderStatus::ISSUE_DETECTED,
                 'notes' => $notes
             ]);
+            $this->logBookingActivity(
+                $booking,
+                'detect_issue',
+                'Officer mencatat issue pada booking',
+                [
+                    'new_order_status' => OrderStatus::ISSUE_DETECTED->value,
+                    'notes' => $notes,
+                ]
+            );
             DB::commit();
 
             return response()->json([
@@ -119,7 +139,7 @@ class OfficerBookingStatusController extends Controller
             return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
         }
 
-        if (!auth()->user()->can('update', $booking)) {
+        if (!$this->hasAuthenticatedActor()) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
         }
 
@@ -129,6 +149,15 @@ class OfficerBookingStatusController extends Controller
                 'order_status' => OrderStatus::CANCELLED,
                 'notes' => $reason
             ]);
+            $this->logBookingActivity(
+                $booking,
+                'cancel',
+                'Officer membatalkan booking',
+                [
+                    'new_order_status' => OrderStatus::CANCELLED->value,
+                    'reason' => $reason,
+                ]
+            );
             DB::commit();
 
             return response()->json([
@@ -153,7 +182,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::AWAITING_VALIDATION,
-            'Order berhasil divalidasi'
+            'Order berhasil divalidasi',
+            'validate'
         );
     }
 
@@ -165,7 +195,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::CONFIRMED,
-            'Order berhasil dikonfirmasi'
+            'Order berhasil dikonfirmasi',
+            'confirm'
         );
     }
 
@@ -177,7 +208,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::READY_FOR_PICKUP,
-            'Barang siap diambil kurir'
+            'Barang siap diambil kurir',
+            'prepare_pickup'
         );
     }
 
@@ -189,7 +221,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::PICKUP_SCHEDULED,
-            'Penjemputan berhasil dijadwalkan'
+            'Penjemputan berhasil dijadwalkan',
+            'schedule_return'
         );
     }
 
@@ -201,7 +234,8 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::COMPLETED,
-            'Order berhasil diselesaikan'
+            'Order berhasil diselesaikan',
+            'complete'
         );
     }
 
@@ -217,7 +251,7 @@ class OfficerBookingStatusController extends Controller
             return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
         }
 
-        if (!auth()->user()->can('update', $booking)) {
+        if (!$this->hasAuthenticatedActor()) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
         }
 
@@ -227,6 +261,15 @@ class OfficerBookingStatusController extends Controller
                 'order_status' => OrderStatus::ISSUE_DETECTED,
                 'notes' => $notes
             ]);
+            $this->logBookingActivity(
+                $booking,
+                'detect_issue',
+                'Officer mencatat issue pada booking',
+                [
+                    'new_order_status' => OrderStatus::ISSUE_DETECTED->value,
+                    'notes' => $notes,
+                ]
+            );
             DB::commit();
 
             return response()->json([
@@ -254,7 +297,7 @@ class OfficerBookingStatusController extends Controller
             return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
         }
 
-        if (!auth()->user()->can('update', $booking)) {
+        if (!$this->hasAuthenticatedActor()) {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
         }
 
@@ -264,6 +307,15 @@ class OfficerBookingStatusController extends Controller
                 'order_status' => OrderStatus::CANCELLED,
                 'notes' => $reason
             ]);
+            $this->logBookingActivity(
+                $booking,
+                'cancel',
+                'Officer membatalkan booking',
+                [
+                    'new_order_status' => OrderStatus::CANCELLED->value,
+                    'reason' => $reason,
+                ]
+            );
             DB::commit();
 
             return response()->json([
@@ -282,7 +334,7 @@ class OfficerBookingStatusController extends Controller
     /**
      * Update order status helper method
      */
-    private function updateOrderStatus($booking, $newStatus, $successMessage): JsonResponse
+    private function updateOrderStatus($booking, $newStatus, $successMessage, string $action): JsonResponse
     {
         if (!$booking) {
             return response()->json([
@@ -291,7 +343,7 @@ class OfficerBookingStatusController extends Controller
             ], 404);
         }
 
-        if (!auth()->user()->can('update', $booking)) {
+        if (!$this->hasAuthenticatedActor()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki akses'
@@ -300,7 +352,17 @@ class OfficerBookingStatusController extends Controller
 
         DB::beginTransaction();
         try {
+            $previousStatus = $booking->order_status?->value;
             $booking->update(['order_status' => $newStatus]);
+            $this->logBookingActivity(
+                $booking,
+                $action,
+                'Officer mengubah status booking',
+                [
+                    'previous_order_status' => $previousStatus,
+                    'new_order_status' => $newStatus->value,
+                ]
+            );
             DB::commit();
 
             return response()->json([
@@ -314,5 +376,41 @@ class OfficerBookingStatusController extends Controller
                 'message' => 'Gagal mengubah status: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function getAuthenticatedActor()
+    {
+        if (auth('officer')->check()) {
+            return auth('officer')->user();
+        }
+
+        if (auth('admin')->check()) {
+            return auth('admin')->user();
+        }
+
+        if (auth('web')->check()) {
+            return auth('web')->user();
+        }
+
+        return null;
+    }
+
+    private function logBookingActivity($booking, string $event, string $description, array $properties = []): void
+    {
+        $actor = $this->getAuthenticatedActor();
+
+        ActivityLog::create([
+            'log_name' => 'booking_status',
+            'description' => $description,
+            'subject_type' => get_class($booking),
+            'subject_id' => (string) $booking->id,
+            'causer_type' => $actor ? get_class($actor) : null,
+            'causer_id' => $actor ? (string) $actor->id : null,
+            'event' => $event,
+            'properties' => array_merge([
+                'book_code' => $booking->book_code ?? null,
+                'booking_type' => $booking instanceof BookProduct ? 'product' : 'package',
+            ], $properties),
+        ]);
     }
 }

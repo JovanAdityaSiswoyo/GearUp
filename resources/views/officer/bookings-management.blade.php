@@ -120,7 +120,7 @@
                             <div>
                                 <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Aksi</h4>
                                 <div class="space-y-2">
-                                    <a href="{{ route('officer.bookings.show', $booking->id) }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-2 px-3 rounded transition block text-center">
+                                    <a href="{{ route('officer.bookings.show', ['type' => 'product', 'bookingId' => $booking->id]) }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-2 px-3 rounded transition block text-center">
                                         👁️ Lihat Detail
                                     </a>
                                     <x-booking-status-actions :booking="$booking" type="product" />
@@ -223,7 +223,7 @@
                             <div>
                                 <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase">Aksi</h4>
                                 <div class="space-y-2">
-                                    <a href="{{ route('officer.bookings.show', $booking->id) }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-2 px-3 rounded transition block text-center">
+                                    <a href="{{ route('officer.bookings.show', ['type' => 'package', 'bookingId' => $booking->id]) }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-2 px-3 rounded transition block text-center">
                                         👁️ Lihat Detail
                                     </a>
                                     <x-booking-status-actions :booking="$booking" type="package" />

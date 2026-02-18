@@ -3,6 +3,24 @@
 @section('title', 'Detail Booking')
 
 @section('content')
+        @php
+            $isProductBooking = $booking instanceof \App\Models\BookProduct;
+            $rentalDays = null;
+            if ($booking->checkin_appointment_start && $booking->checkout_appointment_end) {
+                $startDate = $booking->checkin_appointment_start->copy()->startOfDay();
+                $endDate = $booking->checkout_appointment_end->copy()->startOfDay();
+                $rentalDays = max(1, $startDate->diffInDays($endDate) + 1);
+            }
+
+            $dailyRentalPrice = $isProductBooking
+                ? ($booking->product->price_per_day ?? $booking->product->price ?? 0)
+                : ($booking->package->price ?? 0);
+
+            $totalRentalPrice = $dailyRentalPrice * ($rentalDays ?? 0);
+            $depositAmount = $booking->deposit_amount ?? 0;
+            $grandTotal = $totalRentalPrice + $depositAmount;
+        @endphp
+
         <!-- Header -->
         <div class="mb-8 flex items-center justify-between">
             <div>
@@ -82,7 +100,7 @@
                                 <div class="mt-3 flex space-x-4">
                                     <div>
                                         <p class="text-xs text-gray-600">Kategori</p>
-                                        <p class="font-semibold">{{ $booking->product->category->name ?? '-' }}</p>
+                                        <p class="font-semibold">{{ $booking->product->category->categories ?? $booking->product->category->name ?? '-' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-gray-600">Brand</p>
@@ -90,11 +108,11 @@
                                     </div>
                                     <div>
                                         <p class="text-xs text-gray-600">Harga Sewa/Hari</p>
-                                        <p class="font-semibold text-green-600">Rp {{ number_format($booking->product->daily_rental_price ?? 0, 0, ',', '.') }}</p>
+                                        <p class="font-semibold text-green-600">Rp {{ number_format($booking->product->price_per_day ?? $booking->product->price ?? 0, 0, ',', '.') }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-gray-600">Jumlah Hari</p>
-                                        <p class="font-semibold">{{ $booking->total_rental_days }}</p>
+                                        <p class="font-semibold">{{ $rentalDays ?? '-' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -112,12 +130,12 @@
                                 <p class="text-sm text-gray-700 mt-2">{{ $booking->package->description ?? '-' }}</p>
                                 <div class="mt-3 flex space-x-4">
                                     <div>
-                                        <p class="text-xs text-gray-600">Harga Sewa/Hari</p>
-                                        <p class="font-semibold text-blue-600">Rp {{ number_format($booking->package->daily_rental_price ?? 0, 0, ',', '.') }}</p>
+                                        <p class="text-xs text-gray-600">Harga Paket</p>
+                                        <p class="font-semibold text-blue-600">Rp {{ number_format($booking->package->price ?? 0, 0, ',', '.') }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-gray-600">Jumlah Hari</p>
-                                        <p class="font-semibold">{{ $booking->total_rental_days }}</p>
+                                        <p class="font-semibold">{{ $rentalDays ?? '-' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -146,15 +164,11 @@
                     <div class="space-y-2 mb-4">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Harga Sewa</span>
-                            <span class="font-semibold">Rp {{ number_format($booking->rental_price, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Deposit</span>
-                            <span class="font-semibold">Rp {{ number_format($booking->deposit_amount, 0, ',', '.') }}</span>
+                            <span class="font-semibold">Rp {{ number_format($totalRentalPrice, 0, ',', '.') }}</span>
                         </div>
                         <div class="border-t pt-2 flex justify-between">
                             <span class="font-bold text-gray-900">Total</span>
-                            <span class="font-bold text-lg text-gray-900">Rp {{ number_format($booking->total_price, 0, ',', '.') }}</span>
+                            <span class="font-bold text-lg text-gray-900">Rp {{ number_format($grandTotal, 0, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
@@ -211,16 +225,16 @@
                             ✏️ Edit Data
                         </button>
                         @php
-                            $isProductBooking = $booking instanceof \App\Models\BookProduct;
-                            $routePrefix = $isProductBooking ? 'booking' : 'package-booking';
+                            $bookingType = $isProductBooking ? 'product' : 'package';
                         @endphp
 
-                        @if($booking->order_status == \App\Enums\OrderStatus::AWAITING_VALIDATION)
-                            <button onclick="confirmAction('@if($isProductBooking){{ route('booking.validate', ['booking' => $booking->id]) }}@else{{ route('package-booking.validate', ['booking' => $booking->id]) }}@endif', 'Validasi Order')" 
+                        @if($booking->order_status == \App\Enums\OrderStatus::DRAFT)
+                            <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/validate') : url('/officer/book-packages/' . $booking->id . '/validate') }}', 'Validasi Order')" 
                                 class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-3 rounded transition">
                                 ✓ Validasi Order
                             </button>
-                            <button onclick="confirmAction('@if($isProductBooking){{ route('booking.confirm', ['booking' => $booking->id]) }}@else{{ route('package-booking.confirm', ['booking' => $booking->id]) }}@endif', 'Konfirmasi Order')" 
+                        @elseif($booking->order_status == \App\Enums\OrderStatus::AWAITING_VALIDATION)
+                            <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/confirm') : url('/officer/book-packages/' . $booking->id . '/confirm') }}', 'Konfirmasi Order')" 
                                 class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded transition">
                                 ✓ Konfirmasi Order
                             </button>
@@ -229,7 +243,7 @@
                                 class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-3 rounded transition">
                                 📦 Go to Packing
                             </button>
-                            <button onclick="confirmAction('@if($isProductBooking){{ route('booking.prepare-pickup', ['booking' => $booking->id]) }}@else{{ route('package-booking.prepare-pickup', ['booking' => $booking->id]) }}@endif', 'Siapkan Pengambilan')" 
+                            <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/prepare-pickup') : url('/officer/book-packages/' . $booking->id . '/prepare-pickup') }}', 'Siapkan Pengambilan')" 
                                 class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded transition">
                                 ✓ Siap Pickup
                             </button>
@@ -238,12 +252,12 @@
                                 ✓ Barang siap diambil kurir
                             </div>
                         @elseif($booking->order_status == \App\Enums\OrderStatus::DELIVERED)
-                            <button onclick="confirmAction('@if($isProductBooking){{ route('booking.schedule-return', ['booking' => $booking->id]) }}@else{{ route('package-booking.schedule-return', ['booking' => $booking->id]) }}@endif', 'Jadwalkan Pengembalian')" 
+                            <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/schedule-return') : url('/officer/book-packages/' . $booking->id . '/schedule-return') }}', 'Jadwalkan Pengembalian')" 
                                 class="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-3 rounded transition">
                                 📅 Schedule Return
                             </button>
                         @elseif($booking->order_status == \App\Enums\OrderStatus::PENDING_REVIEW)
-                            <button onclick="confirmAction('@if($isProductBooking){{ route('booking.complete', ['booking' => $booking->id]) }}@else{{ route('package-booking.complete', ['booking' => $booking->id]) }}@endif', 'Selesaikan Booking')" 
+                            <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/complete') : url('/officer/book-packages/' . $booking->id . '/complete') }}', 'Selesaikan Booking')" 
                                 class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2 px-3 rounded transition">
                                 ✓ Selesai
                             </button>
@@ -434,9 +448,9 @@
         };
         
         console.log('Sending data:', data);
-        console.log('URL:', '{{ route("officer.booking-detail.update", $booking->id) }}');
+        console.log('URL:', '{{ route("officer.booking-detail.update", ["type" => $bookingType, "bookingId" => $booking->id]) }}');
 
-            fetch('{{ route("officer.booking-detail.update", $booking->id) }}', {
+            fetch('{{ route("officer.booking-detail.update", ["type" => $bookingType, "bookingId" => $booking->id]) }}', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -482,9 +496,9 @@
 
         @php
             $isProductBooking = $booking instanceof \App\Models\BookProduct;
-            $issueRoute = $isProductBooking 
-                ? route('booking.detect-issue', ['booking' => $booking->id])
-                : route('package-booking.detect-issue', ['booking' => $booking->id]);
+            $issueRoute = $isProductBooking
+                ? url('/officer/book-products/' . $booking->id . '/detect-issue')
+                : url('/officer/book-packages/' . $booking->id . '/detect-issue');
         @endphp
 
         fetch('{{ $issueRoute }}', {
@@ -494,7 +508,7 @@
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ description })
+            body: JSON.stringify({ issue_notes: description })
         })
         .then(r => r.json())
         .then(data => {

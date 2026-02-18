@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BookProduct;
 use App\Models\Book;
 use App\Enums\OrderStatus;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -117,23 +118,9 @@ class OfficerBookingController extends Controller
     /**
      * Tampilkan detail booking
      */
-    public function show($bookingId): View
+    public function show(string $type, string $bookingId): View
     {
-        // Try to find as BookProduct first
-        $booking = BookProduct::find($bookingId);
-        
-        // If not found, try to find as Book
-        if (!$booking) {
-            $booking = Book::find($bookingId);
-        }
-
-        // If still not found, abort
-        if (!$booking) {
-            abort(404, 'Booking tidak ditemukan');
-        }
-
-        // Authorize dapat melihat detail
-        authorize('view', $booking);
+        $booking = $this->resolveBookingByType($type, $bookingId);
 
         // Load relationships
         if ($booking instanceof BookProduct) {
@@ -150,21 +137,10 @@ class OfficerBookingController extends Controller
     /**
      * Update booking data via AJAX (from detail modal)
      */
-    public function updateBookingData(Request $request, $bookingId)
+    public function updateBookingData(Request $request, string $type, string $bookingId)
     {
         try {
-            // Try to find as BookProduct first
-            $booking = BookProduct::find($bookingId);
-            
-            // If not found, try to find as Book
-            if (!$booking) {
-                $booking = Book::find($bookingId);
-            }
-
-            // If still not found, abort
-            if (!$booking) {
-                return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
-            }
+            $booking = $this->resolveBookingByType($type, $bookingId);
 
             // Validate
             $validated = $request->validate([
@@ -185,6 +161,19 @@ class OfficerBookingController extends Controller
                 'message' => 'Terjadi error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function resolveBookingByType(string $type, string $bookingId): BookProduct|Book
+    {
+        if ($type === 'product') {
+            return BookProduct::findOrFail($bookingId);
+        }
+
+        if ($type === 'package') {
+            return Book::findOrFail($bookingId);
+        }
+
+        abort(404, 'Tipe booking tidak valid');
     }
 }
 
