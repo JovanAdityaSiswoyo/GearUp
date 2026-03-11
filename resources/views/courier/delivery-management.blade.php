@@ -90,11 +90,19 @@
                                 </p>
                                 <div class="space-y-2">
                                     @if($booking->order_status->value == 'Ready for Pickup')
-                                        <button onclick="courierPickupDelivery({{ $booking->id }}, '{{ $booking->product ? 'product' : 'package' }}')" class="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-2 px-3 rounded transition">
+                                        <button 
+                                            onclick="courierPickupDelivery(this.dataset.id, this.dataset.type)" 
+                                            data-id="{{ $booking->id }}"
+                                            data-type="{{ $booking->product ? 'product' : 'package' }}"
+                                            class="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-2 px-3 rounded transition">
                                             🚚 Ambil Barang
                                         </button>
                                     @elseif($booking->order_status->value == 'Out for Delivery')
-                                        <button onclick="courierCompleteDelivery({{ $booking->id }}, '{{ $booking->product ? 'product' : 'package' }}')" class="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-2 px-3 rounded transition">
+                                        <button 
+                                            onclick="courierCompleteDelivery(this.dataset.id, this.dataset.type)" 
+                                            data-id="{{ $booking->id }}"
+                                            data-type="{{ $booking->product ? 'product' : 'package' }}"
+                                            class="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-2 px-3 rounded transition">
                                             ✓ Kirim ke User
                                         </button>
                                     @endif
@@ -117,18 +125,21 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function openPhotoUploadDialog(title, message, onPhotoSelected) {
+    // Generate unique ID untuk menghindari konflik element
+    const uniqueId = 'photoInput_' + Date.now();
+    
     Swal.fire({
         title: title,
         html: `
             <div style="text-align: left;">
                 <p style="margin-bottom: 15px; color: #666;">${message}</p>
                 <label style="display: block;">
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
-                    <div style="border: 2px dashed #3B82F6; border-radius: 8px; padding: 20px; cursor: pointer; text-align: center; background: #F0F9FF; transition: all 0.3s;">
-                        <div id="photoPreview" style="display: none; margin-bottom: 10px;">
-                            <img id="previewImage" style="max-width: 200px; max-height: 200px; border-radius: 4px;">
+                    <input type="file" id="${uniqueId}" accept="image/*" style="display: none;">
+                    <div id="uploadArea_${uniqueId}" style="border: 2px dashed #3B82F6; border-radius: 8px; padding: 20px; cursor: pointer; text-align: center; background: #F0F9FF; transition: all 0.3s;">
+                        <div id="photoPreview_${uniqueId}" style="display: none; margin-bottom: 10px;">
+                            <img id="previewImage_${uniqueId}" style="max-width: 200px; max-height: 200px; border-radius: 4px;">
                         </div>
-                        <div id="uploadPrompt">
+                        <div id="uploadPrompt_${uniqueId}">
                             <div style="font-size: 24px; margin-bottom: 8px;">📷</div>
                             <p style="margin: 0; color: #3B82F6; font-weight: bold;">Klik untuk memilih foto</p>
                             <p style="margin: 5px 0 0 0; color: #6B7280; font-size: 12px;">atau drag & drop</p>
@@ -141,39 +152,54 @@ function openPhotoUploadDialog(title, message, onPhotoSelected) {
         confirmButtonColor: '#22C55E',
         cancelButtonColor: '#6B7280',
         confirmButtonText: 'Upload Foto',
+        didOpen: () => {
+            // Setup setelah Swal terbuka
+            const fileInput = document.getElementById(uniqueId);
+            const uploadArea = document.getElementById(`uploadArea_${uniqueId}`);
+            const photoPreview = document.getElementById(`photoPreview_${uniqueId}`);
+            const previewImage = document.getElementById(`previewImage_${uniqueId}`);
+            const uploadPrompt = document.getElementById(`uploadPrompt_${uniqueId}`);
+
+            // Handle file selection via label (natural behavior)
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        photoPreview.style.display = 'block';
+                        uploadPrompt.style.display = 'none';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // Handle click on upload area (only trigger once)
+            uploadArea.addEventListener('click', function(e) {
+                // Prevent double trigger: only click if not already handled by label
+                if (e.target === uploadArea || e.target.closest('#uploadPrompt_' + uniqueId)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileInput.click();
+                }
+            });
+        },
         preConfirm: () => {
-            const fileInput = document.getElementById('photoInput');
+            const fileInput = document.getElementById(uniqueId);
             if (!fileInput.files || !fileInput.files[0]) {
                 Swal.showValidationMessage('Silakan pilih foto terlebih dahulu');
                 return false;
             }
             return fileInput.files[0];
+        },
+        didDestroy: () => {
+            // Cleanup: reset file input untuk memungkinkan upload file yang sama lagi
+            const fileInput = document.getElementById(uniqueId);
+            if (fileInput) fileInput.value = '';
         }
     }).then((result) => {
-        if (result.isConfirmed) {
+        if (result.isConfirmed && result.value) {
             onPhotoSelected(result.value);
         }
-    });
-
-    const photoInput = document.getElementById('photoInput');
-    const uploadPrompt = document.getElementById('uploadPrompt');
-    const photoPreview = document.getElementById('photoPreview');
-    const previewImage = document.getElementById('previewImage');
-
-    photoInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                photoPreview.style.display = 'block';
-                uploadPrompt.style.display = 'none';
-            };
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-
-    document.querySelector('[style*="border: 2px dashed"]').addEventListener('click', function() {
-        photoInput.click();
     });
 }
 

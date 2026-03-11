@@ -14,6 +14,7 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-gray-50">
     <div class="min-h-screen">

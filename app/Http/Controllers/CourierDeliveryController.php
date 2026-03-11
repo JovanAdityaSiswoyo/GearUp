@@ -117,6 +117,94 @@ class CourierDeliveryController extends Controller
         ]);
     }
 
+    public function dashboard(): View 
+    {
+        $courier = auth()->user();
+        $courierId = $courier?->id;
+
+        // Delivery Tasks (Pengiriman)
+        $deliveryBookings = collect();
+        $activeDeliveries = collect();
+        if ($courierId) {
+            $deliveryBookings = BookProduct::where('id_courier', $courierId)
+                ->whereIn('order_status', [OrderStatus::READY_FOR_PICKUP, OrderStatus::OUT_FOR_DELIVERY])
+                ->latest()->get();
+
+            $deliveryBooksBookings = Book::where('id_courier', $courierId)
+                ->whereIn('order_status', [OrderStatus::READY_FOR_PICKUP, OrderStatus::OUT_FOR_DELIVERY])
+                ->latest()->get();
+
+            $deliveryBookings = $deliveryBookings->concat($deliveryBooksBookings)->sortByDesc('created_at');
+            $activeDeliveries = $deliveryBookings->take(5);
+        }
+
+        // Return Tasks (Pengembalian)
+        $returnBookings = collect();
+        $activeReturns = collect();
+        if ($courierId) {
+            $returnBookings = BookProduct::where('id_courier', $courierId)
+                ->whereIn('order_status', [OrderStatus::PICKUP_SCHEDULED, OrderStatus::ON_PROCESS_RETURN])
+                ->latest()->get();
+
+            $returnBooksBookings = Book::where('id_courier', $courierId)
+                ->whereIn('order_status', [OrderStatus::PICKUP_SCHEDULED, OrderStatus::ON_PROCESS_RETURN])
+                ->latest()->get();
+
+            $returnBookings = $returnBookings->concat($returnBooksBookings)->sortByDesc('created_at');
+            $activeReturns = $returnBookings->take(5);
+        }
+
+        // Recent Completed
+        $recentCompleted = collect();
+        if ($courierId) {
+            $completedBookProducts = BookProduct::where('id_courier', $courierId)
+                ->where('order_status', OrderStatus::COMPLETED)->latest()->limit(5)->get();
+            $completedBooks = Book::where('id_courier', $courierId)
+                ->where('order_status', OrderStatus::COMPLETED)->latest()->limit(5)->get();
+            $recentCompleted = $completedBookProducts->concat($completedBooks)
+                ->sortByDesc('created_at')->take(5);
+        }
+
+        // 📊 Stats Counts - Dynamic
+        if ($courierId) {
+            $activeDeliveriesCount = BookProduct::where('id_courier', $courierId)
+                    ->whereIn('order_status', [OrderStatus::READY_FOR_PICKUP, OrderStatus::OUT_FOR_DELIVERY])->count()
+                + Book::where('id_courier', $courierId)
+                    ->whereIn('order_status', [OrderStatus::READY_FOR_PICKUP, OrderStatus::OUT_FOR_DELIVERY])->count();
+
+            $pendingPickupsCount = BookProduct::where('id_courier', $courierId)
+                    ->where('order_status', OrderStatus::READY_FOR_PICKUP)->count()
+                + Book::where('id_courier', $courierId)
+                    ->where('order_status', OrderStatus::READY_FOR_PICKUP)->count();
+
+            $completedTodayCount = BookProduct::where('id_courier', $courierId)
+                    ->where('order_status', OrderStatus::COMPLETED)
+                    ->whereDate('updated_at', today())->count()
+                + Book::where('id_courier', $courierId)
+                    ->where('order_status', OrderStatus::COMPLETED)
+                    ->whereDate('updated_at', today())->count();
+
+            $returnsCount = BookProduct::where('id_courier', $courierId)
+                    ->whereIn('order_status', [OrderStatus::PICKUP_SCHEDULED, OrderStatus::ON_PROCESS_RETURN])->count()
+                + Book::where('id_courier', $courierId)
+                    ->whereIn('order_status', [OrderStatus::PICKUP_SCHEDULED, OrderStatus::ON_PROCESS_RETURN])->count();
+        } else {
+            $activeDeliveriesCount = $pendingPickupsCount = $completedTodayCount = $returnsCount = 0;
+        }
+
+        return view('courier.dashboard', [
+            'deliveryBookings' => $deliveryBookings,
+            'activeDeliveries' => $activeDeliveries,
+            'activeReturns' => $activeReturns,
+            'recentCompleted' => $recentCompleted,
+            // 📊 Pass counts to view
+            'activeDeliveriesCount' => $activeDeliveriesCount,
+            'pendingPickupsCount' => $pendingPickupsCount,
+            'completedTodayCount' => $completedTodayCount,
+            'returnsCount' => $returnsCount,
+        ]);
+    }
+
     /**
      * Tampilkan halaman pengembalian
      */
@@ -176,9 +264,18 @@ class CourierDeliveryController extends Controller
     /**
      * Tampilkan detail delivery
      */
-    public function show(string $type, BookProduct|Book $booking): View
+    public function show(string $type, string $id): View
     {
         $courier = auth()->user();
+        
+        // Resolve booking berdasarkan type
+        if ($type === 'product') {
+            $booking = BookProduct::findOrFail($id);
+        } elseif ($type === 'package') {
+            $booking = Book::findOrFail($id);
+        } else {
+            abort(404, 'Invalid booking type');
+        }
         
         // Validasi bahwa booking ini adalah milik courier
         if ($booking->id_courier !== $courier?->id) {

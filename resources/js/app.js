@@ -1,6 +1,6 @@
 import './bootstrap';
 
-import { supabase, getProducts } from './supabase';
+// import { supabase, getProducts } from './supabase';
 
 // Helper function to open auth modal
 window.openAuthModal = function(tab = 'login') {

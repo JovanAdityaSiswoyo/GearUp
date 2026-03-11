@@ -8,12 +8,30 @@ use App\Models\ActivityLog;
 use App\Enums\OrderStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use App\Enums\ItemStatus;
 
 class OfficerBookingStatusController extends Controller
 {
     private function hasAuthenticatedActor(): bool
     {
         return auth('officer')->check() || auth('admin')->check() || auth('web')->check();
+    }
+
+    private function getItemStatusFromOrderStatus($orderStatus): ?ItemStatus
+    {
+        return match($orderStatus) {
+            OrderStatus::DRAFT => ItemStatus::AVAILABLE,
+            OrderStatus::CONFIRMED => ItemStatus::BOOKED,
+            OrderStatus::READY_FOR_PICKUP => ItemStatus::PACKING,
+            OrderStatus::OUT_FOR_DELIVERY => ItemStatus::PICKED_UP,
+            OrderStatus::DELIVERED => ItemStatus::DEPLOYED,
+            OrderStatus::PICKUP_SCHEDULED => ItemStatus::RETURNING,
+            OrderStatus::PENDING_REVIEW => ItemStatus::IN_INSPECTION,
+            OrderStatus::COMPLETED => ItemStatus::AVAILABLE,
+            OrderStatus::ISSUE_DETECTED,
+            OrderStatus::CANCELLED => null, // Tidak ada mapping langsung
+            default => null,
+        };
     }
 
     /**
@@ -352,23 +370,34 @@ class OfficerBookingStatusController extends Controller
 
         DB::beginTransaction();
         try {
-            $previousStatus = $booking->order_status?->value;
-            $booking->update(['order_status' => $newStatus]);
+            $previousOrderStatus = $booking->order_status?->value;
+            $previousItemStatus = $booking->item_status?->value;
+            
+            // Update order_status
+            $booking->order_status = $newStatus;
+            
+            $correspondingItemStatus = $this->getItemStatusFromOrderStatus($newStatus);
+            if ($correspondingItemStatus) {
+                $booking->item_status = $correspondingItemStatus;
+            }
+            
+            $booking->save();
+            
             $this->logBookingActivity(
                 $booking,
                 $action,
                 'Officer mengubah status booking',
                 [
-                    'previous_order_status' => $previousStatus,
+                    'previous_order_status' => $previousOrderStatus,
                     'new_order_status' => $newStatus->value,
+                    'previous_item_status' => $previousItemStatus,
+                    'new_item_status' => $booking->item_status?->value,
                 ]
             );
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => $successMessage
-            ]);
+            return response()->json(['success' => true, 'message' => $successMessage]);
+            
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

@@ -194,9 +194,7 @@ Route::post('/book-packages/{booking}/cancel', [App\Http\Controllers\OfficerBook
 
 // Courier Routes
 Route::prefix('courier')->middleware(['auth:web,courier'])->name('courier.')->group(function () {
-    Route::get('/dashboard', function() {
-        return view('courier.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard',  [App\Http\Controllers\CourierDeliveryController::class, 'dashboard'])->name('dashboard');
     
     // Deliveries Management (New)
     Route::get('/deliveries', [App\Http\Controllers\CourierDeliveryController::class, 'index'])->name('deliveries.index');
