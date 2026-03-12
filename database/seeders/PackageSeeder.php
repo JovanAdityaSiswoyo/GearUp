@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Package;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class PackageSeeder extends Seeder
 {
@@ -17,7 +16,6 @@ class PackageSeeder extends Seeder
                 $package->products()->attach(
                     $product->id,
                     [
-                        'id' => Str::uuid(),
                         'qty' => rand(1, 3)
                     ]
                 );

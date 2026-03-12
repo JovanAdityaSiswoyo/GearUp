@@ -21,7 +21,7 @@ class PackageFactory extends Factory
             'name_package' => fake()->words(3, true),
             'start_publish' => now(),
             'end_publish' => now()->addMonth(),
-            'price_publish' => now(),
+            'price' => fake()->numberBetween(100000, 5000000),
         ];
     }
 }

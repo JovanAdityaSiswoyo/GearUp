@@ -41,6 +41,14 @@ new class extends Component
 ?>
 
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-4" style="font-family: 'Poppins', sans-serif;">
+    <!-- Loading Overlay -->
+    <div wire:loading wire:target="register" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[200px]">
+            <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+            <p class="text-gray-700 font-semibold">Creating account...</p>
+        </div>
+    </div>
+
     <div class="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full flex flex-col md:flex-row">
         <!-- Left Side - Register Form -->
         <div class="w-full md:w-1/2 p-8 md:p-12">
@@ -170,9 +178,17 @@ new class extends Component
                 <!-- Register Button -->
                 <button
                     type="submit"
-                    class="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    wire:loading.attr="disabled"
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-70 flex items-center justify-center gap-2"
                 >
-                    Create Account
+                    <span wire:loading.remove wire:target="register">Create Account</span>
+                    <span wire:loading wire:target="register" class="flex items-center gap-2">
+                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Creating...
+                    </span>
                 </button>
 
                 <!-- Divider -->

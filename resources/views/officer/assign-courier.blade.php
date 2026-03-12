@@ -50,35 +50,44 @@
                                     <p class="text-sm text-gray-600">{{ $booking->booker_name }}</p>
                                     <p class="text-sm text-gray-600">{{ $booking->booker_telp }}</p>
                                     <p class="text-xs text-gray-500 mt-2">Status: <span class="font-semibold">{{ $booking->order_status->label() }}</span></p>
-                                    @if($booking->id_courier)
-                                        <p class="text-xs text-green-600 mt-1">✓ Courier sudah di-assign</p>
-                                    @endif
                                 </div>
                             </div>
                         </div>
 
                         <!-- Assign Form -->
                         <div>
-                            <form action="{{ route('officer.assign-courier.store') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="booking_id" value="{{ $booking->id }}">
-                                <input type="hidden" name="booking_type" value="{{ $booking instanceof \App\Models\BookProduct ? 'product' : 'package' }}">
-                                <input type="hidden" name="assignment_type" value="delivery">
-                                
-                                <label class="block text-sm font-medium text-gray-700 mb-2 text-center">Pilih Courier</label>
-                                <select name="courier_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center" required>
-                                    <option value="">-- Pilih Courier --</option>
-                                    @foreach($couriers as $courier)
-                                        <option value="{{ $courier->id }}" @if($booking->id_courier === $courier->id) selected @endif>
-                                            {{ $courier->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                
-                                <button type="submit" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
-                                    Assign Courier
-                                </button>
-                            </form>
+                            @if($booking->id_courier)
+                                <div class="flex flex-col items-center justify-center h-full py-4 space-y-2">
+                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-100">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-semibold text-green-700">Courier Sudah Di-assign</p>
+                                    <p class="text-xs text-gray-500 text-center">
+                                        {{ $couriers->firstWhere('id', $booking->id_courier)?->name ?? 'Courier' }}
+                                    </p>
+                                </div>
+                            @else
+                                <form action="{{ route('officer.assign-courier.store') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                                    <input type="hidden" name="booking_type" value="{{ $booking instanceof \App\Models\BookProduct ? 'product' : 'package' }}">
+                                    <input type="hidden" name="assignment_type" value="delivery">
+
+                                    <label class="block text-sm font-medium text-gray-700 mb-2 text-center">Pilih Courier</label>
+                                    <select name="courier_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center" required>
+                                        <option value="">-- Pilih Courier --</option>
+                                        @foreach($couriers as $courier)
+                                            <option value="{{ $courier->id }}">{{ $courier->name }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <button type="submit" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
+                                        Assign Courier
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -113,35 +122,44 @@
                                     <p class="text-sm text-gray-600">{{ $booking->booker_name }}</p>
                                     <p class="text-sm text-gray-600">{{ $booking->booker_telp }}</p>
                                     <p class="text-xs text-gray-500 mt-2">Status: <span class="font-semibold">{{ $booking->order_status->label() }}</span></p>
-                                    @if($booking->id_courier)
-                                        <p class="text-xs text-green-600 mt-1">✓ Courier sudah di-assign</p>
-                                    @endif
                                 </div>
                             </div>
                         </div>
 
                         <!-- Assign Form -->
                         <div>
-                            <form action="{{ route('officer.assign-courier.store') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="booking_id" value="{{ $booking->id }}">
-                                <input type="hidden" name="booking_type" value="{{ $booking instanceof \App\Models\BookProduct ? 'product' : 'package' }}">
-                                <input type="hidden" name="assignment_type" value="return">
-                                
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Courier</label>
-                                <select name="courier_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                                    <option value="">-- Pilih Courier --</option>
-                                    @foreach($couriers as $courier)
-                                        <option value="{{ $courier->id }}" @if($booking->id_courier === $courier->id) selected @endif>
-                                            {{ $courier->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                
-                                <button type="submit" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
-                                    Assign Courier
-                                </button>
-                            </form>
+                            @if($booking->id_courier)
+                                <div class="flex flex-col items-center justify-center h-full py-4 space-y-2">
+                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-100">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-semibold text-green-700">Courier Sudah Di-assign</p>
+                                    <p class="text-xs text-gray-500 text-center">
+                                        {{ $couriers->firstWhere('id', $booking->id_courier)?->name ?? 'Courier' }}
+                                    </p>
+                                </div>
+                            @else
+                                <form action="{{ route('officer.assign-courier.store') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                                    <input type="hidden" name="booking_type" value="{{ $booking instanceof \App\Models\BookProduct ? 'product' : 'package' }}">
+                                    <input type="hidden" name="assignment_type" value="return">
+
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Courier</label>
+                                    <select name="courier_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="">-- Pilih Courier --</option>
+                                        @foreach($couriers as $courier)
+                                            <option value="{{ $courier->id }}">{{ $courier->name }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <button type="submit" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
+                                        Assign Courier
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>
