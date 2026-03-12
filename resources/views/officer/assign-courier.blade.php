@@ -58,7 +58,6 @@
 
                         <!-- Assign Form -->
                         <div>
-<<<<<<< HEAD
                             @if($booking->id_courier)
                                 <div class="flex flex-col items-center justify-center h-full py-4 space-y-2">
                                     <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-100">
@@ -91,7 +90,6 @@
                                     </button>
                                 </form>
                             @endif
-=======
                             <form action="{{ route('officer.assign-courier.store') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="booking_id" value="{{ $booking->id }}">
@@ -112,7 +110,6 @@
                                     Assign Courier
                                 </button>
                             </form>
->>>>>>> parent of e9b8914 (Optimized Pages)
                         </div>
                     </div>
                 </div>
