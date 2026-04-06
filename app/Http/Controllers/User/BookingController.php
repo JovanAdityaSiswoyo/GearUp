@@ -197,12 +197,12 @@ class BookingController extends Controller
             OrderStatus::ISSUE_DETECTED->value,
         ];
 
-        $productBookings = BookProduct::with(['product', 'detailBookProduct', 'courier'])
+        $productBookings = BookProduct::with(['product', 'detailBookProduct'])
             ->where('id_user', auth()->id())
             ->latest()
             ->get();
 
-        $packageBookings = \App\Models\Book::with(['package', 'detailBooks', 'courier'])
+        $packageBookings = \App\Models\Book::with(['package', 'detailBooks'])
             ->where('id_user', auth()->id())
             ->latest()
             ->get();

@@ -38,10 +38,6 @@
                     <x-heroicon-o-square-3-stack-3d class="h-5 w-5 mr-3" />
                     <span>Packing</span>
                 </a>
-                <a href="{{ route('officer.assign-courier.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition {{ request()->routeIs('officer.assign-courier.*') ? 'bg-white/20 border-r-4 border-white' : '' }}">
-                    <x-heroicon-o-truck class="h-5 w-5 mr-3" />
-                    <span>Assign Courier</span>
-                </a>
                 <a href="{{ route('officer.returns.monitor') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition {{ request()->routeIs('officer.returns.*') ? 'bg-white/20 border-r-4 border-white' : '' }}">
                     <x-heroicon-o-arrow-path class="h-5 w-5 mr-3" />
                     <span>Monitor Returns</span>

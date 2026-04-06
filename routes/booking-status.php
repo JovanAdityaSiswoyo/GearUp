@@ -7,7 +7,7 @@ use App\Http\Controllers\BookingStatusController;
  * Booking Status Routes
  * 
  * Routes untuk mengelola status booking (product dan package)
- * Hanya courier yang bisa mengakses operasi delivery/return yang critical
+ * Operasional dijalankan oleh officer tanpa role courier
  */
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -31,25 +31,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/books/{booking}/detect-issue', [BookingStatusController::class, 'detectIssue'])->name('package-booking.detect-issue');
     });
 
-    // Courier routes - KRUSIAL untuk logistik
-    Route::middleware(['role:courier'])->group(function () {
-        // Product booking - Delivery
-        Route::post('/book-products/{booking}/courier/pickup-delivery', [BookingStatusController::class, 'courierPickupDelivery'])->name('booking.courier-pickup');
-        Route::post('/book-products/{booking}/courier/complete-delivery', [BookingStatusController::class, 'courierCompleteDelivery'])->name('booking.courier-deliver');
-        
-        // Product booking - Return
-        Route::post('/book-products/{booking}/courier/pickup-return', [BookingStatusController::class, 'courierPickupReturn'])->name('booking.courier-pickup-return');
-        Route::post('/book-products/{booking}/courier/complete-return', [BookingStatusController::class, 'courierCompleteReturn'])->name('booking.courier-return');
-
-        // Package booking - Delivery
-        Route::post('/books/{booking}/courier/pickup-delivery', [BookingStatusController::class, 'courierPickupDelivery'])->name('package-booking.courier-pickup');
-        Route::post('/books/{booking}/courier/complete-delivery', [BookingStatusController::class, 'courierCompleteDelivery'])->name('package-booking.courier-deliver');
-        
-        // Package booking - Return
-        Route::post('/books/{booking}/courier/pickup-return', [BookingStatusController::class, 'courierPickupReturn'])->name('package-booking.courier-pickup-return');
-        Route::post('/books/{booking}/courier/complete-return', [BookingStatusController::class, 'courierCompleteReturn'])->name('package-booking.courier-return');
-    });
-
     // Admin/Officer routes
     Route::middleware(['role:admin,officer'])->group(function () {
         // Product booking - Cancel
@@ -65,7 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/book-products/{booking}/timeline', [BookingStatusController::class, 'getTimeline'])->name('booking.timeline');
         Route::get('/books/{booking}/timeline', [BookingStatusController::class, 'getTimeline'])->name('package-booking.timeline');
 
-        // Delivery status (untuk courier)
+        // Delivery status
         Route::get('/book-products/{booking}/delivery-status', [BookingStatusController::class, 'getDeliveryStatus'])->name('booking.delivery-status');
         Route::get('/books/{booking}/delivery-status', [BookingStatusController::class, 'getDeliveryStatus'])->name('package-booking.delivery-status');
     });

@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Models\Book;
 use App\Models\DetailBook;
 use App\Enums\OrderStatus;
+use App\Enums\ItemStatus;
 use Illuminate\Support\Facades\Auth;
 
 class BookingPackageController extends Controller
@@ -33,7 +34,6 @@ class BookingPackageController extends Controller
             'renter_address' => 'required|string|max:500',
             'identity_document' => 'required|image|mimes:jpg,jpeg,png|max:4096',
             'shipping_method' => 'required|in:pickup,delivery',
-            'courier' => 'nullable|string|max:50',
             'shipping_date' => 'required|date',
             'rental_start_at' => 'required|date|after_or_equal:today',
             'rental_end_at' => 'required|date|after_or_equal:rental_start_at',
@@ -43,8 +43,9 @@ class BookingPackageController extends Controller
         $booking->id_user = Auth::id();
         $booking->id_package = $package->id;
         $booking->book_code = 'BK-' . strtoupper(uniqid());
-        $booking->status = 'pending'; // or whatever initial string your DB expects
+        $booking->status = 'pending';
         $booking->order_status = OrderStatus::AWAITING_VALIDATION; // Menunggu validasi officer
+        $booking->item_status = ItemStatus::BOOKED; // Item is now booked for this user's dates
         $booking->checkin_appointment_start = $validated['rental_start_at'];
         $booking->checkout_appointment_end = $validated['rental_end_at'];
         $booking->amount = 1;

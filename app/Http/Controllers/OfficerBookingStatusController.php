@@ -6,12 +6,20 @@ use App\Models\BookProduct;
 use App\Models\Book;
 use App\Models\ActivityLog;
 use App\Enums\OrderStatus;
+use App\Services\ItemStatusTransitionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Enums\ItemStatus;
 
 class OfficerBookingStatusController extends Controller
 {
+    protected ItemStatusTransitionService $transitionService;
+
+    public function __construct(ItemStatusTransitionService $transitionService)
+    {
+        $this->transitionService = $transitionService;
+    }
+
     private function hasAuthenticatedActor(): bool
     {
         return auth('officer')->check() || auth('admin')->check() || auth('web')->check();
@@ -68,8 +76,21 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::READY_FOR_PICKUP,
-            'Barang siap diambil kurir',
+            'Barang siap diambil user di lokasi',
             'prepare_pickup'
+        );
+    }
+
+    /**
+     * Serahkan BookProduct langsung ke user di lokasi
+     */
+    public function handoverProduct($id): JsonResponse
+    {
+        return $this->updateOrderStatus(
+            BookProduct::find($id),
+            OrderStatus::DELIVERED,
+            'Barang berhasil diserahkan ke user',
+            'handover'
         );
     }
 
@@ -81,8 +102,21 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::PICKUP_SCHEDULED,
-            'Penjemputan berhasil dijadwalkan',
+            'Jadwal pengembalian berhasil dicatat',
             'schedule_return'
+        );
+    }
+
+    /**
+     * Terima pengembalian BookProduct di lokasi
+     */
+    public function receiveReturnProduct($id): JsonResponse
+    {
+        return $this->updateOrderStatus(
+            BookProduct::find($id),
+            OrderStatus::PENDING_REVIEW,
+            'Barang pengembalian berhasil diterima',
+            'receive_return'
         );
     }
 
@@ -226,8 +260,21 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::READY_FOR_PICKUP,
-            'Barang siap diambil kurir',
+            'Barang siap diambil user di lokasi',
             'prepare_pickup'
+        );
+    }
+
+    /**
+     * Serahkan Book (Package) langsung ke user di lokasi
+     */
+    public function handoverPackage($id): JsonResponse
+    {
+        return $this->updateOrderStatus(
+            Book::find($id),
+            OrderStatus::DELIVERED,
+            'Barang berhasil diserahkan ke user',
+            'handover'
         );
     }
 
@@ -239,8 +286,21 @@ class OfficerBookingStatusController extends Controller
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::PICKUP_SCHEDULED,
-            'Penjemputan berhasil dijadwalkan',
+            'Jadwal pengembalian berhasil dicatat',
             'schedule_return'
+        );
+    }
+
+    /**
+     * Terima pengembalian Book (Package) di lokasi
+     */
+    public function receiveReturnPackage($id): JsonResponse
+    {
+        return $this->updateOrderStatus(
+            Book::find($id),
+            OrderStatus::PENDING_REVIEW,
+            'Barang pengembalian berhasil diterima',
+            'receive_return'
         );
     }
 
@@ -373,14 +433,15 @@ class OfficerBookingStatusController extends Controller
             $previousOrderStatus = $booking->order_status?->value;
             $previousItemStatus = $booking->item_status?->value;
             
-            // Update order_status
-            $booking->order_status = $newStatus;
-            
+            // Get the corresponding item status from order status
             $correspondingItemStatus = $this->getItemStatusFromOrderStatus($newStatus);
+            
+            // Direct assignment (officers can override workflow)
             if ($correspondingItemStatus) {
                 $booking->item_status = $correspondingItemStatus;
             }
             
+            $booking->order_status = $newStatus;
             $booking->save();
             
             $this->logBookingActivity(

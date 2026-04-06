@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\Officer;
-use App\Models\Courier;
 
 new class extends Component
 {
@@ -51,13 +50,6 @@ new class extends Component
             return redirect()->route('officer.dashboard');
         }
         
-        // Try to login as Courier
-        $courier = Courier::where('email', $this->email)->first();
-        if ($courier && Auth::guard('courier')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-            request()->session()->regenerate();
-            return redirect()->route('courier.dashboard');
-        }
-
         $this->addError('email', 'The provided credentials do not match our records.');
     }
 };

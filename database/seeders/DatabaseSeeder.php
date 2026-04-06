@@ -32,7 +32,6 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AdminSeeder::class,
             OfficerSeeder::class,
-            CourierSeeder::class,
             BrandSeeder::class,
             CategorySeeder::class,
             ProductSeeder::class,

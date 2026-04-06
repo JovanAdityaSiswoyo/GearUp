@@ -17,7 +17,7 @@ class ScanUnitController extends Controller
     }
 
     /**
-     * Show unit detail dengan action buttons berdasarkan guard (officer/courier/admin)
+        * Show unit detail dengan action buttons berdasarkan guard (officer/admin)
      * Dimulai dari QR scan
      */
     public function show(Unit $unit): View
@@ -53,29 +53,29 @@ class ScanUnitController extends Controller
     }
 
     /**
-     * Pickup unit - Courier scan  
+     * Pickup unit - Officer scan  
      */
     public function pickupUnit(Unit $unit)
     {
-        $courierId = auth()->guard('courier')->id();
+        $officerId = auth()->guard('officer')->id();
 
-        if (!$courierId) {
-            return redirect()->route('home')->with('error', 'Courier not authenticated');
+        if (!$officerId) {
+            return redirect()->route('home')->with('error', 'Officer not authenticated');
         }
 
         // Log scan action
         $this->qrCodeService->logScan(
             $unit,
             'picked_up',
-            auth()->guard('courier')->user(),
-            'Courier pickup unit'
+            auth()->guard('officer')->user(),
+            'Officer pickup unit'
         );
 
         return back()->with('success', 'Unit picked up: ' . $unit->serial_number);
     }
 
     /**
-     * View history - Admin/Officer/Courier dapat melihat
+        * View history - Admin/Officer dapat melihat
      */
     public function history(Unit $unit): View
     {

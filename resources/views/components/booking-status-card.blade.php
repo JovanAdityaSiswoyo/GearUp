@@ -48,17 +48,6 @@
         </div>
     </div>
 
-    <!-- Courier Info (jika ada) -->
-    @if($booking->courier)
-    <div class="pt-3 border-t">
-        <h4 class="text-sm font-semibold text-gray-700 mb-2">Kurir</h4>
-        <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-sm font-medium text-gray-900">{{ $booking->courier->name }}</p>
-            <p class="text-sm text-gray-600">📱 {{ $booking->courier->phone }}</p>
-        </div>
-    </div>
-    @endif
-
     <!-- Status Timeline -->
     <div class="pt-3 border-t">
         <h4 class="text-sm font-semibold text-gray-700 mb-3">Timeline</h4>

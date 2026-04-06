@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\Officer;
-use App\Models\Courier;
 use App\Models\ActivityLog;
 
 class AuthModal extends Component
@@ -126,18 +125,6 @@ class AuthModal extends Component
             $this->logLoginActivity(Auth::guard('admin')->user(), 'admin');
             $this->closeModal();
             return redirect()->route('admin.dashboard');
-        }
-
-        // Try to login as Courier
-        $courier = Courier::where('email', $this->loginEmail)->first();
-        if ($courier && Auth::guard('courier')->attempt(
-            ['email' => $this->loginEmail, 'password' => $this->loginPassword],
-            $this->loginRemember
-        )) {
-            request()->session()->regenerate();
-            $this->logLoginActivity(Auth::guard('courier')->user(), 'courier');
-            $this->closeModal();
-            return redirect()->route('courier.dashboard');
         }
 
         $this->addError('loginEmail', 'Email atau password salah.');

@@ -17,13 +17,13 @@ enum ItemStatus: string
     // Barang sedang diambil dari rak dan dimasukkan ke tas/wadah
     case PACKING = 'Packing';
     
-    // Barang sudah diserahkan ke kurir untuk dikirim
+    // Barang sudah diserahkan ke user di lokasi
     case PICKED_UP = 'Picked-Up';
     
     // Barang sudah di tangan User dan sedang digunakan di lapangan
     case DEPLOYED = 'Deployed';
     
-    // Barang sedang dalam perjalanan kembali (dibawa kurir)
+    // Barang sedang dalam proses pengembalian ke lokasi
     case RETURNING = 'Returning';
     
     // Barang sudah di gudang tapi belum boleh disewa karena sedang dicek
@@ -44,7 +44,7 @@ enum ItemStatus: string
             self::AVAILABLE => 'Tersedia',
             self::BOOKED => 'Dipesan',
             self::PACKING => 'Sedang Dikemas',
-            self::PICKED_UP => 'Diambil Kurir',
+            self::PICKED_UP => 'Diambil User',
             self::DEPLOYED => 'Sedang Digunakan',
             self::RETURNING => 'Dalam Perjalanan Kembali',
             self::IN_INSPECTION => 'Dalam Pemeriksaan',
@@ -62,9 +62,9 @@ enum ItemStatus: string
             self::AVAILABLE => 'Admin',
             self::BOOKED => 'Officer',
             self::PACKING => 'Officer',
-            self::PICKED_UP => 'Courier',
-            self::DEPLOYED => 'Courier/User',
-            self::RETURNING => 'Courier',
+            self::PICKED_UP => 'Officer/User',
+            self::DEPLOYED => 'User',
+            self::RETURNING => 'Officer/User',
             self::IN_INSPECTION => 'Officer',
             self::MAINTENANCE => 'Officer',
             self::LOST_SCRAPPED => 'Admin',
@@ -80,9 +80,9 @@ enum ItemStatus: string
             self::AVAILABLE => 'Barang bersih, lengkap, dan siap di rak gudang',
             self::BOOKED => 'Barang sudah dipesan untuk tanggal tertentu',
             self::PACKING => 'Barang sedang diambil dari rak dan dimasukkan ke tas/wadah',
-            self::PICKED_UP => 'Barang sudah diserahkan ke kurir untuk dikirim',
+            self::PICKED_UP => 'Barang sudah diserahkan ke user di lokasi',
             self::DEPLOYED => 'Barang sudah di tangan User dan sedang digunakan di lapangan',
-            self::RETURNING => 'Barang sedang dalam perjalanan kembali',
+            self::RETURNING => 'Barang sedang dalam proses pengembalian ke lokasi',
             self::IN_INSPECTION => 'Barang sudah di gudang tapi belum boleh disewa',
             self::MAINTENANCE => 'Barang rusak ringan',
             self::LOST_SCRAPPED => 'Barang hilang atau rusak total',

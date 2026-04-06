@@ -21,10 +21,10 @@ enum OrderStatus: string
 
     // ========== FASE PENGIRIMAN (LOGISTIK) ==========
     
-    // Barang sudah dipacking Officer, siap diambil Courier
+    // Barang sudah dipacking Officer, siap diambil User di lokasi
     case READY_FOR_PICKUP = 'Ready for Pickup';
     
-    // Courier sedang menuju lokasi User
+    // Transisi lama delivery kurir (tetap disimpan untuk kompatibilitas data)
     case OUT_FOR_DELIVERY = 'Out for Delivery';
     
     // Barang sampai. Kurir melakukan foto paket untuk memastikan
@@ -32,10 +32,10 @@ enum OrderStatus: string
 
     // ========== FASE PENGEMBALIAN ==========
     
-    // Sistem/Officer menjadwalkan kurir untuk jemput barang
+    // Sistem/Officer menjadwalkan pengembalian oleh User ke lokasi
     case PICKUP_SCHEDULED = 'Pickup Scheduled';
     
-    // Courier sudah mengambil barang dari User
+    // Transisi lama return kurir (tetap disimpan untuk kompatibilitas data)
     case ON_PROCESS_RETURN = 'On Process Return';
     
     // Barang sudah sampai gudang, menunggu Officer melakukan QC
@@ -67,13 +67,13 @@ enum OrderStatus: string
             self::CONFIRMED => 'Terkonfirmasi',
             
             // Fase Pengiriman
-            self::READY_FOR_PICKUP => 'Siap Diambil Kurir',
-            self::OUT_FOR_DELIVERY => 'Dalam Pengiriman',
+            self::READY_FOR_PICKUP => 'Siap Diambil di Lokasi',
+            self::OUT_FOR_DELIVERY => 'Dalam Proses Penyerahan',
             self::DELIVERED => 'Terkirim',
             
             // Fase Pengembalian
-            self::PICKUP_SCHEDULED => 'Penjemputan Dijadwalkan',
-            self::ON_PROCESS_RETURN => 'Sedang Dikembalikan',
+            self::PICKUP_SCHEDULED => 'Pengembalian Dijadwalkan',
+            self::ON_PROCESS_RETURN => 'Pengembalian Dalam Proses',
             self::PENDING_REVIEW => 'Menunggu Review',
             
             // Fase Penyelesaian
@@ -94,12 +94,12 @@ enum OrderStatus: string
             self::AWAITING_VALIDATION => 'Pembayaran sudah masuk, Officer perlu mengecek ketersediaan',
             self::CONFIRMED => 'Order sah. Stok barang dipotong dari sistem',
             
-            self::READY_FOR_PICKUP => 'Barang sudah dipacking, siap diambil Courier',
-            self::OUT_FOR_DELIVERY => 'Courier sedang menuju lokasi User',
+            self::READY_FOR_PICKUP => 'Barang sudah dipacking, siap diambil User di lokasi',
+            self::OUT_FOR_DELIVERY => 'Barang sedang dalam proses penyerahan ke User',
             self::DELIVERED => 'Barang sampai ke tangan User',
             
-            self::PICKUP_SCHEDULED => 'Penjemputan barang dijadwalkan',
-            self::ON_PROCESS_RETURN => 'Courier sedang mengambil barang dari User',
+            self::PICKUP_SCHEDULED => 'Pengembalian barang oleh User sudah dijadwalkan',
+            self::ON_PROCESS_RETURN => 'Barang sedang dalam proses pengembalian ke lokasi',
             self::PENDING_REVIEW => 'Barang di gudang, menunggu QC Officer',
             
             self::COMPLETED => 'Barang kembali lengkap, deposit dikembalikan',
@@ -118,12 +118,12 @@ enum OrderStatus: string
             self::AWAITING_VALIDATION => 'Officer',
             self::CONFIRMED => 'Officer',
             
-            self::READY_FOR_PICKUP => 'Courier',
-            self::OUT_FOR_DELIVERY => 'Courier',
-            self::DELIVERED => 'Courier',
+            self::READY_FOR_PICKUP => 'Officer/User',
+            self::OUT_FOR_DELIVERY => 'Officer',
+            self::DELIVERED => 'Officer',
             
             self::PICKUP_SCHEDULED => 'Officer',
-            self::ON_PROCESS_RETURN => 'Courier',
+            self::ON_PROCESS_RETURN => 'Officer/User',
             self::PENDING_REVIEW => 'Officer',
             
             self::COMPLETED => 'Officer',
@@ -155,11 +155,11 @@ enum OrderStatus: string
             self::AWAITING_VALIDATION => [self::CONFIRMED, self::CANCELLED],
             self::CONFIRMED => [self::READY_FOR_PICKUP, self::CANCELLED],
             
-            self::READY_FOR_PICKUP => [self::OUT_FOR_DELIVERY],
+            self::READY_FOR_PICKUP => [self::DELIVERED, self::OUT_FOR_DELIVERY],
             self::OUT_FOR_DELIVERY => [self::DELIVERED],
             self::DELIVERED => [self::PICKUP_SCHEDULED],
             
-            self::PICKUP_SCHEDULED => [self::ON_PROCESS_RETURN, self::CANCELLED],
+            self::PICKUP_SCHEDULED => [self::PENDING_REVIEW, self::ON_PROCESS_RETURN, self::CANCELLED],
             self::ON_PROCESS_RETURN => [self::PENDING_REVIEW],
             self::PENDING_REVIEW => [self::COMPLETED, self::ISSUE_DETECTED],
             

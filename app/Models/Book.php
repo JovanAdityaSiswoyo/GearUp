@@ -20,6 +20,7 @@ class Book extends Model
         'status',
         'item_status',
         'order_status',
+        'pickup_photo',
         'id_courier',
         'checkin_appointment_start',
         'checkout_appointment_end',

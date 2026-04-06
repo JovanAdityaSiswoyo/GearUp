@@ -458,8 +458,8 @@ class CourierDeliveryController extends Controller
                 $booking->return_pickup_photo = $path;
             }
 
-            $booking->order_status = OrderStatus::ON_PROCESS_RETURN;
-            $booking->save();
+            $this->transitionService->transitionItemStatus($booking, ItemStatus::RETURNING);
+            $this->transitionService->syncOrderStatus($booking, ItemStatus::RETURNING);
 
             return response()->json(['success' => true, 'message' => 'Barang berhasil diambil untuk pengembalian']);
         } catch (\Exception $e) {
@@ -485,7 +485,8 @@ class CourierDeliveryController extends Controller
                 $booking->return_complete_photo = $path;
             }
 
-            $booking->order_status = OrderStatus::PENDING_REVIEW;
+            $this->transitionService->transitionItemStatus($booking, ItemStatus::IN_INSPECTION);
+            $this->transitionService->syncOrderStatus($booking, ItemStatus::IN_INSPECTION);
             $booking->returned_at = now();
             $booking->save();
 
@@ -498,7 +499,7 @@ class CourierDeliveryController extends Controller
     /**
      * Package (Book) versions of the same methods
      */
-    public function pickupDeliveryPackage($id)
+    public function pickupDeliveryPackage($id)  
     {
         try {
             $booking = Book::findOrFail($id);
@@ -513,12 +514,56 @@ class CourierDeliveryController extends Controller
                 $booking->pickup_photo = $path;
             }
 
-            $booking->order_status = OrderStatus::OUT_FOR_DELIVERY;
-            $booking->save();
+            $this->transitionService->transitionItemStatus($booking, ItemStatus::PICKED_UP);
+            $this->transitionService->syncOrderStatus($booking, ItemStatus::PICKED_UP);
 
-            return response()->json(['success' => true, 'message' => 'Pengiriman berhasil diselesaikan']);
+            return response()->json(['success' => true, 'message' => 'Pengiriman berhasil diambil kurir']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function completeDeliveryPackage($id)
+    {
+        try {
+            $booking = Book::findOrFail($id);
+            
+            if ($booking->id_courier !== auth()->user()?->id) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            // Kalau mau konsisten dengan product, bisa pakai transition service juga
+            $this->transitionService->transitionItemStatus(
+                $booking,
+                ItemStatus::DEPLOYED
+            );
+
+            $this->transitionService->syncOrderStatus(
+                $booking, 
+                ItemStatus::DEPLOYED
+            );
+
+            // Save photo
+            if (request()->hasFile('photo')) {
+                $photo = request()->file('photo');
+                $path = $photo->store('courier/delivery', 'public');
+                $booking->delivery_photo = $path;
+                $booking->save();
+            }
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Pengiriman package berhasil diselesaikan'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -533,15 +578,14 @@ class CourierDeliveryController extends Controller
 
             if (request()->hasFile('photo')) {
                 $photo = request()->file('photo');
-                $path = $photo->store('courier/return-complete', 'public');
-                $booking->return_complete_photo = $path;
+                $path = $photo->store('courier/return-pickup', 'public');
+                $booking->return_pickup_photo = $path;
             }
 
-            $booking->order_status = OrderStatus::PENDING_REVIEW;
-            $booking->returned_at = now();
-            $booking->save();
+            $this->transitionService->transitionItemStatus($booking, ItemStatus::RETURNING);
+            $this->transitionService->syncOrderStatus($booking, ItemStatus::RETURNING);
 
-            return response()->json(['success' => true, 'message' => 'Pengembalian berhasil diselesaikan']);
+            return response()->json(['success' => true, 'message' => 'Pengambilan barang untuk pengembalian berhasil dimulai']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

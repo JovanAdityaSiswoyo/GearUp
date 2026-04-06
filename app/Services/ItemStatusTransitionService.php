@@ -10,7 +10,7 @@ use Exception;
 
 /**
  * Service untuk handle transisi status item dengan validation
- * Mencegah transisi yang tidak valid dan memastikan alur logistik benar
+ * Mencegah transisi yang tidak valid dan memastikan alur operasional benar
  */
 class ItemStatusTransitionService
 {
@@ -70,7 +70,7 @@ class ItemStatusTransitionService
      * 
      * @param BookProduct|Book $booking
      * @param ItemStatus $newStatus
-     * @param array $additionalData Data tambahan (courier_id, timestamps, dll)
+    * @param array $additionalData Data tambahan (timestamps, dll)
      * @throws Exception jika transisi tidak valid
      */
     public function transitionItemStatus($booking, ItemStatus $newStatus, array $additionalData = []): void
@@ -96,12 +96,10 @@ class ItemStatusTransitionService
         // Update status
         $booking->item_status = $newStatus;
 
-        // Courier Handover: Catat timestamp dan courier saat Picked-Up
+        // Handover ke user: catat timestamp saat Picked-Up
         if ($newStatus === ItemStatus::PICKED_UP) {
             $booking->picked_up_at = now();
-            if (isset($additionalData['courier_id'])) {
-                $booking->id_courier = $additionalData['courier_id'];
-            }
+            $booking->id_courier = null;
         }
 
         // Catat timestamp untuk status lainnya

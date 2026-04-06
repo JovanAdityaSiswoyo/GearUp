@@ -4,91 +4,62 @@
 
 @php
     $isOfficer = auth('officer')->check() || (auth()->check() && auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('officer'));
-    $isCourier = auth('courier')->check() || (auth()->check() && auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('courier'));
 @endphp
 
-@if($isOfficer || $isCourier)
-    @if($isOfficer)
-        <!-- Officer Status Controls -->
-        <div class="flex gap-1 items-center justify-start">
-            <!-- Validate Order -->
-            @if($booking->order_status->value == 'Draft')
-            <button onclick="validateOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Validasi
-            </button>
-            @endif
+@if($isOfficer)
+    <!-- Officer Status Controls -->
+    <div class="flex gap-1 items-center justify-start flex-wrap">
+        @if($booking->order_status->value == 'Draft')
+        <button onclick="validateOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Validasi
+        </button>
+        @endif
 
-            <!-- Confirm Order -->
-            @if($booking->order_status->value == 'Awaiting Validation')
-            <button onclick="confirmOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Konfirmasi
-            </button>
-            @endif
+        @if($booking->order_status->value == 'Awaiting Validation')
+        <button onclick="confirmOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Konfirmasi
+        </button>
+        @endif
 
-            <!-- Prepare for Pickup -->
-            @if($booking->order_status->value == 'Confirmed')
-            <button onclick="preparePickup(@js((string) $booking->id), '{{ $type }}')" class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Siapkan
-            </button>
-            @endif
+        @if($booking->order_status->value == 'Confirmed')
+        <button onclick="preparePickup(@js((string) $booking->id), '{{ $type }}')" class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Siapkan
+        </button>
+        @endif
 
-            <!-- Schedule Return -->
-            @if($booking->order_status->value == 'Delivered')
-            <button onclick="scheduleReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Jadwalkan
-            </button>
-            @endif
+        @if(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery']))
+        <button onclick="handoverToUser(@js((string) $booking->id), '{{ $type }}')" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Serah ke User
+        </button>
+        @endif
 
-            <!-- Complete Order -->
-            @if($booking->order_status->value == 'Pending Review')
-            <button onclick="completeOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Selesai
-            </button>
-            <button onclick="detectIssue(@js((string) $booking->id), '{{ $type }}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Masalah
-            </button>
-            @endif
+        @if($booking->order_status->value == 'Delivered')
+        <button onclick="scheduleReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Jadwalkan Kembali
+        </button>
+        @endif
 
-            <!-- Cancel Order -->
-            @if(!in_array($booking->order_status->value, ['Completed', 'Cancelled', 'Out for Delivery', 'On Process Return']))
-            <button onclick="cancelOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-                Batalkan
-            </button>
-            @endif
-        </div>
+        @if(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return']))
+        <button onclick="receiveReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Terima Kembali
+        </button>
+        @endif
 
-    @elseif($isCourier)
-        <!-- Courier Status Controls (Hanya untuk delivery/return) -->
-        <div class="flex flex-wrap gap-1 items-center">
-            @if($booking->order_status->value == 'Ready for Pickup' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierPickupDelivery(@js((string) $booking->id), '{{ $type }}')" class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-1 px-2 rounded transition">
-                Ambil
-            </button>
-            @endif
+        @if($booking->order_status->value == 'Pending Review')
+        <button onclick="completeOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Selesai
+        </button>
+        <button onclick="detectIssue(@js((string) $booking->id), '{{ $type }}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Masalah
+        </button>
+        @endif
 
-            @if($booking->order_status->value == 'Out for Delivery' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierCompleteDelivery(@js((string) $booking->id), '{{ $type }}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded transition">
-                Terkirim
-            </button>
-            @endif
-
-            @if($booking->order_status->value == 'Pickup Scheduled' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierPickupReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-1 px-2 rounded transition">
-                Ambil Kembali
-            </button>
-            @endif
-
-            @if($booking->order_status->value == 'On Process Return' && $booking->id_courier == auth()->user()->courier?->id)
-            <button onclick="courierCompleteReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium py-1 px-2 rounded transition">
-                Kembali
-            </button>
-            @endif
-
-            @if(!in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Pickup Scheduled', 'On Process Return']))
-            <span class="text-xs text-blue-600">Menunggu status...</span>
-            @endif
-        </div>
-    @endif
+        @if(!in_array($booking->order_status->value, ['Completed', 'Cancelled']))
+        <button onclick="cancelOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+            Batalkan
+        </button>
+        @endif
+    </div>
 @endif
 
 <script>
@@ -131,7 +102,7 @@ function confirmOrder(bookingId, type) {
 function preparePickup(bookingId, type) {
     Swal.fire({
         title: 'Siapkan Pengambilan',
-        text: 'Barang akan dipacking dan siap diambil kurir',
+        text: 'Barang akan dipacking dan siap diambil user di lokasi',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#22C55E',
@@ -144,10 +115,26 @@ function preparePickup(bookingId, type) {
     });
 }
 
+function handoverToUser(bookingId, type) {
+    Swal.fire({
+        title: 'Serah Terima ke User',
+        text: 'Pastikan user sudah hadir di lokasi sebelum melanjutkan',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0891B2',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Ya, Serahkan'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/handover`);
+        }
+    });
+}
+
 function scheduleReturn(bookingId, type) {
     Swal.fire({
-        title: 'Jadwalkan Penjemputan',
-        text: 'Kurir akan dijadwalkan untuk mengambil barang',
+        title: 'Jadwalkan Pengembalian',
+        text: 'Tetapkan jadwal user untuk mengembalikan barang ke lokasi',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#A855F7',
@@ -156,6 +143,22 @@ function scheduleReturn(bookingId, type) {
     }).then((result) => {
         if (result.isConfirmed) {
             submitStatusChange(`/officer/book-${type}s/${bookingId}/schedule-return`);
+        }
+    });
+}
+
+function receiveReturn(bookingId, type) {
+    Swal.fire({
+        title: 'Terima Pengembalian',
+        text: 'Barang kembali dari user dan siap masuk tahap review',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#F97316',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Ya, Terima'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitStatusChange(`/officer/book-${type}s/${bookingId}/receive-return`);
         }
     });
 }
@@ -267,177 +270,6 @@ function cancelOrder(bookingId, type) {
                 }
             });
         }
-    });
-}
-
-function courierPickupDelivery(bookingId, type) {
-    openPhotoUploadDialog(
-        'Foto Pengambilan Barang',
-        'Ambil foto saat mengambil barang untuk pengiriman',
-        (file) => {
-            const formData = new FormData();
-            formData.append('photo', file);
-            formData.append('_token', getCsrfToken());
-            
-            fetch(`/book-${type}s/${bookingId}/courier/pickup-delivery`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
-        }
-    );
-}
-
-function courierCompleteDelivery(bookingId, type) {
-    openPhotoUploadDialog(
-        'Foto Pengiriman',
-        'Ambil foto saat barang diserahkan ke user',
-        (file) => {
-            const formData = new FormData();
-            formData.append('photo', file);
-            formData.append('_token', getCsrfToken());
-            
-            fetch(`/book-${type}s/${bookingId}/courier/complete-delivery`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
-        }
-    );
-}
-
-function courierPickupReturn(bookingId, type) {
-    openPhotoUploadDialog(
-        'Foto Penjemputan Kembali',
-        'Ambil foto saat mengambil barang kembali dari user',
-        (file) => {
-            const formData = new FormData();
-            formData.append('photo', file);
-            formData.append('_token', getCsrfToken());
-            
-            fetch(`/book-${type}s/${bookingId}/courier/pickup-return`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
-        }
-    );
-}
-
-function courierCompleteReturn(bookingId, type) {
-    openPhotoUploadDialog(
-        'Foto Pengembalian',
-        'Ambil foto saat mengembalikan barang ke gudang',
-        (file) => {
-            const formData = new FormData();
-            formData.append('photo', file);
-            formData.append('_token', getCsrfToken());
-            
-            fetch(`/book-${type}s/${bookingId}/courier/complete-return`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
-        }
-    );
-}
-
-function openPhotoUploadDialog(title, message, onPhotoSelected) {
-    Swal.fire({
-        title: title,
-        html: `
-            <div style="text-align: left;">
-                <p style="margin-bottom: 15px; color: #666;">${message}</p>
-                <label style="display: block;">
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
-                    <div style="border: 2px dashed #3B82F6; border-radius: 8px; padding: 20px; cursor: pointer; text-align: center; background: #F0F9FF; transition: all 0.3s;">
-                        <div id="photoPreview" style="display: none; margin-bottom: 10px;">
-                            <img id="previewImage" style="max-width: 200px; max-height: 200px; border-radius: 4px;">
-                        </div>
-                        <div id="uploadPrompt">
-                            <div style="font-size: 24px; margin-bottom: 8px;">📷</div>
-                            <p style="margin: 0; color: #3B82F6; font-weight: bold;">Klik untuk memilih foto</p>
-                            <p style="margin: 5px 0 0 0; color: #6B7280; font-size: 12px;">atau drag & drop</p>
-                        </div>
-                    </div>
-                </label>
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonColor: '#22C55E',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Upload Foto',
-        preConfirm: () => {
-            const fileInput = document.getElementById('photoInput');
-            if (!fileInput.files || !fileInput.files[0]) {
-                Swal.showValidationMessage('Silakan pilih foto terlebih dahulu');
-                return false;
-            }
-            return fileInput.files[0];
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            onPhotoSelected(result.value);
-        }
-    });
-
-    // Setup file input
-    const photoInput = document.getElementById('photoInput');
-    const uploadPrompt = document.getElementById('uploadPrompt');
-    const photoPreview = document.getElementById('photoPreview');
-    const previewImage = document.getElementById('previewImage');
-
-    photoInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                photoPreview.style.display = 'block';
-                uploadPrompt.style.display = 'none';
-            };
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-
-    // Make the whole div clickable
-    document.querySelector('[style*="border: 2px dashed"]').addEventListener('click', function() {
-        photoInput.click();
     });
 }
 

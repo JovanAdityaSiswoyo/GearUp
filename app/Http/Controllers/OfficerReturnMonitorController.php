@@ -6,9 +6,17 @@ use App\Models\BookProduct;
 use App\Models\Book;
 use App\Enums\OrderStatus;
 use App\Enums\ItemStatus;
+use App\Services\ItemStatusTransitionService;
 
 class OfficerReturnMonitorController extends Controller
 {
+    protected ItemStatusTransitionService $transitionService;
+
+    public function __construct(ItemStatusTransitionService $transitionService)
+    {
+        $this->transitionService = $transitionService;
+    }
+
     public function index()
     {
         // Show all items in return process (delivered to user, scheduled pickup, returning, or pending review)
@@ -65,9 +73,9 @@ class OfficerReturnMonitorController extends Controller
             return redirect()->back()->with('error', 'Item must be in Pending Review status to process return.');
         }
 
-        // Mark as completed
-        $return->order_status = OrderStatus::COMPLETED;
-        $return->item_status = ItemStatus::AVAILABLE;
+        // Mark as completed using transition service
+        $this->transitionService->transitionItemStatus($return, ItemStatus::AVAILABLE);
+        $this->transitionService->syncOrderStatus($return, ItemStatus::AVAILABLE);
         $return->returned_at = now();
         $return->save();
 

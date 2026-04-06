@@ -103,7 +103,9 @@
                                     </a>
 
                                     @if($booking->order_status === \App\Enums\OrderStatus::PICKUP_SCHEDULED)
-                                        <button onclick="startReturn({{ $booking->id }}, '{{ $booking instanceof \App\Models\BookProduct ? 'product' : 'book' }}')" 
+                                        <button onclick="startReturn(this.dataset.id, this.dataset.type)" 
+                                                data-id="{{ $booking->id }}"
+                                                data-type="{{ $booking->product ? 'product' : 'package' }}"
                                                 class="inline-flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm font-semibold">
                                             <x-heroicon-o-truck class="h-4 w-4 mr-2" />
                                             Mulai Ambil

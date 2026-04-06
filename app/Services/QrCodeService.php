@@ -13,7 +13,7 @@ class QrCodeService
 {
     /**
      * Generate QR code SVG for a unit
-     * Format: /scan-unit/{unit_id} - URL yang akan di-scan oleh officer/courier
+        * Format: /scan-unit/{unit_id} - URL yang akan di-scan oleh officer/admin
      */
     public function generateQrCode(Unit $unit): string
     {
@@ -42,7 +42,7 @@ class QrCodeService
 
     /**
      * Log a scan action untuk unit
-     * Polymorphic relation - bisa Officer atau Courier
+        * Polymorphic relation - bisa Officer atau Admin
      */
     public function logScan(Unit $unit, string $actionType, $actor, ?string $notes = null): bool
     {

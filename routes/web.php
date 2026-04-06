@@ -148,7 +148,9 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::post('/book-products/{booking}/validate', [App\Http\Controllers\OfficerBookingStatusController::class, 'validateProduct'])->name('book-products.validate');
     Route::post('/book-products/{booking}/confirm', [App\Http\Controllers\OfficerBookingStatusController::class, 'confirmProduct'])->name('book-products.confirm');
     Route::post('/book-products/{booking}/prepare-pickup', [App\Http\Controllers\OfficerBookingStatusController::class, 'preparePickupProduct'])->name('book-products.prepare-pickup');
+    Route::post('/book-products/{booking}/handover', [App\Http\Controllers\OfficerBookingStatusController::class, 'handoverProduct'])->name('book-products.handover');
     Route::post('/book-products/{booking}/schedule-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'scheduleReturnProduct'])->name('book-products.schedule-return');
+    Route::post('/book-products/{booking}/receive-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'receiveReturnProduct'])->name('book-products.receive-return');
     Route::post('/book-products/{booking}/complete', [App\Http\Controllers\OfficerBookingStatusController::class, 'completeProduct'])->name('book-products.complete');
     Route::post('/book-products/{booking}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssueProduct'])->name('book-products.detect-issue');
     Route::post('/book-products/{booking}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelProduct'])->name('book-products.cancel');
@@ -156,7 +158,9 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::post('/book-packages/{booking}/validate', [App\Http\Controllers\OfficerBookingStatusController::class, 'validatePackage'])->name('book-packages.validate');
     Route::post('/book-packages/{booking}/confirm', [App\Http\Controllers\OfficerBookingStatusController::class, 'confirmPackage'])->name('book-packages.confirm');
     Route::post('/book-packages/{booking}/prepare-pickup', [App\Http\Controllers\OfficerBookingStatusController::class, 'preparePickupPackage'])->name('book-packages.prepare-pickup');
+    Route::post('/book-packages/{booking}/handover', [App\Http\Controllers\OfficerBookingStatusController::class, 'handoverPackage'])->name('book-packages.handover');
     Route::post('/book-packages/{booking}/schedule-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'scheduleReturnPackage'])->name('book-packages.schedule-return');
+    Route::post('/book-packages/{booking}/receive-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'receiveReturnPackage'])->name('book-packages.receive-return');
     Route::post('/book-packages/{booking}/complete', [App\Http\Controllers\OfficerBookingStatusController::class, 'completePackage'])->name('book-packages.complete');
     Route::post('/book-packages/{booking}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssuePackage'])->name('book-packages.detect-issue');
     Route::post('/book-packages/{booking}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelPackage'])->name('book-packages.cancel');
@@ -170,16 +174,16 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::post('/packing/scan-unit', [App\Http\Controllers\OfficerPackingController::class, 'scanUnit'])->name('packing.scan');
     Route::post('/packing/{booking}/finalize', [App\Http\Controllers\OfficerPackingController::class, 'finalizePacking'])->name('packing.finalize');
     
-    // Assign Courier
-    Route::get('/assign-courier', [App\Http\Controllers\OfficerAssignCourierController::class, 'index'])->name('assign-courier.index');
-    Route::post('/assign-courier', [App\Http\Controllers\OfficerAssignCourierController::class, 'store'])->name('assign-courier.store');
+    // Courier assignment is removed from operational flow
 });
 
 // Officer Booking Status Actions (POST routes)
 Route::post('/book-products/{booking}/validate', [App\Http\Controllers\OfficerBookingStatusController::class, 'validateProduct'])->name('booking.validate')->middleware(['auth:web,officer']);
 Route::post('/book-products/{booking}/confirm', [App\Http\Controllers\OfficerBookingStatusController::class, 'confirmProduct'])->name('booking.confirm')->middleware(['auth:web,officer']);
 Route::post('/book-products/{booking}/prepare-pickup', [App\Http\Controllers\OfficerBookingStatusController::class, 'preparePickupProduct'])->name('booking.prepare-pickup')->middleware(['auth:web,officer']);
+Route::post('/book-products/{booking}/handover', [App\Http\Controllers\OfficerBookingStatusController::class, 'handoverProduct'])->name('booking.handover')->middleware(['auth:web,officer']);
 Route::post('/book-products/{booking}/schedule-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'scheduleReturnProduct'])->name('booking.schedule-return')->middleware(['auth:web,officer']);
+Route::post('/book-products/{booking}/receive-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'receiveReturnProduct'])->name('booking.receive-return')->middleware(['auth:web,officer']);
 Route::post('/book-products/{booking}/complete', [App\Http\Controllers\OfficerBookingStatusController::class, 'completeProduct'])->name('booking.complete')->middleware(['auth:web,officer']);
 Route::post('/book-products/{booking}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssueProduct'])->name('booking.detect-issue')->middleware(['auth:web,officer']);
 Route::post('/book-products/{booking}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelProduct'])->name('booking.cancel')->middleware(['auth:web,officer']);
@@ -187,38 +191,14 @@ Route::post('/book-products/{booking}/cancel', [App\Http\Controllers\OfficerBook
 Route::post('/book-packages/{booking}/validate', [App\Http\Controllers\OfficerBookingStatusController::class, 'validatePackage'])->name('package-booking.validate')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/confirm', [App\Http\Controllers\OfficerBookingStatusController::class, 'confirmPackage'])->name('package-booking.confirm')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/prepare-pickup', [App\Http\Controllers\OfficerBookingStatusController::class, 'preparePickupPackage'])->name('package-booking.prepare-pickup')->middleware(['auth:web,officer']);
+Route::post('/book-packages/{booking}/handover', [App\Http\Controllers\OfficerBookingStatusController::class, 'handoverPackage'])->name('package-booking.handover')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/schedule-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'scheduleReturnPackage'])->name('package-booking.schedule-return')->middleware(['auth:web,officer']);
+Route::post('/book-packages/{booking}/receive-return', [App\Http\Controllers\OfficerBookingStatusController::class, 'receiveReturnPackage'])->name('package-booking.receive-return')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/complete', [App\Http\Controllers\OfficerBookingStatusController::class, 'completePackage'])->name('package-booking.complete')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssuePackage'])->name('package-booking.detect-issue')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelPackage'])->name('package-booking.cancel')->middleware(['auth:web,officer']);
 
-// Courier Routes
-Route::prefix('courier')->middleware(['auth:web,courier'])->name('courier.')->group(function () {
-    Route::get('/dashboard',  [App\Http\Controllers\CourierDeliveryController::class, 'dashboard'])->name('dashboard');
-    
-    // Deliveries Management (New)
-    Route::get('/deliveries', [App\Http\Controllers\CourierDeliveryController::class, 'index'])->name('deliveries.index');
-    Route::get('/deliveries/history', [App\Http\Controllers\CourierDeliveryController::class, 'history'])->name('deliveries.history');
-    Route::get('/deliveries/{type}/{id}', [App\Http\Controllers\CourierDeliveryController::class, 'show'])->name('deliveries.show');
-    
-    // Returns Management
-    Route::get('/returns', [App\Http\Controllers\CourierDeliveryController::class, 'returns'])->name('returns.index');
-    
-    // Route Batching / Map View
-    Route::get('/route-map', [App\Http\Controllers\CourierDeliveryController::class, 'routeMap'])->name('route.map');
-    Route::get('/route-map/data', [App\Http\Controllers\CourierDeliveryController::class, 'routeMapData'])->name('route.map.data');
-});
-
-// Courier Actions (POST routes outside auth middleware to allow AJAX)
-Route::post('/book-products/{id}/courier/pickup-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'pickupDelivery'])->middleware(['auth:web,courier']);
-Route::post('/book-products/{id}/courier/complete-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'completeDelivery'])->middleware(['auth:web,courier']);
-Route::post('/book-products/{id}/courier/pickup-return', [App\Http\Controllers\CourierDeliveryController::class, 'pickupReturn'])->middleware(['auth:web,courier']);
-Route::post('/book-products/{id}/courier/complete-return', [App\Http\Controllers\CourierDeliveryController::class, 'completeReturn'])->middleware(['auth:web,courier']);
-
-Route::post('/book-packages/{id}/courier/pickup-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'pickupDeliveryPackage'])->middleware(['auth:web,courier']);
-Route::post('/book-packages/{id}/courier/complete-delivery', [App\Http\Controllers\CourierDeliveryController::class, 'completeDeliveryPackage'])->middleware(['auth:web,courier']);
-Route::post('/book-packages/{id}/courier/pickup-return', [App\Http\Controllers\CourierDeliveryController::class, 'pickupReturnPackage'])->middleware(['auth:web,courier']);
-Route::post('/book-packages/{id}/courier/complete-return', [App\Http\Controllers\CourierDeliveryController::class, 'completeReturnPackage'])->middleware(['auth:web,courier']);
+// Courier routes are removed. Operational handling is done by officer on-site.
 
 // Logout Route (Available for all guards)
 Route::post('/logout', function () {
@@ -233,10 +213,6 @@ Route::post('/logout', function () {
         $guard = 'officer';
         $actor = auth()->guard('officer')->user();
         auth()->guard('officer')->logout();
-    } elseif (auth()->guard('courier')->check()) {
-        $guard = 'courier';
-        $actor = auth()->guard('courier')->user();
-        auth()->guard('courier')->logout();
     } else {
         $actor = auth()->guard('web')->user();
         auth()->guard('web')->logout();
@@ -266,11 +242,11 @@ Route::post('/logout', function () {
 })->name('logout');
 
 // Scan Unit Routes (Public - accessible to all authenticated users)
-Route::middleware(['auth:web,admin,officer,courier'])->group(function () {
+Route::middleware(['auth:web,admin,officer'])->group(function () {
     Route::get('/scan-unit/{unit}', [App\Http\Controllers\ScanUnitController::class, 'show'])->name('scan-unit.show');
     Route::get('/scan-unit/{unit}/history', [App\Http\Controllers\ScanUnitController::class, 'history'])->name('scan-unit.history');
     Route::post('/scan-unit/{unit}/start-packing', [App\Http\Controllers\ScanUnitController::class, 'startPacking'])->name('scan-unit.start-packing')->middleware('auth:web,officer');
-    Route::post('/scan-unit/{unit}/pickup', [App\Http\Controllers\ScanUnitController::class, 'pickupUnit'])->name('scan-unit.pickup')->middleware('auth:web,courier');
+    Route::post('/scan-unit/{unit}/pickup', [App\Http\Controllers\ScanUnitController::class, 'pickupUnit'])->name('scan-unit.pickup')->middleware('auth:web,officer');
 });
 
 // QR Code Camera Scanner (for inline scanning in packing, etc.)
