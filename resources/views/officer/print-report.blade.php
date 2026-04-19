@@ -72,7 +72,6 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penyewa</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barang</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase print:hidden">Kurir</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Order</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase print:hidden">Status Barang</th>
                         </tr>
@@ -83,6 +82,7 @@
                             $itemType = $report->product ? 'Product' : 'Package';
                             $itemImage = $report->product ? $report->product->image : ($report->package ? $report->package->image : null);
                             $itemName = $report->product ? $report->product->name : ($report->package ? $report->package->name_package : 'N/A');
+                            $itemTypeClass = $itemType === 'Product' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
                         @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-4 text-center">
@@ -98,9 +98,7 @@
                                 <div class="text-sm font-semibold text-gray-900">{{ $report->book_code ?? $report->code ?? '-' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($itemType == 'Product') bg-blue-100 text-blue-800
-                                    @else bg-purple-100 text-purple-800 @endif">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $itemTypeClass }}">
                                     {{ $itemType }}
                                 </span>
                             </td>
@@ -125,9 +123,6 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ $itemName }}</div>
                                 <div class="text-xs text-gray-500">Jumlah: {{ $report->amount ?? 1 }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap print:hidden">
-                                <div class="text-sm text-gray-900">{{ $report->courier->name ?? '-' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php

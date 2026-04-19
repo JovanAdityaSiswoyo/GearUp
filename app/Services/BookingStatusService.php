@@ -7,6 +7,7 @@ use App\Models\Book;
 use App\Enums\ItemStatus;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Service untuk mengelola status transitions pada booking
@@ -42,31 +43,20 @@ class BookingStatusService
         // Validasi status transition yang diizinkan
         $this->validateStatusTransition($booking->order_status, $newStatus);
 
-        // Map order status to corresponding item status
-        $itemStatusMap = [
-            OrderStatus::CONFIRMED => ItemStatus::BOOKED,
-            OrderStatus::READY_FOR_PICKUP => ItemStatus::PACKING,
-            OrderStatus::OUT_FOR_DELIVERY => ItemStatus::PICKED_UP,
-            OrderStatus::DELIVERED => ItemStatus::DEPLOYED,
-            OrderStatus::PICKUP_SCHEDULED => ItemStatus::RETURNING,
-            OrderStatus::PENDING_REVIEW => ItemStatus::IN_INSPECTION,
-            OrderStatus::COMPLETED => ItemStatus::AVAILABLE,
-        ];
-
         $updateData = ['order_status' => $newStatus];
         
-        // Direct update without strict state machine validation
-        // (for admin/officer operations in on-site handover flow)
-        if (isset($itemStatusMap[$newStatus])) {
-            $updateData['item_status'] = $itemStatusMap[$newStatus];
-        }
+        $updateData['item_status'] = match ($newStatus) {
+            OrderStatus::PENDING => ItemStatus::BOOKED,
+            OrderStatus::DIPINJAM => ItemStatus::DEPLOYED,
+            OrderStatus::SELESAI => ItemStatus::AVAILABLE,
+        };
 
         // Handle additional timestamps
-        if ($newStatus === OrderStatus::OUT_FOR_DELIVERY) {
+        if ($newStatus === OrderStatus::DIPINJAM) {
             $updateData['delivery_at'] = now();
         }
 
-        if ($newStatus === OrderStatus::PENDING_REVIEW) {
+        if ($newStatus === OrderStatus::SELESAI) {
             $updateData['returned_at'] = now();
         }
 
@@ -105,20 +95,6 @@ class BookingStatusService
     }
 
     /**
-     * Backward-compatibility hook: courier assignment is disabled.
-     */
-    public function assignCourier(Model $booking, ?string $courierId): bool
-    {
-        if ($courierId) {
-            throw new \Exception('Courier assignment is disabled in current workflow');
-        }
-
-        $booking->update(['id_courier' => null]);
-
-        return true;
-    }
-
-    /**
      * Validasi status transition
      * 
      * @param OrderStatus $currentStatus
@@ -150,7 +126,10 @@ class BookingStatusService
     {
         // Status LOST_SCRAPPED hanya bisa diset oleh admin
         if ($newStatus === ItemStatus::LOST_SCRAPPED) {
-            return auth()?->user()?->hasRole('admin') ?? false;
+            $actor = Auth::user();
+            return $actor && method_exists($actor, 'hasRole')
+                ? (bool) call_user_func([$actor, 'hasRole'], 'admin')
+                : false;
         }
 
         // Tidak bisa mengubah status jika order sudah selesai
@@ -193,7 +172,6 @@ class BookingStatusService
                 'checkin_start' => $booking->checkin_appointment_start,
                 'checkout_end' => $booking->checkout_appointment_end,
             ],
-            'courier' => null,
         ];
     }
 
@@ -230,14 +208,4 @@ class BookingStatusService
         return $booking->order_status->isActive();
     }
 
-    /**
-     * Require courier untuk order ini?
-     * 
-     * @param Model $booking
-     * @return bool
-     */
-    public function requiresCourier(Model $booking): bool
-    {
-        return false;
-    }
 }

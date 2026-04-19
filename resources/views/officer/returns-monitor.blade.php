@@ -37,31 +37,45 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batas Kembali</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Order</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Item</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kurir</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($returns as $return)
                         @php
-                            $isOverdue = $return->checkout_appointment_end && $return->checkout_appointment_end->isPast() && 
-                                         in_array($return->order_status->value, ['Delivered', 'Pickup Scheduled']);
-                            $itemName = $return->product ? $return->product->name : ($return->package ? $return->package->name : 'N/A');
+                            $isOverdue = $return->checkout_appointment_end && $return->checkout_appointment_end->isPast();
+                            $itemName = $return->product ? $return->product->name : ($return->package ? $return->package->name_package : 'N/A');
                             $itemType = $return->product ? 'Product' : 'Package';
+                            $rowClass = $isOverdue
+                                ? 'border-red-400 bg-red-50'
+                                : match ($return->order_status->value) {
+                                    'dipinjam' => 'border-blue-400',
+                                    'selesai' => 'border-emerald-400',
+                                    default => 'border-gray-400',
+                                };
+                            $typeClass = $itemType === 'Product' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+                            $dueClass = $isOverdue ? 'text-red-600' : 'text-gray-900';
+                            $orderStatusClass = match ($return->order_status->value) {
+                                'pending' => 'bg-amber-100 text-amber-800',
+                                'dipinjam' => 'bg-blue-100 text-blue-800',
+                                'selesai' => 'bg-emerald-100 text-emerald-800',
+                                default => 'bg-gray-100 text-gray-800',
+                            };
+                            $itemStatusClass = match ($return->item_status->value) {
+                                'Deployed' => 'bg-green-100 text-green-800',
+                                'Returning' => 'bg-yellow-100 text-yellow-800',
+                                'In-Inspection' => 'bg-orange-100 text-orange-800',
+                                'Available' => 'bg-emerald-100 text-emerald-800',
+                                default => 'bg-gray-100 text-gray-800',
+                            };
+                            $bookingType = $return->product ? 'product' : 'package';
                         @endphp
-                        <tr class="hover:bg-gray-50 border-l-4
-                            @if($isOverdue) border-red-400 bg-red-50
-                            @elseif($return->order_status->value == 'Delivered') border-green-400
-                            @elseif($return->order_status->value == 'Pickup Scheduled') border-blue-400
-                            @elseif($return->order_status->value == 'On Process Return') border-yellow-400
-                            @elseif($return->order_status->value == 'Pending Review') border-orange-400
-                            @else border-gray-400
-                            @endif">
+                        <tr class="hover:bg-gray-50 border-l-4 {{ $rowClass }}">
                             <td class="px-4 py-4 text-center">
                                 @if($return->product && $return->product->image)
                                     <img src="{{ asset('storage/' . $return->product->image) }}" alt="{{ $return->product->name }}" class="w-16 h-16 rounded object-cover mx-auto">
                                 @elseif($return->package && $return->package->image)
-                                    <img src="{{ asset('storage/' . $return->package->image) }}" alt="{{ $return->package->name }}" class="w-16 h-16 rounded object-cover mx-auto">
+                                    <img src="{{ asset('storage/' . $return->package->image) }}" alt="{{ $return->package->name_package }}" class="w-16 h-16 rounded object-cover mx-auto">
                                 @else
                                     <div class="w-16 h-16 rounded bg-gray-200 flex items-center justify-center mx-auto">
                                         <x-heroicon-o-photo class="h-6 w-6 text-gray-400" />
@@ -72,9 +86,7 @@
                                 <div class="text-sm font-semibold text-gray-900">{{ $return->book_code }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($itemType == 'Product') bg-blue-100 text-blue-800
-                                    @else bg-purple-100 text-purple-800 @endif">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $typeClass }}">
                                     {{ $itemType }}
                                 </span>
                             </td>
@@ -87,7 +99,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($return->checkout_appointment_end)
-                                    <div class="text-sm font-medium @if($isOverdue) text-red-600 @else text-gray-900 @endif">
+                                    <div class="text-sm font-medium {{ $dueClass }}">
                                         {{ $return->checkout_appointment_end->format('d M Y') }}
                                     </div>
                                     <div class="text-xs text-gray-500">{{ $return->checkout_appointment_end->format('H:i') }}</div>
@@ -101,36 +113,36 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap
-                                    @if($return->order_status->value == 'Delivered') bg-green-100 text-green-800
-                                    @elseif($return->order_status->value == 'Pickup Scheduled') bg-blue-100 text-blue-800
-                                    @elseif($return->order_status->value == 'On Process Return') bg-yellow-100 text-yellow-800
-                                    @elseif($return->order_status->value == 'Pending Review') bg-orange-100 text-orange-800
-                                    @else bg-gray-100 text-gray-800 @endif">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap {{ $orderStatusClass }}">
                                     {{ $return->order_status->label() }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap
-                                    @if($return->item_status->value == 'Deployed') bg-green-100 text-green-800
-                                    @elseif($return->item_status->value == 'Returning') bg-yellow-100 text-yellow-800
-                                    @elseif($return->item_status->value == 'In-Inspection') bg-orange-100 text-orange-800
-                                    @else bg-gray-100 text-gray-800 @endif">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap {{ $itemStatusClass }}">
                                     {{ $return->item_status->label() }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($return->courier)
-                                    <div class="text-sm text-gray-900">{{ $return->courier->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $return->courier->phone }}</div>
-                                @else
-                                    <span class="text-xs text-gray-400">-</span>
-                                @endif
-                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                @if($return->order_status->value == 'Pending Review')
-                                    <form action="{{ route('officer.returns.process', $return->id) }}" method="POST" 
-                                          onsubmit="return confirm('Confirm that the item has been inspected and is in good condition?')"
+                                <a href="{{ route('officer.bookings.show', ['type' => $bookingType, 'bookingId' => $return->id]) }}" class="text-blue-600 hover:text-blue-900 font-medium mr-3">
+                                    Detail
+                                </a>
+                                @if($return->item_status->value == 'Deployed')
+                                    <form id="start-return-form-{{ $return->id }}" action="{{ route('officer.returns.start-return', $return->id) }}" method="POST" class="inline" onsubmit="return confirmReturnAction(event, 'start-return-form-{{ $return->id }}', 'Mulai Return?', 'Tandai item sedang dikembalikan?', 'Ya, Mulai', '#2563EB')">
+                                        @csrf
+                                        <button type="submit" class="text-blue-600 hover:text-blue-900 font-medium">
+                                            Mulai Return
+                                        </button>
+                                    </form>
+                                @elseif($return->item_status->value == 'Returning')
+                                    <form id="start-inspection-form-{{ $return->id }}" action="{{ route('officer.returns.start-inspection', $return->id) }}" method="POST" class="inline" onsubmit="return confirmReturnAction(event, 'start-inspection-form-{{ $return->id }}', 'Masuk Inspeksi?', 'Pindahkan item ke tahap inspeksi?', 'Ya, Pindahkan', '#F97316')">
+                                        @csrf
+                                        <button type="submit" class="text-orange-600 hover:text-orange-900 font-medium">
+                                            Masuk Inspeksi
+                                        </button>
+                                    </form>
+                                @elseif($return->item_status->value == 'In-Inspection')
+                                    <form id="complete-return-form-{{ $return->id }}" action="{{ route('officer.returns.process', $return->id) }}" method="POST" 
+                                          onsubmit="return confirmReturnAction(event, 'complete-return-form-{{ $return->id }}', 'Complete Return?', 'Confirm that the item has been inspected and is in good condition?', 'Ya, Complete', '#10B981')"
                                           class="inline">
                                         @csrf
                                         <button type="submit" 
@@ -139,21 +151,13 @@
                                         </button>
                                     </form>
                                 @else
-                                    <span class="text-xs text-gray-500">
-                                        @if($return->order_status->value == 'Delivered')
-                                            <span class="text-gray-400">Waiting</span>
-                                        @elseif($return->order_status->value == 'Pickup Scheduled')
-                                            <span class="text-blue-600">Assigned</span>
-                                        @elseif($return->order_status->value == 'On Process Return')
-                                            <span class="text-yellow-600">In transit</span>
-                                        @endif
-                                    </span>
+                                    <span class="text-xs text-gray-500">Selesai</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-6 py-8 text-center">
+                            <td colspan="9" class="px-6 py-8 text-center">
                                 <x-heroicon-o-inbox class="h-12 w-12 text-gray-300 mx-auto mb-3" />
                                 <p class="text-gray-600">Tidak ada pengembalian yang harus dimonitor</p>
                             </td>
@@ -170,4 +174,26 @@
         </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function confirmReturnAction(event, formId, title, text, confirmText, confirmButtonColor) {
+                event.preventDefault();
+
+                Swal.fire({
+                    title,
+                    text,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor,
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: confirmText,
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+
+                return false;
+            }
+        </script>
 @endsection

@@ -14,6 +14,20 @@
             @include('admin.partials.header', ['title' => 'Booking Detail'])
 
             <main class="p-8">
+                @php
+                    $statusBadgeClass = match ($booking->status) {
+                        'pending' => 'bg-yellow-100 text-yellow-800',
+                        'confirmed' => 'bg-blue-100 text-blue-800',
+                        'active' => 'bg-green-100 text-green-800',
+                        'completed' => 'bg-gray-100 text-gray-800',
+                        default => 'bg-red-100 text-red-800',
+                    };
+                @endphp
+                @php
+                    $renterDetail = $booking->item_type === 'product'
+                        ? $booking->detailBookProduct
+                        : $booking->detailBook;
+                @endphp
                 <!-- Header -->
                 <div class="mb-8 flex justify-between items-center">
                     <div class="flex items-center space-x-4">
@@ -27,12 +41,7 @@
                         </div>
                     </div>
                     <span class="px-4 py-2 inline-block text-sm font-semibold rounded
-                        @if($booking->status === 'pending') bg-yellow-100 text-yellow-800
-                        @elseif($booking->status === 'confirmed') bg-blue-100 text-blue-800
-                        @elseif($booking->status === 'active') bg-green-100 text-green-800
-                        @elseif($booking->status === 'completed') bg-gray-100 text-gray-800
-                        @else bg-red-100 text-red-800
-                        @endif">
+                        {{ $statusBadgeClass }}">
                         {{ ucfirst($booking->status) }}
                     </span>
                 </div>
@@ -121,6 +130,56 @@
                             </div>
                         </div>
 
+                        @if($renterDetail)
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-lg font-bold text-gray-900 mb-4">Data Penyewa Lengkap</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-600">Nama Lengkap</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->full_name ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">No. HP Penyewa</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->phone_number ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">No. Orang Tua/Wali</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->emergency_phone_number ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">Instagram</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->instagram_handle ?? '-' }}</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-gray-600">Media Sosial Lainnya</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->other_socials ?? '-' }}</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-gray-600">Alamat Lengkap</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->renter_address ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">Mulai Sewa (Detail)</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->rental_start_at?->format('d M Y H:i') ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">Akhir Sewa (Detail)</p>
+                                    <p class="font-semibold text-gray-900">{{ $renterDetail->rental_end_at?->format('d M Y H:i') ?? '-' }}</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-gray-600 mb-2">Foto KTP/Identitas</p>
+                                    @if(!empty($renterDetail->identity_document_path))
+                                        <a href="{{ asset('storage/' . $renterDetail->identity_document_path) }}" target="_blank" rel="noopener noreferrer" class="inline-block">
+                                            <img src="{{ asset('storage/' . $renterDetail->identity_document_path) }}" alt="Foto KTP Penyewa" class="w-44 h-28 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition">
+                                        </a>
+                                    @else
+                                        <p class="font-semibold text-gray-500">-</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <!-- Rental Period -->
                         <div class="bg-white rounded-lg shadow p-6">
                             <h2 class="text-lg font-bold text-gray-900 mb-4">Rental Period</h2>
@@ -184,33 +243,10 @@
                                 </div>
                                 <div>
                                     <p class="text-gray-600">Status</p>
-                                    <span class="px-2 py-1 inline-block text-xs font-semibold rounded
-                                        @if($booking->status === 'pending') bg-yellow-100 text-yellow-800
-                                        @elseif($booking->status === 'confirmed') bg-blue-100 text-blue-800
-                                        @elseif($booking->status === 'active') bg-green-100 text-green-800
-                                        @elseif($booking->status === 'completed') bg-gray-100 text-gray-800
-                                        @else bg-red-100 text-red-800
-                                        @endif">
+                                    <span class="px-2 py-1 inline-block text-xs font-semibold rounded {{ $statusBadgeClass }}">
                                         {{ ucfirst($booking->status) }}
                                     </span>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h3 class="text-lg font-bold text-gray-900 mb-4">Actions</h3>
-                            <div class="space-y-2">
-                                <button onclick="openEditModal()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded transition">
-                                    ✏️ Edit
-                                </button>
-                                <form action="{{ route('admin.bookings.destroy', [$booking->item_type, $booking->id]) }}" method="POST" class="w-full" id="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-3 rounded transition" onclick="confirmDeleteBooking()">
-                                        🗑️ Delete
-                                    </button>
-                                </form>
                             </div>
                         </div>
 
@@ -233,140 +269,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Edit Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Status</h3>
-            <form id="editForm">
-                <div class="space-y-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select id="editStatus" name="status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" onchange="showAdminStatusInfo()">
-                            <option value="">-- Select Status --</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <!-- Status Info Box -->
-                    <div id="statusInfo" class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 hidden">
-                        <p class="font-semibold mb-1" id="statusTitle"></p>
-                        <p id="statusDescription" class="text-xs leading-relaxed"></p>
-                    </div>
-                </div>
-                <div class="flex space-x-2">
-                    <button type="button" onclick="closeEditModal()" 
-                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 rounded transition">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="submitEdit()" 
-                        class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 rounded transition">
-                        Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        function openEditModal() {
-            document.getElementById('editStatus').value = '{{ $booking->status }}';
-            document.getElementById('editModal').classList.remove('hidden');
-            showAdminStatusInfo();
-        }
-
-        function showAdminStatusInfo() {
-            const select = document.getElementById('editStatus');
-            const value = select.value;
-            const infoBox = document.getElementById('statusInfo');
-            const titleEl = document.getElementById('statusTitle');
-            const descEl = document.getElementById('statusDescription');
-
-            const statusDescriptions = {
-                'pending': { title: '⏳ Pending', desc: 'Booking menunggu untuk diproses dan dikonfirmasi' },
-                'confirmed': { title: '✅ Confirmed', desc: 'Booking sudah dikonfirmasi dan siap untuk diproses lebih lanjut' },
-                'active': { title: '🔄 Active', desc: 'Proses booking sedang berjalan, periode sewa mulai' },
-                'completed': { title: '🎉 Completed', desc: 'Proses booking selesai dengan sukses, semua transaksi selesai' },
-                'cancelled': { title: '❌ Cancelled', desc: 'Booking dibatalkan, tidak ada transaksi lebih lanjut' }
-            };
-
-            if (value && statusDescriptions[value]) {
-                const desc = statusDescriptions[value];
-                titleEl.textContent = desc.title;
-                descEl.textContent = desc.desc;
-                infoBox.classList.remove('hidden');
-            } else {
-                infoBox.classList.add('hidden');
-            }
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editForm').reset();
-        }
-
-        function submitEdit() {
-            const statusValue = document.getElementById('editStatus').value;
-            console.log('Status value:', statusValue);
-            
-            if (!statusValue) {
-                Swal.fire('Error!', 'Status is required', 'error');
-                return;
-            }
-
-            const data = {
-                status: statusValue
-            };
-            
-            const url = `/admin/bookings/{{ $booking->item_type }}/{{ $booking->id }}/update-data`;
-            console.log('Sending data:', data);
-            console.log('URL:', url);
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Response data:', data);
-                if (data.success) {
-                    Swal.fire('Success!', data.message, 'success')
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire('Error!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
-            });
-        }
-
-        function confirmDeleteBooking() {
-            Swal.fire({
-                title: 'Delete Booking?',
-                text: 'This action cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, Delete It!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form').submit();
-                }
-            });
-        }
+        // View-only detail page; no admin actions available.
     </script>
 </body>
 </html>

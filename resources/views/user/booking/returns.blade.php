@@ -38,11 +38,11 @@
                                 </div>
                                 <div class="bg-orange-50 border border-orange-100 rounded-lg p-4">
                                     <p class="font-semibold text-orange-700 mb-1">2. Siapkan barang</p>
-                                    <p class="text-gray-600">Bersihkan dan pastikan lengkap sebelum kurir datang.</p>
+                                    <p class="text-gray-600">Bersihkan dan pastikan lengkap sebelum proses pengembalian.</p>
                                 </div>
                                 <div class="bg-orange-50 border border-orange-100 rounded-lg p-4">
-                                    <p class="font-semibold text-orange-700 mb-1">3. Serahkan ke kurir</p>
-                                    <p class="text-gray-600">Kurir akan mengambil dan memproses pengembalian.</p>
+                                    <p class="font-semibold text-orange-700 mb-1">3. Serahkan barang</p>
+                                    <p class="text-gray-600">Petugas akan memproses pengembalian Anda.</p>
                                 </div>
                             </div>
                         </div>
@@ -103,11 +103,6 @@
                                                     <x-booking-status-card :booking="$booking" />
                                                 </div>
                                             </div>
-                                            @if($booking->courier)
-                                                <div class="mt-6 pt-6 border-t">
-                                                    <p class="text-sm text-gray-600">Kurir: <span class="font-semibold text-gray-900">{{ $booking->courier->name }}</span> ({{ $booking->courier->phone }})</p>
-                                                </div>
-                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -149,11 +144,6 @@
                                                     <x-booking-status-card :booking="$booking" />
                                                 </div>
                                             </div>
-                                            @if($booking->courier)
-                                                <div class="mt-6 pt-6 border-t">
-                                                    <p class="text-sm text-gray-600">Kurir: <span class="font-semibold text-gray-900">{{ $booking->courier->name }}</span> ({{ $booking->courier->phone }})</p>
-                                                </div>
-                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -206,11 +196,6 @@
                                                     <x-booking-status-card :booking="$booking" />
                                                 </div>
                                             </div>
-                                            @if($booking->courier)
-                                                <div class="mt-6 pt-6 border-t">
-                                                    <p class="text-sm text-gray-600">Kurir: <span class="font-semibold text-gray-900">{{ $booking->courier->name }}</span> ({{ $booking->courier->phone }})</p>
-                                                </div>
-                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -252,11 +237,6 @@
                                                     <x-booking-status-card :booking="$booking" />
                                                 </div>
                                             </div>
-                                            @if($booking->courier)
-                                                <div class="mt-6 pt-6 border-t">
-                                                    <p class="text-sm text-gray-600">Kurir: <span class="font-semibold text-gray-900">{{ $booking->courier->name }}</span> ({{ $booking->courier->phone }})</p>
-                                                </div>
-                                            @endif
                                         </div>
                                     </div>
                                 @endforeach

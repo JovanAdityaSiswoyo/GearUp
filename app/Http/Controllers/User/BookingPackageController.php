@@ -44,7 +44,7 @@ class BookingPackageController extends Controller
         $booking->id_package = $package->id;
         $booking->book_code = 'BK-' . strtoupper(uniqid());
         $booking->status = 'pending';
-        $booking->order_status = OrderStatus::AWAITING_VALIDATION; // Menunggu validasi officer
+        $booking->order_status = OrderStatus::PENDING; // Menunggu validasi officer
         $booking->item_status = ItemStatus::BOOKED; // Item is now booked for this user's dates
         $booking->checkin_appointment_start = $validated['rental_start_at'];
         $booking->checkout_appointment_end = $validated['rental_end_at'];

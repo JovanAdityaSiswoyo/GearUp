@@ -16,16 +16,21 @@
 
             <main class="p-8">
                 <div class="max-w-4xl mx-auto">
+                    @php
+                        $returnStatusClass = $return->status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800';
+                        $renterDetail = ($return->item_type ?? 'product') === 'package'
+                            ? $return->detailBooks?->first()
+                            : $return->detailBookProducts?->first();
+                    @endphp
                     <div class="bg-white rounded-xl shadow-sm p-8">
                         <div class="flex justify-between items-start mb-6">
                             <div>
                                 <h2 class="text-2xl font-bold text-gray-800">Booking Details</h2>
                                 <p class="text-gray-600">{{ $return->book_code }}</p>
                             </div>
-                            <span class="px-4 py-2 inline-flex text-sm font-semibold rounded-full 
-                                @if($return->status === 'active') bg-green-100 text-green-800
-                                @else bg-gray-100 text-gray-800
-                                @endif">
+                            <span class="px-4 py-2 inline-flex text-sm font-semibold rounded-full {{ $returnStatusClass }}">
                                 {{ ucfirst($return->status) }}
                             </span>
                         </div>
@@ -84,50 +89,33 @@
                             </div>
                         </div>
 
-                        @if(($return->item_type ?? 'product') === 'package')
-                        @if($return->detailBooks && $return->detailBooks->count() > 0)
+                        @if($renterDetail)
                         <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Additional Details</h3>
-                            <div class="bg-gray-50 p-4 rounded-lg space-y-2">
-                                @foreach($return->detailBooks as $detail)
-                                <div class="grid grid-cols-2 gap-4">
-                                    <p><span class="font-medium">Full Name:</span> {{ $detail->full_name }}</p>
-                                    <p><span class="font-medium">Phone:</span> {{ $detail->phone_number }}</p>
-                                    <p><span class="font-medium">Emergency Contact:</span> {{ $detail->emergency_phone_number }}</p>
-                                    <p><span class="font-medium">Shipping Method:</span> {{ $detail->shipping_method }}</p>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Data Penyewa Lengkap</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <p><span class="font-medium">Nama Lengkap:</span> {{ $renterDetail->full_name ?? '-' }}</p>
+                                <p><span class="font-medium">No. HP Penyewa:</span> {{ $renterDetail->phone_number ?? '-' }}</p>
+                                <p><span class="font-medium">No. Orang Tua/Wali:</span> {{ $renterDetail->emergency_phone_number ?? '-' }}</p>
+                                <p><span class="font-medium">Instagram:</span> {{ $renterDetail->instagram_handle ?? '-' }}</p>
+                                <p class="md:col-span-2"><span class="font-medium">Media Sosial Lainnya:</span> {{ $renterDetail->other_socials ?? '-' }}</p>
+                                <p class="md:col-span-2"><span class="font-medium">Alamat Lengkap:</span> {{ $renterDetail->renter_address ?? '-' }}</p>
+                                <p><span class="font-medium">Mulai Sewa (Detail):</span> {{ $renterDetail->rental_start_at?->format('d M Y H:i') ?? '-' }}</p>
+                                <p><span class="font-medium">Akhir Sewa (Detail):</span> {{ $renterDetail->rental_end_at?->format('d M Y H:i') ?? '-' }}</p>
+                                <div class="md:col-span-2">
+                                    <p class="font-medium mb-2">Foto KTP/Identitas:</p>
+                                    @if(!empty($renterDetail->identity_document_path))
+                                        <a href="{{ asset('storage/' . $renterDetail->identity_document_path) }}" target="_blank" rel="noopener noreferrer" class="inline-block">
+                                            <img src="{{ asset('storage/' . $renterDetail->identity_document_path) }}" alt="Foto KTP Penyewa" class="w-44 h-28 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition">
+                                        </a>
+                                    @else
+                                        <p>-</p>
+                                    @endif
                                 </div>
-                                @endforeach
                             </div>
                         </div>
-                        @endif
-                        @else
-                        @if($return->detailBookProducts && $return->detailBookProducts->count() > 0)
-                        <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Additional Details</h3>
-                            <div class="bg-gray-50 p-4 rounded-lg space-y-2">
-                                @foreach($return->detailBookProducts as $detail)
-                                <div class="grid grid-cols-2 gap-4">
-                                    <p><span class="font-medium">Full Name:</span> {{ $detail->full_name }}</p>
-                                    <p><span class="font-medium">Phone:</span> {{ $detail->phone_number }}</p>
-                                    <p><span class="font-medium">Emergency Contact:</span> {{ $detail->emergency_phone_number }}</p>
-                                    <p><span class="font-medium">Shipping Method:</span> {{ $detail->shipping_method }}</p>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
                         @endif
 
                         <div class="flex items-center space-x-4">
-                            @if($return->status === 'active')
-                            <form action="{{ route('admin.returns.process', ['type' => $return->item_type ?? 'product', 'return' => $return->id]) }}" method="POST" id="completeForm">
-                                @csrf
-                                <input type="hidden" name="status" value="completed">
-                                <button type="button" onclick="confirmComplete()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
-                                    Mark as Completed
-                                </button>
-                            </form>
-                            @endif
                             <a href="{{ route('admin.returns.index') }}" class="text-gray-600 hover:text-gray-800 px-6 py-2">
                                 Back to List
                             </a>
@@ -139,22 +127,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function confirmComplete() {
-            Swal.fire({
-                title: 'Complete Return?',
-                text: "This will mark the rental as completed and returned.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, complete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('completeForm').submit();
-                }
-            });
-        }
-    </script>
 </body>
 </html>

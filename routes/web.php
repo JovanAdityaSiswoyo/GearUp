@@ -119,6 +119,8 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
 
     // Returns Monitoring
     Route::get('/returns-monitor', [App\Http\Controllers\OfficerReturnMonitorController::class, 'index'])->name('returns.monitor');
+    Route::post('/returns-monitor/{id}/start-return', [App\Http\Controllers\OfficerReturnMonitorController::class, 'startReturn'])->name('returns.start-return');
+    Route::post('/returns-monitor/{id}/start-inspection', [App\Http\Controllers\OfficerReturnMonitorController::class, 'startInspection'])->name('returns.start-inspection');
     Route::post('/returns-monitor/{id}/process', [App\Http\Controllers\OfficerReturnMonitorController::class, 'process'])->name('returns.process');
 
     // Print Reports
@@ -131,9 +133,6 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     // Product Loans Management (placeholder)
     Route::get('/products', function () { return 'Product Loans Index'; })->name('products.index');
     Route::get('/products/create', function () { return 'Create Product Loan'; })->name('products.create');
-
-    // Payments Management
-    Route::get('/payments', [App\Http\Controllers\OfficerPaymentController::class, 'index'])->name('payments.index');
 
     // Booking Management (New)
     Route::get('/bookings', [App\Http\Controllers\OfficerBookingController::class, 'index'])->name('bookings.index');
@@ -165,16 +164,7 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
     Route::post('/book-packages/{booking}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssuePackage'])->name('book-packages.detect-issue');
     Route::post('/book-packages/{booking}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelPackage'])->name('book-packages.cancel');
 
-    // Packing Management (Atomic Assignment)
-    Route::get('/packing', [App\Http\Controllers\OfficerPackingController::class, 'index'])->name('packing.index');
-    Route::get('/packing/{type}/{booking}', [App\Http\Controllers\OfficerPackingController::class, 'showByType'])
-        ->where('type', 'product|package')
-        ->name('packing.show.by-type');
-    Route::post('/packing/{booking}/assign-units', [App\Http\Controllers\OfficerPackingController::class, 'assignUnits'])->name('packing.assign');
-    Route::post('/packing/scan-unit', [App\Http\Controllers\OfficerPackingController::class, 'scanUnit'])->name('packing.scan');
-    Route::post('/packing/{booking}/finalize', [App\Http\Controllers\OfficerPackingController::class, 'finalizePacking'])->name('packing.finalize');
-    
-    // Courier assignment is removed from operational flow
+    // Assignment workflow handled directly by officer
 });
 
 // Officer Booking Status Actions (POST routes)
@@ -198,7 +188,7 @@ Route::post('/book-packages/{booking}/complete', [App\Http\Controllers\OfficerBo
 Route::post('/book-packages/{booking}/detect-issue', [App\Http\Controllers\OfficerBookingStatusController::class, 'detectIssuePackage'])->name('package-booking.detect-issue')->middleware(['auth:web,officer']);
 Route::post('/book-packages/{booking}/cancel', [App\Http\Controllers\OfficerBookingStatusController::class, 'cancelPackage'])->name('package-booking.cancel')->middleware(['auth:web,officer']);
 
-// Courier routes are removed. Operational handling is done by officer on-site.
+// Operational handling is done by officer on-site.
 
 // Logout Route (Available for all guards)
 Route::post('/logout', function () {
@@ -284,6 +274,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/booking/package/{package}', [App\Http\Controllers\User\BookingPackageController::class, 'create'])->name('user.booking.package.create');
     Route::post('/booking/package/{package}', [App\Http\Controllers\User\BookingPackageController::class, 'store'])->name('user.booking.package.store');
 
-    // Booking Status Routes (Status management untuk courier, officer, admin)
+    // Booking Status Routes (status management untuk officer dan admin)
     require __DIR__ . '/booking-status.php';
 });

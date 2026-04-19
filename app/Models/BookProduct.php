@@ -29,7 +29,6 @@ class BookProduct extends Model
         'status',
         'item_status',
         'order_status',
-        'id_courier',
         'checkin_appointment_start',
         'checkout_appointment_end',
         'delivery_at',
@@ -59,11 +58,6 @@ class BookProduct extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'id_product');
-    }
-
-    public function courier()
-    {
-        return $this->belongsTo(Courier::class, 'id_courier');
     }
 
     public function detailBookProducts()

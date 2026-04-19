@@ -1,42 +1,30 @@
 <?php
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\BookProduct;
 use App\Models\Book;
 use App\Enums\OrderStatus;
 use App\Enums\ItemStatus;
-use App\Services\ItemStatusTransitionService;
+use Illuminate\Http\Request;
 
 class OfficerReturnMonitorController extends Controller
 {
-    protected ItemStatusTransitionService $transitionService;
-
-    public function __construct(ItemStatusTransitionService $transitionService)
-    {
-        $this->transitionService = $transitionService;
-    }
-
     public function index()
     {
-        // Show all items in return process (delivered to user, scheduled pickup, returning, or pending review)
+        // Show all items in the return workflow, including completed records for history.
         $bookProducts = BookProduct::whereIn('order_status', [
-                OrderStatus::DELIVERED,
-                OrderStatus::PICKUP_SCHEDULED,
-                OrderStatus::ON_PROCESS_RETURN,
-                OrderStatus::PENDING_REVIEW
+                OrderStatus::DIPINJAM,
+                OrderStatus::SELESAI,
             ])
-            ->with(['user', 'product', 'courier'])
+            ->with(['user', 'product'])
             ->orderBy('checkout_appointment_end', 'asc')
             ->get();
 
         $books = Book::whereIn('order_status', [
-                OrderStatus::DELIVERED,
-                OrderStatus::PICKUP_SCHEDULED,
-                OrderStatus::ON_PROCESS_RETURN,
-                OrderStatus::PENDING_REVIEW
+                OrderStatus::DIPINJAM,
+                OrderStatus::SELESAI,
             ])
-            ->with(['user', 'package', 'courier'])
+            ->with(['user', 'package'])
             ->orderBy('checkout_appointment_end', 'asc')
             ->get();
 
@@ -58,27 +46,60 @@ class OfficerReturnMonitorController extends Controller
         return view('officer.returns-monitor', compact('returns'));
     }
 
+    public function startReturn($id)
+    {
+        $return = $this->resolveReturn($id);
+
+        if ($return->order_status !== OrderStatus::DIPINJAM || $return->item_status !== ItemStatus::DEPLOYED) {
+            return redirect()->back()->with('error', 'Item belum siap memulai proses pengembalian.');
+        }
+
+        $return->item_status = ItemStatus::RETURNING;
+        $return->return_started_at = now();
+        $return->save();
+
+        return redirect()->back()->with('success', 'Pengembalian berhasil dimulai.');
+    }
+
+    public function startInspection($id)
+    {
+        $return = $this->resolveReturn($id);
+
+        if ($return->order_status !== OrderStatus::DIPINJAM || $return->item_status !== ItemStatus::RETURNING) {
+            return redirect()->back()->with('error', 'Item harus dalam perjalanan kembali sebelum masuk inspeksi.');
+        }
+
+        $return->item_status = ItemStatus::IN_INSPECTION;
+        $return->inspection_started_at = now();
+        $return->save();
+
+        return redirect()->back()->with('success', 'Item berhasil masuk tahap inspeksi.');
+    }
+
     public function process($id)
     {
-        // Try to find in BookProduct first
-        $return = BookProduct::find($id);
-        
-        if (!$return) {
-            // If not found, try Book
-            $return = Book::findOrFail($id);
+        $return = $this->resolveReturn($id);
+
+        if ($return->order_status !== OrderStatus::DIPINJAM || $return->item_status !== ItemStatus::IN_INSPECTION) {
+            return redirect()->back()->with('error', 'Item belum menunggu approval officer.');
         }
 
-        // Officer can only process items in PENDING_REVIEW status
-        if ($return->order_status !== OrderStatus::PENDING_REVIEW) {
-            return redirect()->back()->with('error', 'Item must be in Pending Review status to process return.');
-        }
-
-        // Mark as completed using transition service
-        $this->transitionService->transitionItemStatus($return, ItemStatus::AVAILABLE);
-        $this->transitionService->syncOrderStatus($return, ItemStatus::AVAILABLE);
+        $return->order_status = OrderStatus::SELESAI;
+        $return->item_status = ItemStatus::AVAILABLE;
         $return->returned_at = now();
         $return->save();
 
-        return redirect()->back()->with('success', 'Return processed successfully. Item is now available for booking.');
+        return redirect()->back()->with('success', 'Pengembalian berhasil diproses dan status pinjaman selesai.');
+    }
+
+    private function resolveReturn($id)
+    {
+        $return = BookProduct::find($id);
+
+        if (!$return) {
+            $return = Book::findOrFail($id);
+        }
+
+        return $return;
     }
 }

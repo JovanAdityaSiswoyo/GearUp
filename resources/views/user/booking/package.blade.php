@@ -293,13 +293,13 @@
                                                 <span>Ambil Foto dari Kamera</span>
                                             </button>
                                             <!-- Camera Modal -->
-                                            <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+                                            <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 items-center justify-center p-4">
                                                 <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full">
                                                     <div class="p-6">
                                                         <h3 class="text-xl font-bold text-gray-800 mb-4">Ambil Foto KTP/Identitas</h3>
                                                         <!-- Video Stream -->
                                                         <div class="w-full flex justify-center items-center mb-4">
-                                                            <video id="camera-stream" class="rounded-lg bg-black aspect-video max-w-full max-h-[400px] object-contain" style="aspect-ratio: 4/3; background:#000;" autoplay playsinline></video>
+                                                            <video id="camera-stream" class="rounded-lg bg-black aspect-video max-w-full max-h-100 object-contain" style="aspect-ratio: 4/3; background:#000;" autoplay playsinline></video>
                                                         </div>
                                                         <div class="flex items-center space-x-3">
                                                             <button 
@@ -394,40 +394,6 @@
                                         @error('shipping_method')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                         @enderror
-
-                                        <!-- Dropdown kurir, hanya muncul jika Antar ke Alamat -->
-                                        <div id="courier-wrapper" class="mt-4" style="display: none;">
-                                            <label for="courier" class="block text-sm font-medium text-gray-700 mb-2">Pilih Kurir</label>
-                                            <select id="courier" name="courier" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                                                <option value="">Pilih Kurir</option>
-                                                <option value="JNE" {{ old('courier') == 'JNE' ? 'selected' : '' }}>JNE</option>
-                                                <option value="J&T" {{ old('courier') == 'J&T' ? 'selected' : '' }}>J&T</option>
-                                                <option value="SiCepat" {{ old('courier') == 'SiCepat' ? 'selected' : '' }}>SiCepat</option>
-                                                <option value="AnterAja" {{ old('courier') == 'AnterAja' ? 'selected' : '' }}>AnterAja</option>
-                                                <option value="GrabExpress" {{ old('courier') == 'GrabExpress' ? 'selected' : '' }}>GrabExpress</option>
-                                                <option value="Gojek" {{ old('courier') == 'Gojek' ? 'selected' : '' }}>Gojek</option>
-                                            </select>
-                                            @error('courier')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <script>
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            var shippingSelect = document.getElementById('shipping_method');
-                                            var courierWrapper = document.getElementById('courier-wrapper');
-                                            function toggleCourier() {
-                                                if (shippingSelect.value === 'delivery') {
-                                                    courierWrapper.style.display = '';
-                                                } else {
-                                                    courierWrapper.style.display = 'none';
-                                                    document.getElementById('courier').value = '';
-                                                }
-                                            }
-                                            shippingSelect.addEventListener('change', toggleCourier);
-                                            // Initial state
-                                            toggleCourier();
-                                        });
-                                        </script>
                                     </div>
 
                                     <!-- Shipping Date -->
@@ -492,7 +458,7 @@
                             <!-- Notes Section -->
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                 <div class="flex items-start space-x-3">
-                                    <x-heroicon-o-information-circle class="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                    <x-heroicon-o-information-circle class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                                     <div class="text-sm text-blue-800">
                                         <p class="font-semibold mb-1">Catatan Penting:</p>
                                         <ul class="list-disc list-inside space-y-1">

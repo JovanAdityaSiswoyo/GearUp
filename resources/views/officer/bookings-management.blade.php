@@ -64,16 +64,23 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($bookProducts as $booking)
-                            <tr class="hover:bg-gray-50 border-l-4 
-                                @if($booking->order_status->value == 'Draft') border-gray-400
-                                @elseif($booking->order_status->value == 'Awaiting Validation') border-yellow-400
-                                @elseif($booking->order_status->value == 'Confirmed') border-blue-400
-                                @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) border-green-400
-                                @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) border-orange-400
-                                @elseif($booking->order_status->value == 'Completed') border-emerald-400
-                                @elseif($booking->order_status->value == 'Issue Detected') border-red-400
-                                @else border-gray-400
-                                @endif">
+                            @php
+                                $orderStatusValue = $booking->order_status->value;
+                                $isApproved = isset($approvedProductIds[(string) $booking->id]);
+                                $rowBorderClass = match ($orderStatusValue) {
+                                    'pending' => 'border-amber-400',
+                                    'dipinjam' => 'border-blue-400',
+                                    'selesai' => 'border-emerald-400',
+                                    default => 'border-gray-400',
+                                };
+                                $statusBadgeClass = match ($orderStatusValue) {
+                                    'pending' => 'bg-amber-100 text-amber-800',
+                                    'dipinjam' => 'bg-blue-100 text-blue-800',
+                                    'selesai' => 'bg-emerald-100 text-emerald-800',
+                                    default => 'bg-gray-100 text-gray-800',
+                                };
+                            @endphp
+                            <tr class="hover:bg-gray-50 border-l-4 {{ $rowBorderClass }}">
                                 <td class="px-4 py-4 text-center">
                                     @if($booking->product && $booking->product->image)
                                         <img src="{{ asset('storage/' . $booking->product->image) }}" alt="{{ $booking->product->name }}" class="w-16 h-16 rounded object-cover mx-auto">
@@ -105,39 +112,37 @@
                                     <div class="text-xs text-gray-500">{{ $booking->booker_telp }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        @if($booking->order_status->value == 'Draft') bg-gray-100 text-gray-800
-                                        @elseif($booking->order_status->value == 'Awaiting Validation') bg-yellow-100 text-yellow-800
-                                        @elseif($booking->order_status->value == 'Confirmed') bg-blue-100 text-blue-800
-                                        @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) bg-green-100 text-green-800
-                                        @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) bg-orange-100 text-orange-800
-                                        @elseif($booking->order_status->value == 'Completed') bg-emerald-100 text-emerald-800
-                                        @elseif($booking->order_status->value == 'Issue Detected') bg-red-100 text-red-800
-                                        @else bg-gray-100 text-gray-800
-                                        @endif">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClass }}">
                                         {{ $booking->order_status->label() }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2 items-center">
                                         <a href="{{ route('officer.bookings.show', ['type' => 'product', 'bookingId' => $booking->id]) }}" class="text-blue-600 hover:text-blue-900 font-medium">Detail</a>
-                                        <x-booking-status-actions :booking="$booking" type="product" />
+                                        <x-booking-status-actions :booking="$booking" type="product" :isApproved="$isApproved" />
                                     </div>
                                 </td>
                             </tr>
                             @empty
                             @endforelse
                             @forelse($books as $booking)
-                            <tr class="hover:bg-gray-50 border-l-4 
-                                @if($booking->order_status->value == 'Draft') border-gray-400
-                                @elseif($booking->order_status->value == 'Awaiting Validation') border-yellow-400
-                                @elseif($booking->order_status->value == 'Confirmed') border-blue-400
-                                @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) border-green-400
-                                @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) border-orange-400
-                                @elseif($booking->order_status->value == 'Completed') border-emerald-400
-                                @elseif($booking->order_status->value == 'Issue Detected') border-red-400
-                                @else border-gray-400
-                                @endif">
+                            @php
+                                $orderStatusValue = $booking->order_status->value;
+                                $isApproved = isset($approvedPackageIds[(string) $booking->id]);
+                                $rowBorderClass = match ($orderStatusValue) {
+                                    'pending' => 'border-amber-400',
+                                    'dipinjam' => 'border-blue-400',
+                                    'selesai' => 'border-emerald-400',
+                                    default => 'border-gray-400',
+                                };
+                                $statusBadgeClass = match ($orderStatusValue) {
+                                    'pending' => 'bg-amber-100 text-amber-800',
+                                    'dipinjam' => 'bg-blue-100 text-blue-800',
+                                    'selesai' => 'bg-emerald-100 text-emerald-800',
+                                    default => 'bg-gray-100 text-gray-800',
+                                };
+                            @endphp
+                            <tr class="hover:bg-gray-50 border-l-4 {{ $rowBorderClass }}">
                                 <td class="px-4 py-4 text-center">
                                     @if($booking->package && $booking->package->image)
                                         <img src="{{ asset('storage/' . $booking->package->image) }}" alt="{{ $booking->package->name_package }}" class="w-16 h-16 rounded object-cover mx-auto">
@@ -168,23 +173,14 @@
                                     <div class="text-xs text-gray-500">{{ $booking->booker_telp }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        @if($booking->order_status->value == 'Draft') bg-gray-100 text-gray-800
-                                        @elseif($booking->order_status->value == 'Awaiting Validation') bg-yellow-100 text-yellow-800
-                                        @elseif($booking->order_status->value == 'Confirmed') bg-blue-100 text-blue-800
-                                        @elseif(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery', 'Delivered'])) bg-green-100 text-green-800
-                                        @elseif(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return', 'Pending Review'])) bg-orange-100 text-orange-800
-                                        @elseif($booking->order_status->value == 'Completed') bg-emerald-100 text-emerald-800
-                                        @elseif($booking->order_status->value == 'Issue Detected') bg-red-100 text-red-800
-                                        @else bg-gray-100 text-gray-800
-                                        @endif">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClass }}">
                                         {{ $booking->order_status->label() }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2 items-center">
                                         <a href="{{ route('officer.bookings.show', ['type' => 'package', 'bookingId' => $booking->id]) }}" class="text-blue-600 hover:text-blue-900 font-medium">Detail</a>
-                                        <x-booking-status-actions :booking="$booking" type="package" />
+                                        <x-booking-status-actions :booking="$booking" type="package" :isApproved="$isApproved" />
                                     </div>
                                 </td>
                             </tr>

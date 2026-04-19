@@ -5,7 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Package>
  */
 class PackageFactory extends Factory
 {
@@ -21,7 +21,7 @@ class PackageFactory extends Factory
             'name_package' => fake()->words(3, true),
             'start_publish' => now(),
             'end_publish' => now()->addMonth(),
-            'price_publish' => now(),
+            'price' => fake()->numberBetween(50000, 500000),
         ];
     }
 }

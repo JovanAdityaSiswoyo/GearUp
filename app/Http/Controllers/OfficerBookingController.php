@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BookProduct;
 use App\Models\Book;
+use App\Models\ActivityLog;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -68,50 +69,70 @@ class OfficerBookingController extends Controller
 
         // Apply status filter and pagination
         if ($filter === 'draft') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::DRAFT)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::DRAFT)->latest()->paginate($perPage, ['*'], 'package_page');
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'awaiting_validation') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::AWAITING_VALIDATION)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::AWAITING_VALIDATION)->latest()->paginate($perPage, ['*'], 'package_page');
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'confirmed') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::CONFIRMED)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::CONFIRMED)->latest()->paginate($perPage, ['*'], 'package_page');
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'delivery') {
             $bookProducts = $bookProductsQuery->whereIn('order_status', [
-                OrderStatus::READY_FOR_PICKUP,
-                OrderStatus::OUT_FOR_DELIVERY,
-                OrderStatus::DELIVERED
+                OrderStatus::PENDING,
+                OrderStatus::DIPINJAM,
+                OrderStatus::DIPINJAM
             ])->latest()->paginate($perPage, ['*'], 'product_page');
             $books = $booksQuery->whereIn('order_status', [
-                OrderStatus::READY_FOR_PICKUP,
-                OrderStatus::OUT_FOR_DELIVERY,
-                OrderStatus::DELIVERED
+                OrderStatus::PENDING,
+                OrderStatus::DIPINJAM,
+                OrderStatus::DIPINJAM
             ])->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'return') {
             $bookProducts = $bookProductsQuery->whereIn('order_status', [
-                OrderStatus::PICKUP_SCHEDULED,
-                OrderStatus::ON_PROCESS_RETURN,
-                OrderStatus::PENDING_REVIEW
+                OrderStatus::DIPINJAM,
+                OrderStatus::DIPINJAM,
+                OrderStatus::SELESAI
             ])->latest()->paginate($perPage, ['*'], 'product_page');
             $books = $booksQuery->whereIn('order_status', [
-                OrderStatus::PICKUP_SCHEDULED,
-                OrderStatus::ON_PROCESS_RETURN,
-                OrderStatus::PENDING_REVIEW
+                OrderStatus::DIPINJAM,
+                OrderStatus::DIPINJAM,
+                OrderStatus::SELESAI
             ])->latest()->paginate($perPage, ['*'], 'package_page');
         } elseif ($filter === 'completed') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::COMPLETED)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::COMPLETED)->latest()->paginate($perPage, ['*'], 'package_page');
+            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::SELESAI)->latest()->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery->where('order_status', OrderStatus::SELESAI)->latest()->paginate($perPage, ['*'], 'package_page');
         } else {
             // Default to 'all' filter
             $bookProducts = $bookProductsQuery->latest()->paginate($perPage, ['*'], 'product_page');
             $books = $booksQuery->latest()->paginate($perPage, ['*'], 'package_page');
         }
 
+        $approvedProductIds = ActivityLog::query()
+            ->where('log_name', 'booking_status')
+            ->where('subject_type', BookProduct::class)
+            ->whereIn('event', ['validate', 'confirm'])
+            ->pluck('subject_id')
+            ->map(static fn($id) => (string) $id)
+            ->flip()
+            ->all();
+
+        $approvedPackageIds = ActivityLog::query()
+            ->where('log_name', 'booking_status')
+            ->where('subject_type', Book::class)
+            ->whereIn('event', ['validate', 'confirm'])
+            ->pluck('subject_id')
+            ->map(static fn($id) => (string) $id)
+            ->flip()
+            ->all();
+
         return view('officer.bookings-management', [
             'bookProducts' => $bookProducts ?? collect(),
             'books' => $books ?? collect(),
             'searchQuery' => $searchQuery,
             'searchType' => $searchType,
+            'approvedProductIds' => $approvedProductIds,
+            'approvedPackageIds' => $approvedPackageIds,
         ]);
     }
 
@@ -124,13 +145,16 @@ class OfficerBookingController extends Controller
 
         // Load relationships
         if ($booking instanceof BookProduct) {
-            $booking->load('product.category', 'product.brand', 'user');
+            $booking->load('product.category', 'product.brand', 'user', 'detailBookProduct');
         } else {
-            $booking->load('package', 'user');
+            $booking->load('package', 'user', 'detailBook');
         }
+
+        $isApproved = $this->hasOfficerApproval($booking);
 
         return view('officer.booking-detail', [
             'booking' => $booking,
+            'isApproved' => $isApproved,
         ]);
     }
 
@@ -147,6 +171,22 @@ class OfficerBookingController extends Controller
                 'order_status' => 'required|string',
             ]);
 
+            $targetStatus = OrderStatus::tryFrom($validated['order_status']);
+            if (!$targetStatus) {
+                throw new \Exception('Status booking tidak valid');
+            }
+
+            if (
+                $targetStatus === OrderStatus::DIPINJAM &&
+                $booking->order_status !== OrderStatus::DIPINJAM &&
+                !$this->hasOfficerApproval($booking)
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking harus di-approve officer terlebih dahulu lewat Booking Management sebelum status dipinjam.',
+                ], 422);
+            }
+
             // Update
             $booking->update($validated);
 
@@ -161,6 +201,16 @@ class OfficerBookingController extends Controller
                 'message' => 'Terjadi error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function hasOfficerApproval(BookProduct|Book $booking): bool
+    {
+        return ActivityLog::query()
+            ->where('log_name', 'booking_status')
+            ->where('subject_type', get_class($booking))
+            ->where('subject_id', (string) $booking->id)
+            ->whereIn('event', ['validate', 'confirm'])
+            ->exists();
     }
 
     private function resolveBookingByType(string $type, string $bookingId): BookProduct|Book

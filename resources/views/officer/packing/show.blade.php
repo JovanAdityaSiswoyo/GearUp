@@ -97,7 +97,7 @@
 
                 <!-- Packing Checklist -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-4">
+                    <div class="bg-linear-to-r from-blue-600 to-cyan-500 text-white px-6 py-4">
                         <h3 class="text-xl font-semibold">📋 Packing Checklist</h3>
                         <p class="text-blue-100 text-sm mt-1">Scan QR code untuk setiap item, atau masukkan serial number secara manual</p>
                     </div>
@@ -182,7 +182,7 @@
                         <a href="{{ route('officer.packing.index') }}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg transition text-center font-semibold">
                             ← Back
                         </a>
-                        @if($booking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP)
+                        @if($booking->order_status === \App\Enums\OrderStatus::SELESAI)
                             <button 
                                 type="button"
                                 disabled

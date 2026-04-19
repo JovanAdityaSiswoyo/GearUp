@@ -32,8 +32,8 @@ class OfficerPackingController extends Controller
         // Get individual product bookings
         $productBookings = \App\Models\BookProduct::with(['product.category', 'user'])
             ->whereIn('order_status', [
-                \App\Enums\OrderStatus::CONFIRMED,
-                \App\Enums\OrderStatus::READY_FOR_PICKUP,
+                \App\Enums\OrderStatus::PENDING,
+                \App\Enums\OrderStatus::PENDING,
             ])
             ->get()
             ->map(function($booking) {
@@ -53,8 +53,8 @@ class OfficerPackingController extends Controller
         // Get package bookings
         $packageBookings = \App\Models\Book::with(['package', 'user'])
             ->whereIn('order_status', [
-                \App\Enums\OrderStatus::CONFIRMED,
-                \App\Enums\OrderStatus::READY_FOR_PICKUP,
+                \App\Enums\OrderStatus::PENDING,
+                \App\Enums\OrderStatus::PENDING,
             ])
             ->get()
             ->map(function($booking) {
@@ -112,10 +112,10 @@ class OfficerPackingController extends Controller
 
             $packingProgress = [
                 'total' => 1,
-                'packed' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 1 : 0,
-                'remaining' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 0 : 1,
-                'percentage' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 100 : 0,
-                'is_complete' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP,
+                'packed' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING ? 1 : 0,
+                'remaining' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING ? 0 : 1,
+                'percentage' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING ? 100 : 0,
+                'is_complete' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING,
             ];
 
             return view('officer.packing.show-product', [
@@ -164,10 +164,10 @@ class OfficerPackingController extends Controller
 
             $packingProgress = [
                 'total' => 1,
-                'packed' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 1 : 0,
-                'remaining' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 0 : 1,
-                'percentage' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP ? 100 : 0,
-                'is_complete' => $productBooking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP,
+                'packed' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING ? 1 : 0,
+                'remaining' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING ? 0 : 1,
+                'percentage' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING ? 100 : 0,
+                'is_complete' => $productBooking->order_status === \App\Enums\OrderStatus::PENDING,
             ];
 
             return view('officer.packing.show-product', [
@@ -355,12 +355,12 @@ class OfficerPackingController extends Controller
     {
         $productBooking = BookProduct::find($bookingId);
         if ($productBooking) {
-            $productBooking->order_status = \App\Enums\OrderStatus::READY_FOR_PICKUP;
+            $productBooking->order_status = \App\Enums\OrderStatus::PENDING;
             $productBooking->save();
 
             return response()->json([
                 'success' => true,
-                'message' => '✅ Packing produk selesai! Booking siap untuk pickup oleh courier.',
+                'message' => '✅ Packing produk selesai! Booking siap untuk pengambilan.',
             ]);
         }
 
@@ -374,12 +374,12 @@ class OfficerPackingController extends Controller
         }
 
         // Update booking status ke READY_FOR_PICKUP
-        $booking->order_status = \App\Enums\OrderStatus::READY_FOR_PICKUP;
+        $booking->order_status = \App\Enums\OrderStatus::PENDING;
         $booking->save();
 
         return response()->json([
             'success' => true,
-            'message' => '✅ Packing selesai! Booking siap untuk pickup oleh courier.',
+            'message' => '✅ Packing selesai! Booking siap untuk pengambilan.',
         ]);
     }
 }

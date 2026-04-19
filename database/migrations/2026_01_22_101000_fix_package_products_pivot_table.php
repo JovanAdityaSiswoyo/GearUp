@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::dropIfExists('package_products');
 
         Schema::create('package_products', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('id_package');
             $table->uuid('id_product');
             $table->timestamps();

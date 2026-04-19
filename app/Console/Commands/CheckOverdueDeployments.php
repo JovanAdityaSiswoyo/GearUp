@@ -8,6 +8,7 @@ use App\Models\BookProduct;
 use App\Models\Book;
 use App\Notifications\OverdueDeploymentNotification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class CheckOverdueDeployments extends Command
@@ -38,15 +39,19 @@ class CheckOverdueDeployments extends Command
 
         // Check BookProducts
         $overdueProducts = BookProduct::where('item_status', ItemStatus::DEPLOYED)
-            ->where('order_status', '!=', OrderStatus::OVERDUE)
+            ->where('order_status', '!=', OrderStatus::DIPINJAM)
             ->where('checkout_appointment_end', '<', $now)
             ->get();
 
         foreach ($overdueProducts as $booking) {
+            if (! $booking instanceof BookProduct) {
+                continue;
+            }
+
             $this->warn("Overdue found: BookProduct #{$booking->id} - {$booking->book_code}");
             
             // Update status to Overdue
-            $booking->order_status = OrderStatus::OVERDUE;
+            $booking->order_status = OrderStatus::DIPINJAM;
             $booking->overdue_since = $now;
             $booking->save();
 
@@ -58,15 +63,19 @@ class CheckOverdueDeployments extends Command
 
         // Check Books (Packages)
         $overdueBooks = Book::where('item_status', ItemStatus::DEPLOYED)
-            ->where('order_status', '!=', OrderStatus::OVERDUE)
+            ->where('order_status', '!=', OrderStatus::DIPINJAM)
             ->where('checkout_appointment_end', '<', $now)
             ->get();
 
         foreach ($overdueBooks as $booking) {
+            if (! $booking instanceof Book) {
+                continue;
+            }
+
             $this->warn("Overdue found: Book #{$booking->id} - {$booking->book_code}");
             
             // Update status to Overdue
-            $booking->order_status = OrderStatus::OVERDUE;
+            $booking->order_status = OrderStatus::DIPINJAM;
             $booking->overdue_since = $now;
             $booking->save();
 
@@ -97,7 +106,7 @@ class CheckOverdueDeployments extends Command
             try {
                 // You can use email, database, or other notification channels
                 // For now, we'll log it (you can implement actual notification later)
-                \Log::warning("OVERDUE ALERT: Booking {$booking->book_code} is overdue. Officer {$officer->nama} should follow up.");
+                Log::warning("OVERDUE ALERT: Booking {$booking->book_code} is overdue. Officer {$officer->nama} should follow up.");
                 
                 // Example: If you have notification system
                 // $officer->notify(new OverdueDeploymentNotification($booking));

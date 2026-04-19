@@ -4,7 +4,7 @@
 
 @section('content')
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <div class="bg-white rounded-xl shadow-sm p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -52,20 +52,6 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 sub-header">Pending Payments</p>
-                                <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ \App\Models\Payment::where('status', 'pending')->count() }}</h3>
-                            </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                <x-heroicon-o-credit-card class="h-6 w-6 text-green-600" />
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <span class="text-sm text-gray-500 sub-header">Awaiting confirmation</span>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Recent Activity & Quick Actions -->
@@ -77,7 +63,7 @@
                             @foreach(\App\Models\Book::where('status', 'borrowed')->latest()->take(5)->get() as $book)
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-linear-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
                                         <x-heroicon-o-book-open class="h-5 w-5 text-white" />
                                     </div>
                                     <div>
@@ -106,10 +92,6 @@
                             <a href="{{ route('officer.reports.print') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
                                 <x-heroicon-o-printer class="h-8 w-8 text-blue-600 mb-2" />
                                 <span class="text-sm font-medium text-gray-700">Print Report</span>
-                            </a>
-                            <a href="{{ route('officer.payments.index') }}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-                                <x-heroicon-o-credit-card class="h-8 w-8 text-blue-600 mb-2" />
-                                <span class="text-sm font-medium text-gray-700">Verify Payment</span>
                             </a>
                         </div>
                     </div>

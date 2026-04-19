@@ -59,6 +59,11 @@ class Product extends Model
         return $this->hasMany(Unit::class, 'id_product');
     }
 
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'id_product');
+    }
+
     /**
      * Get available units count
      */

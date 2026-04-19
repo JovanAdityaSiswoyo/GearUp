@@ -16,10 +16,10 @@ class OfficerReportController extends Controller
         $type = $request->input('type', 'all');
 
         // Query BookProduct
-        $bookProductQuery = BookProduct::query()->with(['user', 'product', 'courier']);
+        $bookProductQuery = BookProduct::query()->with(['user', 'product']);
         
         // Query Book (Package)
-        $bookQuery = Book::query()->with(['user', 'package', 'courier']);
+        $bookQuery = Book::query()->with(['user', 'package']);
         
         // Filter by date range
         if ($from) {
@@ -35,19 +35,19 @@ class OfficerReportController extends Controller
         if ($type == 'loan') {
             // Loan: barang yang sudah dikirim ke user
             $statuses = [
-                OrderStatus::DELIVERED->value,
-                OrderStatus::OUT_FOR_DELIVERY->value,
-                OrderStatus::READY_FOR_PICKUP->value,
+                OrderStatus::DIPINJAM->value,
+                OrderStatus::DIPINJAM->value,
+                OrderStatus::PENDING->value,
             ];
             $bookProductQuery->whereIn('order_status', $statuses);
             $bookQuery->whereIn('order_status', $statuses);
         } elseif ($type == 'return') {
             // Return: barang yang sudah atau sedang dikembalikan
             $statuses = [
-                OrderStatus::PICKUP_SCHEDULED->value,
-                OrderStatus::ON_PROCESS_RETURN->value,
-                OrderStatus::PENDING_REVIEW->value,
-                OrderStatus::COMPLETED->value,
+                OrderStatus::DIPINJAM->value,
+                OrderStatus::DIPINJAM->value,
+                OrderStatus::SELESAI->value,
+                OrderStatus::SELESAI->value,
             ];
             $bookProductQuery->whereIn('order_status', $statuses);
             $bookQuery->whereIn('order_status', $statuses);

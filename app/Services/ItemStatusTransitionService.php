@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Models\BookProduct;
 use App\Models\Book;
 use Exception;
+use Illuminate\Support\Carbon;
 
 /**
  * Service untuk handle transisi status item dengan validation
@@ -98,21 +99,20 @@ class ItemStatusTransitionService
 
         // Handover ke user: catat timestamp saat Picked-Up
         if ($newStatus === ItemStatus::PICKED_UP) {
-            $booking->picked_up_at = now();
-            $booking->id_courier = null;
+            $booking->picked_up_at = Carbon::now();
         }
 
         // Catat timestamp untuk status lainnya
         if ($newStatus === ItemStatus::DEPLOYED) {
-            $booking->delivery_at = now();
+            $booking->delivery_at = Carbon::now();
         }
 
         if ($newStatus === ItemStatus::RETURNING) {
-            $booking->return_started_at = now();
+            $booking->return_started_at = Carbon::now();
         }
 
         if ($newStatus === ItemStatus::IN_INSPECTION) {
-            $booking->inspection_started_at = now();
+            $booking->inspection_started_at = Carbon::now();
         }
 
         $booking->save();
@@ -140,13 +140,15 @@ class ItemStatusTransitionService
     public function syncOrderStatus($booking, ItemStatus $itemStatus): void
     {
         $orderStatus = match($itemStatus) {
-            ItemStatus::AVAILABLE => OrderStatus::DRAFT,
-            ItemStatus::BOOKED => OrderStatus::CONFIRMED,
-            ItemStatus::PACKING => OrderStatus::READY_FOR_PICKUP,
-            ItemStatus::PICKED_UP => OrderStatus::OUT_FOR_DELIVERY,
-            ItemStatus::DEPLOYED => OrderStatus::DELIVERED,
-            ItemStatus::RETURNING => OrderStatus::PICKUP_SCHEDULED,
-            ItemStatus::IN_INSPECTION => OrderStatus::PENDING_REVIEW,
+            ItemStatus::BOOKED => OrderStatus::PENDING,
+            ItemStatus::PACKING => OrderStatus::PENDING,
+            ItemStatus::PICKED_UP => OrderStatus::DIPINJAM,
+            ItemStatus::DEPLOYED => OrderStatus::DIPINJAM,
+            ItemStatus::RETURNING => OrderStatus::DIPINJAM,
+            ItemStatus::IN_INSPECTION => OrderStatus::DIPINJAM,
+            ItemStatus::AVAILABLE => OrderStatus::SELESAI,
+            ItemStatus::MAINTENANCE => OrderStatus::SELESAI,
+            ItemStatus::LOST_SCRAPPED => OrderStatus::SELESAI,
             default => $booking->order_status, // Keep existing
         };
 

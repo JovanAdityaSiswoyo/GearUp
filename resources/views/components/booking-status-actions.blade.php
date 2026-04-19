@@ -4,60 +4,32 @@
 
 @php
     $isOfficer = auth('officer')->check() || (auth()->check() && auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('officer'));
+    $isApproved = $isApproved ?? false;
 @endphp
 
 @if($isOfficer)
     <!-- Officer Status Controls -->
     <div class="flex gap-1 items-center justify-start flex-wrap">
-        @if($booking->order_status->value == 'Draft')
-        <button onclick="validateOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Validasi
-        </button>
-        @endif
-
-        @if($booking->order_status->value == 'Awaiting Validation')
-        <button onclick="confirmOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Konfirmasi
-        </button>
-        @endif
-
-        @if($booking->order_status->value == 'Confirmed')
-        <button onclick="preparePickup(@js((string) $booking->id), '{{ $type }}')" class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Siapkan
-        </button>
-        @endif
-
-        @if(in_array($booking->order_status->value, ['Ready for Pickup', 'Out for Delivery']))
-        <button onclick="handoverToUser(@js((string) $booking->id), '{{ $type }}')" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Serah ke User
-        </button>
-        @endif
-
-        @if($booking->order_status->value == 'Delivered')
-        <button onclick="scheduleReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Jadwalkan Kembali
-        </button>
-        @endif
-
-        @if(in_array($booking->order_status->value, ['Pickup Scheduled', 'On Process Return']))
-        <button onclick="receiveReturn(@js((string) $booking->id), '{{ $type }}')" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Terima Kembali
-        </button>
-        @endif
-
-        @if($booking->order_status->value == 'Pending Review')
-        <button onclick="completeOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Selesai
-        </button>
-        <button onclick="detectIssue(@js((string) $booking->id), '{{ $type }}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Masalah
-        </button>
-        @endif
-
-        @if(!in_array($booking->order_status->value, ['Completed', 'Cancelled']))
-        <button onclick="cancelOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
-            Batalkan
-        </button>
+        @if($booking->order_status === OrderStatus::PENDING)
+            @if(!$isApproved)
+                <button onclick="approveBooking(@js((string) $booking->id), '{{ $type }}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+                    Approve
+                </button>
+            @else
+                <button onclick="handoverToUser(@js((string) $booking->id), '{{ $type }}')" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+                    Serah ke User
+                </button>
+            @endif
+            <button onclick="cancelOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+                Batalkan
+            </button>
+        @elseif($booking->order_status === OrderStatus::DIPINJAM)
+            <button onclick="completeOrder(@js((string) $booking->id), '{{ $type }}')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+                Selesai
+            </button>
+            <button onclick="detectIssue(@js((string) $booking->id), '{{ $type }}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium py-1 px-2 rounded transition whitespace-nowrap">
+                Masalah
+            </button>
         @endif
     </div>
 @endif
@@ -67,50 +39,18 @@ function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @js(csrf_token());
 }
 
-function validateOrder(bookingId, type) {
+function approveBooking(bookingId, type) {
     Swal.fire({
-        title: 'Validasi Order',
-        text: 'Pastikan barang tersedia sebelum memvalidasi',
+        title: 'Approve Booking',
+        text: 'Booking akan di-approve oleh officer.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#EAB308',
+        confirmButtonColor: '#2563EB',
         cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Validasi'
+        confirmButtonText: 'Ya, Approve'
     }).then((result) => {
         if (result.isConfirmed) {
             submitStatusChange(`/officer/book-${type}s/${bookingId}/validate`);
-        }
-    });
-}
-
-function confirmOrder(bookingId, type) {
-    Swal.fire({
-        title: 'Konfirmasi Order',
-        text: 'Order akan dikonfirmasi dan stok akan dipotong',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3B82F6',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Konfirmasi'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitStatusChange(`/officer/book-${type}s/${bookingId}/confirm`);
-        }
-    });
-}
-
-function preparePickup(bookingId, type) {
-    Swal.fire({
-        title: 'Siapkan Pengambilan',
-        text: 'Barang akan dipacking dan siap diambil user di lokasi',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#22C55E',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Siapkan'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitStatusChange(`/officer/book-${type}s/${bookingId}/prepare-pickup`);
         }
     });
 }
@@ -131,37 +71,6 @@ function handoverToUser(bookingId, type) {
     });
 }
 
-function scheduleReturn(bookingId, type) {
-    Swal.fire({
-        title: 'Jadwalkan Pengembalian',
-        text: 'Tetapkan jadwal user untuk mengembalikan barang ke lokasi',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#A855F7',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Jadwalkan'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitStatusChange(`/officer/book-${type}s/${bookingId}/schedule-return`);
-        }
-    });
-}
-
-function receiveReturn(bookingId, type) {
-    Swal.fire({
-        title: 'Terima Pengembalian',
-        text: 'Barang kembali dari user dan siap masuk tahap review',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#F97316',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Terima'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitStatusChange(`/officer/book-${type}s/${bookingId}/receive-return`);
-        }
-    });
-}
 
 function completeOrder(bookingId, type) {
     Swal.fire({

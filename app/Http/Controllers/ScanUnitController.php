@@ -47,8 +47,8 @@ class ScanUnitController extends Controller
             'Officer mulai packing'
         );
 
-        // Redirect ke daftar packing
-        return redirect()->route('officer.packing.index')
+        // Redirect ke booking management (packing page removed)
+        return redirect()->route('officer.bookings.index')
             ->with('success', 'Packing started for unit: ' . $unit->serial_number);
     }
 

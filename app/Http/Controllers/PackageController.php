@@ -6,6 +6,7 @@ use App\Models\Package;
 use App\Models\Product;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class PackageController extends Controller
@@ -87,8 +88,8 @@ class PackageController extends Controller
             'description' => 'Created package: ' . $package->name_package,
             'subject_type' => Package::class,
             'subject_id' => $package->id,
-            'causer_type' => get_class(auth()->user()),
-            'causer_id' => auth()->id(),
+            'causer_type' => get_class(Auth::user()),
+            'causer_id' => Auth::id(),
             'event' => 'created',
             'properties' => json_encode(['package_name' => $package->name_package]),
         ]);
@@ -173,8 +174,8 @@ class PackageController extends Controller
             'description' => 'Updated package: ' . $package->name_package,
             'subject_type' => Package::class,
             'subject_id' => $package->id,
-            'causer_type' => get_class(auth()->user()),
-            'causer_id' => auth()->id(),
+            'causer_type' => get_class(Auth::user()),
+            'causer_id' => Auth::id(),
             'event' => 'updated',
             'properties' => json_encode(['package_name' => $package->name_package]),
         ]);
@@ -205,8 +206,8 @@ class PackageController extends Controller
             'description' => 'Deleted package: ' . $packageName,
             'subject_type' => Package::class,
             'subject_id' => null,
-            'causer_type' => get_class(auth()->user()),
-            'causer_id' => auth()->id(),
+            'causer_type' => get_class(Auth::user()),
+            'causer_id' => Auth::id(),
             'event' => 'deleted',
             'properties' => json_encode(['package_name' => $packageName]),
         ]);

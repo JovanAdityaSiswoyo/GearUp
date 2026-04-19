@@ -7,7 +7,7 @@ use App\Http\Controllers\BookingStatusController;
  * Booking Status Routes
  * 
  * Routes untuk mengelola status booking (product dan package)
- * Operasional dijalankan oleh officer tanpa role courier
+ * Operasional dijalankan oleh officer
  */
 
 Route::middleware(['auth', 'verified'])->group(function () {

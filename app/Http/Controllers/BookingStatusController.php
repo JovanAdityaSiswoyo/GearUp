@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\BookProduct;
 use App\Models\Book;
 use App\Services\BookingStatusService;
-use App\Services\CourierStatusService;
 use App\Enums\OrderStatus;
 use App\Enums\ItemStatus;
 use Illuminate\Http\Request;
@@ -17,8 +16,7 @@ use Illuminate\Http\Request;
 class BookingStatusController extends Controller
 {
     public function __construct(
-        protected BookingStatusService $statusService,
-        protected CourierStatusService $courierService
+        protected BookingStatusService $statusService
     ) {}
 
     // ========== OFFICER OPERATIONS ==========
@@ -28,12 +26,12 @@ class BookingStatusController extends Controller
      */
     public function validateOrder(BookProduct $booking)
     {
-        authorize('validate', $booking);
+        $this->authorize('validate', $booking);
 
         try {
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::AWAITING_VALIDATION
+                OrderStatus::PENDING
             );
 
             return response()->json([
@@ -54,12 +52,12 @@ class BookingStatusController extends Controller
      */
     public function confirmOrder(BookProduct $booking)
     {
-        authorize('confirm', $booking);
+        $this->authorize('confirm', $booking);
 
         try {
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::CONFIRMED
+                OrderStatus::PENDING
             );
 
             return response()->json([
@@ -80,12 +78,12 @@ class BookingStatusController extends Controller
      */
     public function prepareForPickup(Request $request, BookProduct $booking)
     {
-        authorize('prepare', $booking);
+        $this->authorize('prepare', $booking);
 
         try {
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::READY_FOR_PICKUP
+                OrderStatus::PENDING
             );
 
             return response()->json([
@@ -106,17 +104,17 @@ class BookingStatusController extends Controller
      */
     public function scheduleReturn(Request $request, BookProduct $booking)
     {
-        authorize('schedule_return', $booking);
+        $this->authorize('schedule_return', $booking);
 
         try {
             // Validasi bahwa order sudah delivered
-            if ($booking->order_status !== OrderStatus::DELIVERED) {
+            if ($booking->order_status !== OrderStatus::DIPINJAM) {
                 throw new \Exception('Order harus sudah delivered');
             }
 
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::PICKUP_SCHEDULED
+                OrderStatus::DIPINJAM
             );
 
             return response()->json([
@@ -137,17 +135,16 @@ class BookingStatusController extends Controller
      */
     public function completeOrder(Request $request, BookProduct $booking)
     {
-        authorize('complete', $booking);
+        $this->authorize('complete', $booking);
 
         try {
-            // Validasi bahwa barang sudah pending review
-            if ($booking->order_status !== OrderStatus::PENDING_REVIEW) {
-                throw new \Exception('Order harus dalam status Pending Review');
+            if ($booking->order_status !== OrderStatus::DIPINJAM) {
+                throw new \Exception('Order harus dalam status dipinjam');
             }
 
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::COMPLETED
+                OrderStatus::SELESAI
             );
 
             return response()->json([
@@ -168,7 +165,7 @@ class BookingStatusController extends Controller
      */
     public function detectIssue(Request $request, BookProduct $booking)
     {
-        authorize('detect_issue', $booking);
+        $this->authorize('detect_issue', $booking);
 
         $validated = $request->validate([
             'issue_notes' => 'required|string|min:10',
@@ -192,143 +189,13 @@ class BookingStatusController extends Controller
 
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::ISSUE_DETECTED,
+                OrderStatus::SELESAI,
                 $additionalData
             );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Issue telah dicatat',
-                'status' => $booking->order_status->label(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    // ========== COURIER OPERATIONS ==========
-
-    /**
-     * Courier mengambil barang untuk pengiriman
-     */
-    public function courierPickupDelivery(Request $request, BookProduct $booking)
-    {
-        authorize('courier_pickup', $booking);
-
-        $validated = $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png|max:2048',
-        ]);
-
-        try {
-            $photoPath = $request->file('photo')->store('delivery_photos');
-
-            $this->courierService->pickupForDelivery(
-                $booking,
-                $photoPath
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Barang berhasil diambil untuk pengiriman',
-                'status' => $booking->order_status->label(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Courier menyelesaikan pengiriman
-     */
-    public function courierCompleteDelivery(Request $request, BookProduct $booking)
-    {
-        authorize('courier_deliver', $booking);
-
-        $validated = $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png|max:2048',
-        ]);
-
-        try {
-            $photoPath = $request->file('photo')->store('delivery_photos');
-
-            $this->courierService->completeDelivery(
-                $booking,
-                $photoPath
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Pengiriman selesai',
-                'status' => $booking->order_status->label(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Courier mengambil barang untuk dikembalikan
-     */
-    public function courierPickupReturn(Request $request, BookProduct $booking)
-    {
-        authorize('courier_return', $booking);
-
-        $validated = $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png|max:2048',
-        ]);
-
-        try {
-            $photoPath = $request->file('photo')->store('return_photos');
-
-            $this->courierService->pickupForReturn(
-                $booking,
-                $photoPath
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Barang berhasil diambil untuk dikembalikan',
-                'status' => $booking->order_status->label(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Courier menyelesaikan pengembalian
-     */
-    public function courierCompleteReturn(Request $request, BookProduct $booking)
-    {
-        authorize('courier_complete_return', $booking);
-
-        $validated = $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png|max:2048',
-        ]);
-
-        try {
-            $photoPath = $request->file('photo')->store('return_photos');
-
-            $this->courierService->completeReturn(
-                $booking,
-                $photoPath
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Barang berhasil dikembalikan ke gudang',
                 'status' => $booking->order_status->label(),
             ]);
         } catch (\Exception $e) {
@@ -346,7 +213,7 @@ class BookingStatusController extends Controller
      */
     public function cancelOrder(Request $request, BookProduct $booking)
     {
-        authorize('cancel', $booking);
+        $this->authorize('cancel', $booking);
 
         $validated = $request->validate([
             'reason' => 'required|string|min:10',
@@ -355,7 +222,7 @@ class BookingStatusController extends Controller
         try {
             $this->statusService->updateOrderStatus(
                 $booking,
-                OrderStatus::CANCELLED,
+                OrderStatus::SELESAI,
                 ['cancellation_reason' => $validated['reason']]
             );
 
@@ -382,15 +249,19 @@ class BookingStatusController extends Controller
         );
     }
 
-    /**
-     * Get delivery status (untuk courier)
-     */
     public function getDeliveryStatus(BookProduct $booking)
     {
-        authorize('view', $booking);
+        $this->authorize('view', $booking);
 
         return response()->json(
-            $this->courierService->getDeliveryStatus($booking)
+            [
+                'can_pickup_delivery' => $booking->order_status === OrderStatus::PENDING,
+                'can_complete_delivery' => $booking->order_status === OrderStatus::DIPINJAM,
+                'can_schedule_return' => $booking->order_status === OrderStatus::DIPINJAM,
+                'can_complete_return' => $booking->order_status === OrderStatus::DIPINJAM,
+                'current_status' => $booking->order_status->label(),
+                'item_status' => $booking->item_status->label(),
+            ]
         );
     }
 }

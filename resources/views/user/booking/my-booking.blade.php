@@ -118,14 +118,6 @@
                                                         <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_telp }}</p>
                                                     </div>
                                                     @if($booking->detailBooks && $booking->detailBooks->count())
-                                                        <div>
-                                                            <p class="text-xs text-gray-600 mb-1">Metode Pengiriman</p>
-                                                            <p class="text-sm font-semibold text-gray-900">{{ ucfirst($booking->detailBooks->first()->shipping_method) }}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-xs text-gray-600 mb-1">Tanggal Pengiriman</p>
-                                                            <p class="text-sm font-semibold text-gray-900">{{ $booking->detailBooks->first()->shipping_date?->format('d M Y') }}</p>
-                                                        </div>
                                                     @endif
                                                 </div>
                                             </div>
@@ -203,14 +195,6 @@
                                                         <p class="text-sm font-semibold text-gray-900">{{ $booking->booker_telp }}</p>
                                                     </div>
                                                     @if($booking->detailBookProduct)
-                                                        <div>
-                                                            <p class="text-xs text-gray-600 mb-1">Metode Pengiriman</p>
-                                                            <p class="text-sm font-semibold text-gray-900">{{ ucfirst($booking->detailBookProduct->shipping_method) }}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-xs text-gray-600 mb-1">Tanggal Pengiriman</p>
-                                                            <p class="text-sm font-semibold text-gray-900">{{ $booking->detailBookProduct->shipping_date->format('d M Y') }}</p>
-                                                        </div>
                                                     @endif
                                                 </div>
                                             </div>

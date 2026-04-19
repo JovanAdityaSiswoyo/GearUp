@@ -6,6 +6,18 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $id
+ * @property string $name_package
+ * @property string|null $description
+ * @property int|null $duration_days
+ * @property int|null $rental_duration
+ * @property int|float|null $price
+ * @property int|float|null $upsell
+ * @property \Illuminate\Support\Carbon|null $start_publish
+ * @property \Illuminate\Support\Carbon|null $end_publish
+ * @property string|null $image
+ */
 class Package extends Model
 {
     use HasFactory, HasUuids;

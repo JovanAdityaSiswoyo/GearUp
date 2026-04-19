@@ -41,9 +41,18 @@
             <div class="mb-3 text-2xl font-bold text-teal-700">Rp {{ number_format($product->price_per_day, 0, ',', '.') }} <span class="text-base font-normal text-gray-500">/ hari</span></div>
             <div class="mb-3 text-base text-gray-500">Stok: <span class="font-medium text-gray-700">{{ $product->stock }} unit</span></div>
             <div class="mb-6 text-gray-700 leading-relaxed border-t pt-4">{{ $product->description }}</div>
+            @php
+                $isInCart = in_array($product->id, session('cart', []));
+            @endphp
             <form action="{{ route('user.cart.add', $product->id) }}" method="POST">
                 @csrf
-                <button type="submit" class="inline-block w-full md:w-auto text-center bg-teal-600 hover:bg-teal-700 text-white text-lg font-semibold px-10 py-3 rounded-lg shadow transition">Tambah ke Cart</button>
+                <button
+                    type="submit"
+                    @disabled($isInCart)
+                    class="inline-block w-full md:w-auto text-center text-lg font-semibold px-10 py-3 rounded-lg shadow transition {{ $isInCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700 text-white' }}"
+                >
+                    {{ $isInCart ? 'Sudah di Cart' : 'Tambah ke Cart' }}
+                </button>
             </form>
         </div>
     </div>

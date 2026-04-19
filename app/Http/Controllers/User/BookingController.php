@@ -7,6 +7,7 @@ use App\Models\DetailBookProduct;
 use App\Models\Product;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -26,10 +27,10 @@ class BookingController extends Controller
                 'other_socials' => 'nullable|string|max:255',
                 'phone_number' => 'required|string|max:20',
                 'emergency_phone_number' => 'required|string|max:20',
-                'shipping_method' => 'required|in:pickup,delivery',
+                'shipping_method' => 'nullable|in:pickup,delivery',
                 'renter_address' => 'required|string',
-                'shipping_date' => 'required|date|after_or_equal:today',
-                'rental_start_at' => 'required|date|after_or_equal:shipping_date',
+                'shipping_date' => 'nullable|date|after_or_equal:today',
+                'rental_start_at' => 'required|date|after_or_equal:today',
                 'rental_end_at' => 'required|date|after:rental_start_at',
                 'identity_document' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             ]);
@@ -39,9 +40,9 @@ class BookingController extends Controller
             foreach ($validated['products'] as $productId) {
                 $bookProduct = BookProduct::create([
                     'book_code' => 'BK-' . strtoupper(Str::random(8)),
-                    'id_user' => auth()->id(),
+                    'id_user' => Auth::id(),
                     'id_product' => $productId,
-                    'order_status' => OrderStatus::AWAITING_VALIDATION, // Menunggu validasi officer
+                    'order_status' => OrderStatus::PENDING, // Menunggu validasi officer
                     'checkin_appointment_start' => $validated['rental_start_at'],
                     'checkout_appointment_end' => $validated['rental_end_at'],
                     'amount' => $validated['amount'],
@@ -57,9 +58,9 @@ class BookingController extends Controller
                     'other_socials' => $validated['other_socials'],
                     'phone_number' => $validated['phone_number'],
                     'emergency_phone_number' => $validated['emergency_phone_number'],
-                    'shipping_method' => $validated['shipping_method'],
+                    'shipping_method' => $validated['shipping_method'] ?? 'pickup',
                     'renter_address' => $validated['renter_address'],
-                    'shipping_date' => $validated['shipping_date'],
+                    'shipping_date' => $validated['shipping_date'] ?? $validated['rental_start_at'],
                     'rental_start_at' => $validated['rental_start_at'],
                     'rental_end_at' => $validated['rental_end_at'],
                     'identity_document_path' => $identityPath,
@@ -118,10 +119,10 @@ class BookingController extends Controller
             'other_socials' => 'nullable|string|max:255',
             'phone_number' => 'required|string|max:20',
             'emergency_phone_number' => 'required|string|max:20',
-            'shipping_method' => 'required|in:pickup,delivery',
+            'shipping_method' => 'nullable|in:pickup,delivery',
             'renter_address' => 'required|string',
-            'shipping_date' => 'required|date|after_or_equal:today',
-            'rental_start_at' => 'required|date|after_or_equal:shipping_date',
+            'shipping_date' => 'nullable|date|after_or_equal:today',
+            'rental_start_at' => 'required|date|after_or_equal:today',
             'rental_end_at' => 'required|date|after:rental_start_at',
             'identity_document' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
@@ -133,9 +134,9 @@ class BookingController extends Controller
             $amount = $validated['amount'][$productId] ?? 1;
             $bookProduct = BookProduct::create([
                 'book_code' => 'BK-' . strtoupper(Str::random(8)),
-                'id_user' => auth()->id(),
+                'id_user' => Auth::id(),
                 'id_product' => $productId,
-                'order_status' => OrderStatus::AWAITING_VALIDATION, // Menunggu validasi officer
+                'order_status' => OrderStatus::PENDING, // Menunggu validasi officer
                 'checkin_appointment_start' => $validated['rental_start_at'],
                 'checkout_appointment_end' => $validated['rental_end_at'],
                 'amount' => $amount,
@@ -151,9 +152,9 @@ class BookingController extends Controller
                 'other_socials' => $validated['other_socials'],
                 'phone_number' => $validated['phone_number'],
                 'emergency_phone_number' => $validated['emergency_phone_number'],
-                'shipping_method' => $validated['shipping_method'],
+                'shipping_method' => $validated['shipping_method'] ?? 'pickup',
                 'renter_address' => $validated['renter_address'],
-                'shipping_date' => $validated['shipping_date'],
+                'shipping_date' => $validated['shipping_date'] ?? $validated['rental_start_at'],
                 'rental_start_at' => $validated['rental_start_at'],
                 'rental_end_at' => $validated['rental_end_at'],
                 'identity_document_path' => $identityPath,
@@ -166,13 +167,13 @@ class BookingController extends Controller
     public function myBooking()
     {
         $bookings = BookProduct::with(['product', 'detailBookProduct'])
-            ->where('id_user', auth()->id())
+            ->where('id_user', Auth::id())
             ->latest()
             ->get();
 
         // Ambil riwayat booking package user
         $packageBookings = \App\Models\Book::with(['package', 'detailBooks'])
-            ->where('id_user', auth()->id())
+            ->where('id_user', Auth::id())
             ->latest()
             ->get();
 
@@ -181,29 +182,17 @@ class BookingController extends Controller
 
     public function myReturns()
     {
-        $returnNeededStatuses = [
-            OrderStatus::DELIVERED->value,
-            OrderStatus::OVERDUE->value,
-        ];
-
-        $returnInProcessStatuses = [
-            OrderStatus::PICKUP_SCHEDULED->value,
-            OrderStatus::ON_PROCESS_RETURN->value,
-            OrderStatus::PENDING_REVIEW->value,
-        ];
-
-        $returnCompletedStatuses = [
-            OrderStatus::COMPLETED->value,
-            OrderStatus::ISSUE_DETECTED->value,
-        ];
+        $returnNeededStatuses = [OrderStatus::DIPINJAM->value];
+        $returnInProcessStatuses = [OrderStatus::DIPINJAM->value];
+        $returnCompletedStatuses = [OrderStatus::SELESAI->value];
 
         $productBookings = BookProduct::with(['product', 'detailBookProduct'])
-            ->where('id_user', auth()->id())
+            ->where('id_user', Auth::id())
             ->latest()
             ->get();
 
         $packageBookings = \App\Models\Book::with(['package', 'detailBooks'])
-            ->where('id_user', auth()->id())
+            ->where('id_user', Auth::id())
             ->latest()
             ->get();
 

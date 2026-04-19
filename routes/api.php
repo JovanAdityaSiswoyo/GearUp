@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\DetailBookController;
 use App\Http\Controllers\Api\BookProductController;
 use App\Http\Controllers\Api\DetailBookProductController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\CartController;
 
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -50,4 +51,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('book-products', BookProductController::class);
     Route::apiResource('detail-book-products', DetailBookProductController::class);
     Route::apiResource('payments', PaymentController::class);
+
+    // Cart management
+    Route::get('cart', [CartController::class, 'index']);
+    Route::post('cart', [CartController::class, 'store']);
+    Route::put('cart/{id}', [CartController::class, 'update']);
+    Route::delete('cart/{id}', [CartController::class, 'destroy']);
+    Route::delete('cart', [CartController::class, 'clear']);
+    Route::post('cart/checkout', [CartController::class, 'checkout']);
 });

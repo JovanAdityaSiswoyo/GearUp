@@ -1,6 +1,26 @@
 @php
     use App\Enums\OrderStatus;
     use App\Enums\ItemStatus;
+
+    $orderBadgeClass = match ($booking->order_status) {
+        OrderStatus::PENDING => 'bg-yellow-100 text-yellow-800',
+        OrderStatus::DIPINJAM => 'bg-blue-100 text-blue-800',
+        OrderStatus::SELESAI => 'bg-emerald-100 text-emerald-800',
+        default => 'bg-gray-100 text-gray-800',
+    };
+
+    $itemBadgeClass = match ($booking->item_status) {
+        ItemStatus::AVAILABLE => 'bg-green-100 text-green-800',
+        ItemStatus::BOOKED => 'bg-yellow-100 text-yellow-800',
+        ItemStatus::PACKING => 'bg-blue-100 text-blue-800',
+        ItemStatus::PICKED_UP => 'bg-blue-100 text-blue-800',
+        ItemStatus::DEPLOYED => 'bg-green-100 text-green-800',
+        ItemStatus::RETURNING => 'bg-orange-100 text-orange-800',
+        ItemStatus::IN_INSPECTION => 'bg-purple-100 text-purple-800',
+        ItemStatus::MAINTENANCE => 'bg-red-100 text-red-800',
+        ItemStatus::LOST_SCRAPPED => 'bg-red-200 text-red-900',
+        default => 'bg-gray-100 text-gray-800',
+    };
 @endphp
 
 <div class="space-y-4">
@@ -8,17 +28,7 @@
     <div>
         <h4 class="text-sm font-semibold text-gray-700 mb-2">Status Order</h4>
         <div class="flex flex-col items-start space-y-2">
-            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                @if($booking->order_status == OrderStatus::DRAFT) bg-gray-100 text-gray-800
-                @elseif($booking->order_status == OrderStatus::AWAITING_VALIDATION) bg-yellow-100 text-yellow-800
-                @elseif($booking->order_status == OrderStatus::CONFIRMED) bg-blue-100 text-blue-800
-                @elseif(in_array($booking->order_status, [OrderStatus::READY_FOR_PICKUP, OrderStatus::OUT_FOR_DELIVERY, OrderStatus::DELIVERED])) bg-green-100 text-green-800
-                @elseif($booking->order_status == OrderStatus::PICKUP_SCHEDULED) bg-purple-100 text-purple-800
-                @elseif(in_array($booking->order_status, [OrderStatus::ON_PROCESS_RETURN, OrderStatus::PENDING_REVIEW])) bg-orange-100 text-orange-800
-                @elseif($booking->order_status == OrderStatus::COMPLETED) bg-emerald-100 text-emerald-800
-                @elseif($booking->order_status == OrderStatus::ISSUE_DETECTED) bg-red-100 text-red-800
-                @elseif($booking->order_status == OrderStatus::CANCELLED) bg-gray-100 text-gray-600
-                @endif">
+            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $orderBadgeClass }}">
                 {{ $booking->order_status->label() }}
             </span>
             <p class="text-xs text-gray-600">{{ $booking->order_status->description() }}</p>
@@ -30,17 +40,7 @@
     <div class="pt-3 border-t">
         <h4 class="text-sm font-semibold text-gray-700 mb-2">Status Barang</h4>
         <div class="flex flex-col items-start space-y-2">
-            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                @if($booking->item_status == ItemStatus::AVAILABLE) bg-green-100 text-green-800
-                @elseif($booking->item_status == ItemStatus::BOOKED) bg-yellow-100 text-yellow-800
-                @elseif($booking->item_status == ItemStatus::PACKING) bg-blue-100 text-blue-800
-                @elseif($booking->item_status == ItemStatus::PICKED_UP) bg-blue-100 text-blue-800
-                @elseif($booking->item_status == ItemStatus::DEPLOYED) bg-green-100 text-green-800
-                @elseif($booking->item_status == ItemStatus::RETURNING) bg-orange-100 text-orange-800
-                @elseif($booking->item_status == ItemStatus::IN_INSPECTION) bg-purple-100 text-purple-800
-                @elseif($booking->item_status == ItemStatus::MAINTENANCE) bg-red-100 text-red-800
-                @elseif($booking->item_status == ItemStatus::LOST_SCRAPPED) bg-red-200 text-red-900
-                @endif">
+            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $itemBadgeClass }}">
                 {{ $booking->item_status->label() }}
             </span>
             <p class="text-xs text-gray-600">{{ $booking->item_status->description() }}</p>

@@ -1,5 +1,5 @@
 <!-- Header Atas: Kontak & Info -->
-<div id="top-header" class="w-full bg-transparent px-6 lg:px-16 py-2 flex flex-col md:flex-row items-center justify-between text-black text-sm border-b-1 border-gray-300 transition-all duration-300 bg-white" style="background:transparent;">
+<div id="top-header" class="w-full bg-transparent px-6 lg:px-16 py-2 flex flex-col md:flex-row items-center justify-between text-black text-sm border-b border-gray-300 transition-all duration-300" style="background:transparent;">
     <div class="flex items-center space-x-6">
         <div class="flex items-center space-x-2">
             <x-heroicon-o-phone class="h-5 w-5" />
@@ -20,7 +20,7 @@
 </div>
 
 <!-- Header Bawah: Logo, Navigasi, Login/Cart -->
-<nav id="main-navbar" class="w-full bg-transparent px-6 lg:px-16 py-3 flex items-center justify-between text-black border-b-1 border-gray-300 transition-all duration-300" style="background:transparent; position:static; top:auto; left:auto; transform:none;">
+<nav id="main-navbar" class="w-full bg-transparent px-6 lg:px-16 py-3 flex items-center justify-between text-black border-b border-gray-300 transition-all duration-300" style="background:transparent; position:static; top:auto; left:auto; transform:none;">
     <script>
     // Navbar and header show/hide & sticky blur effect on scroll
     document.addEventListener('DOMContentLoaded', function() {

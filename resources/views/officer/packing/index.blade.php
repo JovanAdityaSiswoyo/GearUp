@@ -65,13 +65,13 @@
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4">
-                                                @if($booking->order_status === \App\Enums\OrderStatus::CONFIRMED)
+                                                @if($booking->order_status === \App\Enums\OrderStatus::PENDING)
                                                     <span class="px-3 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">
-                                                        Confirmed
+                                                        Pending
                                                     </span>
-                                                @elseif($booking->order_status === \App\Enums\OrderStatus::READY_FOR_PICKUP)
-                                                    <span class="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
-                                                        Ready
+                                                @elseif($booking->order_status === \App\Enums\OrderStatus::DIPINJAM)
+                                                    <span class="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                                                        Dipinjam
                                                     </span>
                                                 @else
                                                     <span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">

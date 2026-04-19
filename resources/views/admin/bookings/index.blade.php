@@ -77,11 +77,19 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($bookings as $booking)
+                            @php
+                                $statusBadgeClass = match ($booking->status) {
+                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                    'confirmed' => 'bg-blue-100 text-blue-800',
+                                    'active' => 'bg-green-100 text-green-800',
+                                    'completed' => 'bg-gray-100 text-gray-800',
+                                    default => 'bg-red-100 text-red-800',
+                                };
+                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-semibold text-gray-900">{{ $booking->book_code }}</div>
@@ -110,29 +118,17 @@
                                     {{ $booking->amount }} pcs
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        @if($booking->status === 'pending') bg-yellow-100 text-yellow-800
-                                        @elseif($booking->status === 'confirmed') bg-blue-100 text-blue-800
-                                        @elseif($booking->status === 'active') bg-green-100 text-green-800
-                                        @elseif($booking->status === 'completed') bg-gray-100 text-gray-800
-                                        @else bg-red-100 text-red-800
-                                        @endif">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClass }}">
                                         {{ ucfirst($booking->status) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ route('admin.bookings.show', [$booking->item_type, $booking->id]) }}" class="text-blue-600 hover:text-blue-900 font-medium">View</a>
-                                    <button onclick="openEditModal('{{ $booking->id }}', '{{ $booking->item_type }}', '{{ $booking->status }}')" class="text-purple-600 hover:text-purple-900 font-medium">Quick Edit</button>
-                                    <form action="{{ route('admin.bookings.destroy', [$booking->item_type, $booking->id]) }}" method="POST" class="inline" id="delete-form-{{ $booking->id }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" class="text-red-600 hover:text-red-900" onclick='confirmDelete("{{ $booking->id }}")'>Delete</button>
-                                    </form>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -145,152 +141,7 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Status</h3>
-            <form id="editForm">
-                <div class="space-y-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select id="editStatus" name="status" required class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent" onchange="showAdminStatusInfo()">
-                            <option value="">-- Select Status --</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <!-- Status Info Box -->
-                    <div id="statusInfo" class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 hidden">
-                        <p class="font-semibold mb-1" id="statusTitle"></p>
-                        <p id="statusDescription" class="text-xs leading-relaxed"></p>
-                    </div>
-                </div>
-                <div class="flex space-x-2">
-                    <button type="button" onclick="closeEditModal()" 
-                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 rounded transition">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="submitEdit()" 
-                        class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 rounded transition">
-                        Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        let currentEditingBookingId = null;
-        let currentEditingBookingType = null;
-
-        function openEditModal(bookingId, bookingType, currentStatus) {
-            currentEditingBookingId = bookingId;
-            currentEditingBookingType = bookingType;
-            document.getElementById('editStatus').value = currentStatus;
-            document.getElementById('editModal').classList.remove('hidden');
-            showAdminStatusInfo();
-        }
-
-        function showAdminStatusInfo() {
-            const select = document.getElementById('editStatus');
-            const value = select.value;
-            const infoBox = document.getElementById('statusInfo');
-            const titleEl = document.getElementById('statusTitle');
-            const descEl = document.getElementById('statusDescription');
-
-            const statusDescriptions = {
-                'pending': { title: '⏳ Pending', desc: 'Booking menunggu untuk diproses dan dikonfirmasi' },
-                'confirmed': { title: '✅ Confirmed', desc: 'Booking sudah dikonfirmasi dan siap untuk diproses lebih lanjut' },
-                'active': { title: '🔄 Active', desc: 'Proses booking sedang berjalan, periode sewa mulai' },
-                'completed': { title: '🎉 Completed', desc: 'Proses booking selesai dengan sukses, semua transaksi selesai' },
-                'cancelled': { title: '❌ Cancelled', desc: 'Booking dibatalkan, tidak ada transaksi lebih lanjut' }
-            };
-
-            if (value && statusDescriptions[value]) {
-                const desc = statusDescriptions[value];
-                titleEl.textContent = desc.title;
-                descEl.textContent = desc.desc;
-                infoBox.classList.remove('hidden');
-            } else {
-                infoBox.classList.add('hidden');
-            }
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editForm').reset();
-            currentEditingBookingId = null;
-            currentEditingBookingType = null;
-        }
-
-        function submitEdit() {
-            const statusValue = document.getElementById('editStatus').value;
-            console.log('Status value:', statusValue);
-            
-            if (!statusValue) {
-                Swal.fire('Error!', 'Status is required', 'error');
-                return;
-            }
-
-            if (!currentEditingBookingId || !currentEditingBookingType) {
-                Swal.fire('Error!', 'Booking ID or Type not found', 'error');
-                return;
-            }
-
-            const data = {
-                status: statusValue
-            };
-            
-            const url = `/admin/bookings/${currentEditingBookingType}/${currentEditingBookingId}/update-data`;
-            console.log('Sending data:', data);
-            console.log('URL:', url);
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Response data:', data);
-                if (data.success) {
-                    Swal.fire('Success!', data.message, 'success')
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire('Error!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
-            });
-        }
-
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            });
-        }
     </script>
 </body>
 </html>

@@ -59,144 +59,144 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Product Info Card -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-                            <h2 class="text-lg font-bold text-gray-800 mb-1">Produk yang Dipilih</h2>
-                            <p class="text-sm text-gray-500 mb-4">Total produk dipilih: <span class="font-semibold text-green-700">{{ count($products) }}</span></p>
-                            <div class="relative">
-                                <div id="carousel-container" class="relative w-full flex items-center justify-center">
-                                    <button type="button" id="carousel-prev" class="absolute left-0 z-10 bg-white border border-gray-300 rounded-full shadow p-2 hover:bg-gray-100 disabled:opacity-30" style="top: 50%; transform: translateY(-50%);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                                    </button>
-                                    <div id="carousel-card-wrapper" class="w-full flex items-center justify-center">
-                                        @foreach($products as $i => $product)
-                                            <div class="carousel-card" data-index="{{ $i }}" style="display: {{ $i === 0 ? 'block' : 'none' }}; width: 100%;">
-                                                <div class="min-w-[260px] max-w-sm bg-gray-50 rounded-2xl shadow-lg p-5 border-2 border-green-200 mx-auto">
-                                                    <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-4">
-                                                        @if($product->image)
-                                                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-                                                        @else
-                                                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                                                <x-heroicon-o-photo class="h-20 w-20 text-gray-400" />
+                        <div class="sticky top-4 space-y-6">
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <h2 class="text-lg font-bold text-gray-800 mb-1">Produk yang Dipilih</h2>
+                                <p class="text-sm text-gray-500 mb-4">Total produk dipilih: <span class="font-semibold text-green-700">{{ count($products) }}</span></p>
+                                <div class="relative">
+                                    <div id="carousel-container" class="relative w-full flex items-center justify-center">
+                                        <button type="button" id="carousel-prev" class="absolute left-0 z-10 bg-white border border-gray-300 rounded-full shadow p-2 hover:bg-gray-100 disabled:opacity-30" style="top: 50%; transform: translateY(-50%);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                                        </button>
+                                        <div id="carousel-card-wrapper" class="w-full flex items-center justify-center">
+                                            @foreach($products as $i => $product)
+                                                <div class="carousel-card" data-index="{{ $i }}" style="display: {{ $i === 0 ? 'block' : 'none' }}; width: 100%;">
+                                                    <div class="min-w-65 max-w-sm bg-gray-50 rounded-2xl shadow-lg p-5 border-2 border-green-200 mx-auto">
+                                                        <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-4">
+                                                            @if($product->image)
+                                                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                                            @else
+                                                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                    <x-heroicon-o-photo class="h-20 w-20 text-gray-400" />
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
+                                                        @if($product->category)
+                                                            <p class="text-sm text-gray-500 mb-2">{{ $product->category->categories }}</p>
+                                                        @endif
+                                                        @if($product->brand)
+                                                            <div class="flex items-center space-x-2 mb-3">
+                                                                <span class="text-sm text-gray-600 font-medium">Brand:</span>
+                                                                <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">{{ $product->brand->name }}</span>
                                                             </div>
                                                         @endif
-                                                    </div>
-                                                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $product->name }}</h3>
-                                                    @if($product->category)
-                                                        <p class="text-sm text-gray-500 mb-2">{{ $product->category->categories }}</p>
-                                                    @endif
-                                                    @if($product->brand)
-                                                        <div class="flex items-center space-x-2 mb-3">
-                                                            <span class="text-sm text-gray-600 font-medium">Brand:</span>
-                                                            <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">{{ $product->brand->name }}</span>
-                                                        </div>
-                                                    @endif
-                                                    <div class="border-t pt-3 mt-3">
-                                                        <div class="flex justify-between items-center mb-2">
-                                                            <span class="text-sm text-gray-600">Harga/hari:</span>
-                                                            <span class="text-lg font-bold text-teal-700">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}</span>
-                                                        </div>
-                                                        <div class="flex justify-between items-center">
-                                                            <span class="text-sm text-gray-600">Stok:</span>
-                                                            <span class="font-semibold text-gray-900 text-sm">{{ $product->stock }} unit</span>
+                                                        <div class="border-t pt-3 mt-3">
+                                                            <div class="flex justify-between items-center mb-2">
+                                                                <span class="text-sm text-gray-600">Harga/hari:</span>
+                                                                <span class="text-lg font-bold text-teal-700">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-gray-600">Stok:</span>
+                                                                <span class="font-semibold text-gray-900 text-sm">{{ $product->stock }} unit</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
+                                            @endforeach
+                                        </div>
+                                        <button type="button" id="carousel-next" class="absolute right-0 z-10 bg-white border border-gray-300 rounded-full shadow p-2 hover:bg-gray-100 disabled:opacity-30" style="top: 50%; transform: translateY(-50%);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                        </button>
                                     </div>
-                                    <button type="button" id="carousel-next" class="absolute right-0 z-10 bg-white border border-gray-300 rounded-full shadow p-2 hover:bg-gray-100 disabled:opacity-30" style="top: 50%; transform: translateY(-50%);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                                    </button>
                                 </div>
-                                                    <script>
-                                                    document.addEventListener('DOMContentLoaded', function() {
-                                                        const cards = document.querySelectorAll('.carousel-card');
-                                                        const prevBtn = document.getElementById('carousel-prev');
-                                                        const nextBtn = document.getElementById('carousel-next');
-                                                        let current = 0;
-                                                        function updateCarousel() {
-                                                            cards.forEach((card, i) => {
-                                                                card.style.display = (i === current) ? 'block' : 'none';
-                                                            });
-                                                            prevBtn.disabled = (current === 0);
-                                                            nextBtn.disabled = (current === cards.length - 1);
-                                                        }
-                                                        prevBtn.addEventListener('click', function() {
-                                                            if (current > 0) { current--; updateCarousel(); }
-                                                        });
-                                                        nextBtn.addEventListener('click', function() {
-                                                            if (current < cards.length - 1) { current++; updateCarousel(); }
-                                                        });
-                                                        updateCarousel();
-                                                    });
-                                                    </script>
-                            </div>
-                        </div>
-                        <!-- Payment Summary -->
-                        <div class="mt-6 bg-green-50 border border-green-200 rounded-xl p-4">
-                            <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">
-                                <x-heroicon-o-currency-dollar class="h-5 w-5" />
-                                Ringkasan Pembayaran
-                            </h4>
-                            <div class="flex justify-between text-sm mb-2">
-                                <span>Total Harga Produk / Hari</span>
-                                <span id="summary-product-price">Rp 0</span>
-                            </div>
-                            <div class="flex justify-between text-sm mb-2">
-                                <span>Estimasi Hari Sewa</span>
-                                <span id="summary-days">-</span>
-                            </div>
-                            <div class="flex justify-between text-base font-bold border-t pt-2 mt-2">
-                                <span>Total Pembayaran</span>
-                                <span id="summary-total">Rp 0</span>
-                            </div>
-                            <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const start = document.getElementById('rental_start_at');
-                                const end = document.getElementById('rental_end_at');
-                                const daysSpan = document.getElementById('summary-days');
-                                const totalSpan = document.getElementById('summary-total');
-                                const priceSpan = document.getElementById('summary-product-price');
-                                // Ambil semua input amount
-                                function getProductData() {
-                                    const amounts = document.querySelectorAll('input[name^="amount["]');
-                                    let total = 0;
-                                    @foreach($products as $product)
-                                        let val = 1;
-                                        const input = document.querySelector('input[name="amount[{{ $product->id }}]"]');
-                                        if (input && input.value) val = parseInt(input.value) || 1;
-                                        total += val * {{ $product->price_per_day }};
-                                    @endforeach
-                                    return total;
-                                }
-                                function updateSummary() {
-                                    let days = 0;
-                                    if (start && end && start.value && end.value) {
-                                        const d1 = new Date(start.value);
-                                        const d2 = new Date(end.value);
-                                        days = Math.floor((d2 - d1) / (1000*60*60*24)) + 1;
+                                <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const cards = document.querySelectorAll('.carousel-card');
+                                    const prevBtn = document.getElementById('carousel-prev');
+                                    const nextBtn = document.getElementById('carousel-next');
+                                    let current = 0;
+                                    function updateCarousel() {
+                                        cards.forEach((card, i) => {
+                                            card.style.display = (i === current) ? 'block' : 'none';
+                                        });
+                                        prevBtn.disabled = (current === 0);
+                                        nextBtn.disabled = (current === cards.length - 1);
                                     }
-                                    const totalPerDay = getProductData();
-                                    priceSpan.textContent = 'Rp ' + totalPerDay.toLocaleString('id-ID');
-                                    if (isNaN(days) || days < 1) {
-                                        daysSpan.textContent = '-';
-                                        totalSpan.textContent = 'Rp 0';
-                                    } else {
-                                        daysSpan.textContent = days + ' hari';
-                                        totalSpan.textContent = 'Rp ' + (totalPerDay * days).toLocaleString('id-ID');
-                                    }
-                                }
-                                // Listen to amount changes
-                                document.querySelectorAll('input[name^="amount["]').forEach(input => {
-                                    input.addEventListener('input', updateSummary);
+                                    prevBtn.addEventListener('click', function() {
+                                        if (current > 0) { current--; updateCarousel(); }
+                                    });
+                                    nextBtn.addEventListener('click', function() {
+                                        if (current < cards.length - 1) { current++; updateCarousel(); }
+                                    });
+                                    updateCarousel();
                                 });
-                                if (start && end) {
-                                    start.addEventListener('change', updateSummary);
-                                    end.addEventListener('change', updateSummary);
-                                }
-                                updateSummary();
-                            });
-                            </script>
+                                </script>
+                            </div>
+                            <!-- Payment Summary -->
+                            <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                                <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">
+                                    <x-heroicon-o-currency-dollar class="h-5 w-5" />
+                                    Ringkasan Pembayaran
+                                </h4>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Total Harga Produk / Hari</span>
+                                    <span id="summary-product-price">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Estimasi Hari Sewa</span>
+                                    <span id="summary-days">-</span>
+                                </div>
+                                <div class="flex justify-between text-base font-bold border-t pt-2 mt-2">
+                                    <span>Total Pembayaran</span>
+                                    <span id="summary-total">Rp 0</span>
+                                </div>
+                                <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const start = document.getElementById('rental_start_at');
+                                    const end = document.getElementById('rental_end_at');
+                                    const daysSpan = document.getElementById('summary-days');
+                                    const totalSpan = document.getElementById('summary-total');
+                                    const priceSpan = document.getElementById('summary-product-price');
+                                    function getProductData() {
+                                        const amounts = document.querySelectorAll('input[name^="amount["]');
+                                        let total = 0;
+                                        @foreach($products as $product)
+                                            let val = 1;
+                                            const input = document.querySelector('input[name="amount[{{ $product->id }}]"]');
+                                            if (input && input.value) val = parseInt(input.value) || 1;
+                                            total += val * {{ $product->price_per_day }};
+                                        @endforeach
+                                        return total;
+                                    }
+                                    function updateSummary() {
+                                        let days = 0;
+                                        if (start && end && start.value && end.value) {
+                                            const d1 = new Date(start.value);
+                                            const d2 = new Date(end.value);
+                                            days = Math.floor((d2 - d1) / (1000*60*60*24)) + 1;
+                                        }
+                                        const totalPerDay = getProductData();
+                                        priceSpan.textContent = 'Rp ' + totalPerDay.toLocaleString('id-ID');
+                                        if (isNaN(days) || days < 1) {
+                                            daysSpan.textContent = '-';
+                                            totalSpan.textContent = 'Rp 0';
+                                        } else {
+                                            daysSpan.textContent = days + ' hari';
+                                            totalSpan.textContent = 'Rp ' + (totalPerDay * days).toLocaleString('id-ID');
+                                        }
+                                    }
+                                    document.querySelectorAll('input[name^="amount["]').forEach(input => {
+                                        input.addEventListener('input', updateSummary);
+                                    });
+                                    if (start && end) {
+                                        start.addEventListener('change', updateSummary);
+                                        end.addEventListener('change', updateSummary);
+                                    }
+                                    updateSummary();
+                                });
+                                </script>
+                            </div>
                         </div>
                     </div>
 
@@ -440,7 +440,7 @@
                                                 </button>
 
                                                 <!-- Camera Modal -->
-                                                <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+                                                <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 items-center justify-center p-4">
                                                     <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full">
                                                         <div class="p-6">
                                                             <h3 class="text-xl font-bold text-gray-800 mb-4">Ambil Foto KTP/Identitas</h3>
@@ -527,79 +527,6 @@
                                         <span>Informasi Penyewaan</span>
                                     </h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <!-- Shipping Method -->
-                                        <div>
-                                            <label for="shipping_method" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Metode Pengiriman <span class="text-red-500">*</span>
-                                            </label>
-                                            <select 
-                                                id="shipping_method"
-                                                name="shipping_method"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                                                required
-                                            >
-                                                <option value="">Pilih Metode</option>
-                                                <option value="pickup" {{ old('shipping_method') == 'pickup' ? 'selected' : '' }}>Ambil Sendiri</option>
-                                                <option value="delivery" {{ old('shipping_method') == 'delivery' ? 'selected' : '' }}>Antar ke Alamat</option>
-                                            </select>
-                                            @error('shipping_method')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-
-                                            <!-- Dropdown kurir, hanya muncul jika Antar ke Alamat -->
-                                            <div id="courier-wrapper" class="mt-4" style="display: none;">
-                                                <label for="courier" class="block text-sm font-medium text-gray-700 mb-2">Pilih Kurir</label>
-                                                <select id="courier" name="courier" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                                                    <option value="">Pilih Kurir</option>
-                                                    <option value="JNE" {{ old('courier') == 'JNE' ? 'selected' : '' }}>JNE</option>
-                                                    <option value="J&T" {{ old('courier') == 'J&T' ? 'selected' : '' }}>J&T</option>
-                                                    <option value="SiCepat" {{ old('courier') == 'SiCepat' ? 'selected' : '' }}>SiCepat</option>
-                                                    <option value="AnterAja" {{ old('courier') == 'AnterAja' ? 'selected' : '' }}>AnterAja</option>
-                                                    <option value="GrabExpress" {{ old('courier') == 'GrabExpress' ? 'selected' : '' }}>GrabExpress</option>
-                                                    <option value="Gojek" {{ old('courier') == 'Gojek' ? 'selected' : '' }}>Gojek</option>
-                                                </select>
-                                                @error('courier')
-                                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-                                            <script>
-                                            document.addEventListener('DOMContentLoaded', function() {
-                                                var shippingSelect = document.getElementById('shipping_method');
-                                                var courierWrapper = document.getElementById('courier-wrapper');
-                                                function toggleCourier() {
-                                                    if (shippingSelect.value === 'delivery') {
-                                                        courierWrapper.style.display = '';
-                                                    } else {
-                                                        courierWrapper.style.display = 'none';
-                                                        document.getElementById('courier').value = '';
-                                                    }
-                                                }
-                                                shippingSelect.addEventListener('change', toggleCourier);
-                                                // Initial state
-                                                toggleCourier();
-                                            });
-                                            </script>
-                                        </div>
-
-                                        <!-- Shipping Date -->
-                                        <div>
-                                            <label for="shipping_date" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Tanggal Pengiriman <span class="text-red-500">*</span>
-                                            </label>
-                                            <input 
-                                                type="date" 
-                                                id="shipping_date"
-                                                name="shipping_date"
-                                                value="{{ old('shipping_date') }}"
-                                                min="{{ date('Y-m-d') }}"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                                                required
-                                            >
-                                            @error('shipping_date')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-
                                         <!-- Rental Start -->
                                         <div>
                                             <label for="rental_start_at" class="block text-sm font-medium text-gray-700 mb-2">
@@ -643,7 +570,7 @@
                                 <!-- Notes Section -->
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                     <div class="flex items-start space-x-3">
-                                        <x-heroicon-o-information-circle class="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                        <x-heroicon-o-information-circle class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                                         <div class="text-sm text-blue-800">
                                             <p class="font-semibold mb-1">Catatan Penting:</p>
                                             <ul class="list-disc list-inside space-y-1">
@@ -689,17 +616,17 @@
                         
                         <div class="space-y-4 text-gray-400 text-sm">
                             <div class="flex items-start space-x-2">
-                                <x-heroicon-o-map-pin class="h-5 w-5 flex-shrink-0 mt-0.5" />
+                                <x-heroicon-o-map-pin class="h-5 w-5 shrink-0 mt-0.5" />
                                 <p>Jl. H. Jian No.38, RT.9/RW.3, Cipete Utara,<br>Kec. Kby. Baru, Kota Jakarta Selatan,<br>Daerah Khusus Ibukota Jakarta 12150</p>
                             </div>
                             
                             <div class="flex items-center space-x-2">
-                                <x-heroicon-o-clock class="h-5 w-5 flex-shrink-0" />
+                                <x-heroicon-o-clock class="h-5 w-5 shrink-0" />
                                 <p>Setiap hari, 09:00 - 20:00 WIB</p>
                             </div>
                             
                             <div class="flex items-center space-x-2">
-                                <x-heroicon-o-envelope class="h-5 w-5 flex-shrink-0" />
+                                <x-heroicon-o-envelope class="h-5 w-5 shrink-0" />
                                 <p>gearup@gmail.com</p>
                             </div>
                         </div>

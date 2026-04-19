@@ -96,9 +96,6 @@ Admin Routes (auth:web,admin middleware):
 Officer Routes (auth:web,officer middleware):
   ✅ /officer/*
 
-Courier Routes (auth:web,courier middleware):
-  ✅ /courier/*
-
 TOTAL: 40+ protected routes, all auto-handled
 
 ═══════════════════════════════════════════════════════════════════════════════
@@ -122,7 +119,6 @@ TOTAL: 40+ protected routes, all auto-handled
    ├─ Works with web guard (default)
    ├─ Works with admin guard
    ├─ Works with officer guard
-   ├─ Works with courier guard
    └─ Automatic guard detection
 
 ✅ API Support

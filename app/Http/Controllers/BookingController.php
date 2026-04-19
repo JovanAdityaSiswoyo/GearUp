@@ -161,9 +161,9 @@ class BookingController extends Controller
         $booking->item_type = $type;
         
         if ($type === 'product') {
-            $booking->load('user', 'product.category', 'product.brand');
+            $booking->load('user', 'product.category', 'product.brand', 'detailBookProduct');
         } else {
-            $booking->load('user', 'package');
+            $booking->load('user', 'package', 'detailBook');
         }
         
         return view('admin.bookings.show', compact('booking'));

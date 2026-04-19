@@ -28,16 +28,9 @@ class OfficerBookingStatusController extends Controller
     private function getItemStatusFromOrderStatus($orderStatus): ?ItemStatus
     {
         return match($orderStatus) {
-            OrderStatus::DRAFT => ItemStatus::AVAILABLE,
-            OrderStatus::CONFIRMED => ItemStatus::BOOKED,
-            OrderStatus::READY_FOR_PICKUP => ItemStatus::PACKING,
-            OrderStatus::OUT_FOR_DELIVERY => ItemStatus::PICKED_UP,
-            OrderStatus::DELIVERED => ItemStatus::DEPLOYED,
-            OrderStatus::PICKUP_SCHEDULED => ItemStatus::RETURNING,
-            OrderStatus::PENDING_REVIEW => ItemStatus::IN_INSPECTION,
-            OrderStatus::COMPLETED => ItemStatus::AVAILABLE,
-            OrderStatus::ISSUE_DETECTED,
-            OrderStatus::CANCELLED => null, // Tidak ada mapping langsung
+            OrderStatus::PENDING => ItemStatus::BOOKED,
+            OrderStatus::DIPINJAM => ItemStatus::DEPLOYED,
+            OrderStatus::SELESAI => ItemStatus::AVAILABLE,
             default => null,
         };
     }
@@ -49,7 +42,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::AWAITING_VALIDATION,
+            OrderStatus::PENDING,
             'Order berhasil divalidasi',
             'validate'
         );
@@ -62,7 +55,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::CONFIRMED,
+            OrderStatus::PENDING,
             'Order berhasil dikonfirmasi',
             'confirm'
         );
@@ -75,7 +68,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::PENDING,
             'Barang siap diambil user di lokasi',
             'prepare_pickup'
         );
@@ -88,7 +81,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::DELIVERED,
+            OrderStatus::DIPINJAM,
             'Barang berhasil diserahkan ke user',
             'handover'
         );
@@ -101,7 +94,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::PICKUP_SCHEDULED,
+            OrderStatus::DIPINJAM,
             'Jadwal pengembalian berhasil dicatat',
             'schedule_return'
         );
@@ -114,7 +107,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::PENDING_REVIEW,
+            OrderStatus::SELESAI,
             'Barang pengembalian berhasil diterima',
             'receive_return'
         );
@@ -127,7 +120,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             BookProduct::find($id),
-            OrderStatus::COMPLETED,
+            OrderStatus::SELESAI,
             'Order berhasil diselesaikan',
             'complete'
         );
@@ -152,7 +145,7 @@ class OfficerBookingStatusController extends Controller
         DB::beginTransaction();
         try {
             $booking->update([
-                'order_status' => OrderStatus::ISSUE_DETECTED,
+                'order_status' => OrderStatus::SELESAI,
                 'notes' => $notes
             ]);
             $this->logBookingActivity(
@@ -160,7 +153,7 @@ class OfficerBookingStatusController extends Controller
                 'detect_issue',
                 'Officer mencatat issue pada booking',
                 [
-                    'new_order_status' => OrderStatus::ISSUE_DETECTED->value,
+                    'new_order_status' => OrderStatus::SELESAI->value,
                     'notes' => $notes,
                 ]
             );
@@ -198,7 +191,7 @@ class OfficerBookingStatusController extends Controller
         DB::beginTransaction();
         try {
             $booking->update([
-                'order_status' => OrderStatus::CANCELLED,
+                'order_status' => OrderStatus::SELESAI,
                 'notes' => $reason
             ]);
             $this->logBookingActivity(
@@ -206,7 +199,7 @@ class OfficerBookingStatusController extends Controller
                 'cancel',
                 'Officer membatalkan booking',
                 [
-                    'new_order_status' => OrderStatus::CANCELLED->value,
+                    'new_order_status' => OrderStatus::SELESAI->value,
                     'reason' => $reason,
                 ]
             );
@@ -233,7 +226,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::AWAITING_VALIDATION,
+            OrderStatus::PENDING,
             'Order berhasil divalidasi',
             'validate'
         );
@@ -246,7 +239,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::CONFIRMED,
+            OrderStatus::PENDING,
             'Order berhasil dikonfirmasi',
             'confirm'
         );
@@ -259,7 +252,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::READY_FOR_PICKUP,
+            OrderStatus::PENDING,
             'Barang siap diambil user di lokasi',
             'prepare_pickup'
         );
@@ -272,7 +265,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::DELIVERED,
+            OrderStatus::DIPINJAM,
             'Barang berhasil diserahkan ke user',
             'handover'
         );
@@ -285,7 +278,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::PICKUP_SCHEDULED,
+            OrderStatus::DIPINJAM,
             'Jadwal pengembalian berhasil dicatat',
             'schedule_return'
         );
@@ -298,7 +291,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::PENDING_REVIEW,
+            OrderStatus::SELESAI,
             'Barang pengembalian berhasil diterima',
             'receive_return'
         );
@@ -311,7 +304,7 @@ class OfficerBookingStatusController extends Controller
     {
         return $this->updateOrderStatus(
             Book::find($id),
-            OrderStatus::COMPLETED,
+            OrderStatus::SELESAI,
             'Order berhasil diselesaikan',
             'complete'
         );
@@ -336,7 +329,7 @@ class OfficerBookingStatusController extends Controller
         DB::beginTransaction();
         try {
             $booking->update([
-                'order_status' => OrderStatus::ISSUE_DETECTED,
+                'order_status' => OrderStatus::SELESAI,
                 'notes' => $notes
             ]);
             $this->logBookingActivity(
@@ -344,7 +337,7 @@ class OfficerBookingStatusController extends Controller
                 'detect_issue',
                 'Officer mencatat issue pada booking',
                 [
-                    'new_order_status' => OrderStatus::ISSUE_DETECTED->value,
+                    'new_order_status' => OrderStatus::SELESAI->value,
                     'notes' => $notes,
                 ]
             );
@@ -382,7 +375,7 @@ class OfficerBookingStatusController extends Controller
         DB::beginTransaction();
         try {
             $booking->update([
-                'order_status' => OrderStatus::CANCELLED,
+                'order_status' => OrderStatus::SELESAI,
                 'notes' => $reason
             ]);
             $this->logBookingActivity(
@@ -390,7 +383,7 @@ class OfficerBookingStatusController extends Controller
                 'cancel',
                 'Officer membatalkan booking',
                 [
-                    'new_order_status' => OrderStatus::CANCELLED->value,
+                    'new_order_status' => OrderStatus::SELESAI->value,
                     'reason' => $reason,
                 ]
             );
@@ -426,6 +419,17 @@ class OfficerBookingStatusController extends Controller
                 'success' => false,
                 'message' => 'Anda tidak memiliki akses'
             ], 403);
+        }
+
+        if (
+            $newStatus === OrderStatus::DIPINJAM &&
+            $booking->order_status !== OrderStatus::DIPINJAM &&
+            !$this->hasOfficerApproval($booking)
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking harus di-approve officer terlebih dahulu lewat Booking Management sebelum status dipinjam.',
+            ], 422);
         }
 
         DB::beginTransaction();
@@ -466,6 +470,16 @@ class OfficerBookingStatusController extends Controller
                 'message' => 'Gagal mengubah status: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function hasOfficerApproval($booking): bool
+    {
+        return ActivityLog::query()
+            ->where('log_name', 'booking_status')
+            ->where('subject_type', get_class($booking))
+            ->where('subject_id', (string) $booking->id)
+            ->whereIn('event', ['validate', 'confirm'])
+            ->exists();
     }
 
     private function getAuthenticatedActor()

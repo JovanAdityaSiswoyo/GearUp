@@ -151,71 +151,6 @@
             </div>
         </div>
 
-        <!-- Search Bar (Floating at Bottom) -->
-        <div class="absolute -bottom-12 md:-bottom-16 left-6 right-6 lg:left-16 lg:right-16 z-20">
-            <div class="bg-white rounded-2xl shadow-2xl p-6">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                    <!-- Tgl Ambil -->
-                    <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">Tgl Ambil</label>
-                        <div class="relative">
-                            <input 
-                                type="date" 
-                                wire:model.live="tanggal_ambil"
-                                class="w-full text-sm border-b-2 border-gray-200 pb-2 focus:outline-none focus:border-teal-600 text-gray-800"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Tgl Pengembalian -->
-                    <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">Tgl Pengembalian</label>
-                        <div class="relative">
-                            <input 
-                                type="date" 
-                                wire:model.live="tanggal_pengembalian"
-                                class="w-full text-sm border-b-2 border-gray-200 pb-2 focus:outline-none focus:border-teal-600 text-gray-800"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Durasi -->
-                    <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">Durasi (Hari)</label>
-                        <div class="flex items-center space-x-2 text-sm border-b-2 border-gray-200 pb-2">
-                            @if(!empty($durasi) && $durasi > 0)
-                                <span class="text-gray-800 font-medium">{{ $durasi }} hari</span>
-                            @else
-                                <span class="text-gray-400 text-xs">Isi tanggal</span>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Cari -->
-                    <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">Cari</label>
-                        <div class="flex items-center gap-2 bg-gray-50 rounded-lg border border-gray-200 p-2">
-                            <x-heroicon-o-magnifying-glass class="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <input 
-                                type="text" 
-                                wire:model="search"
-                                placeholder="Cari peralatan ..." 
-                                class="flex-1 text-sm focus:outline-none bg-gray-50 text-gray-700 placeholder-gray-400"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Button Cari -->
-                    <div>
-                        <label class="block text-gray-600 text-xs mb-2 font-medium">&nbsp;</label>
-                        <button class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg font-medium transition flex items-center space-x-1 w-full justify-center h-10">
-                            <x-heroicon-o-magnifying-glass class="h-4 w-4" />
-                            <span class="text-sm">Cari</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -250,7 +185,7 @@
 </script>
 
 <!-- Pilihan Brand Section -->
-<div class="py-16 px-6 lg:px-16 bg-gray-50 pt-48">
+<div class="py-16 px-6 lg:px-16 bg-gray-50">
     <div class="max-w-7xl mx-auto">
         <!-- Section Header -->
         <div class="mb-12">

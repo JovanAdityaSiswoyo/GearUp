@@ -1,4 +1,4 @@
-<aside class="w-64 bg-gradient-to-b from-purple-600 to-pink-500 text-white fixed left-0 top-0 bottom-0 overflow-y-auto">
+<aside class="w-64 bg-gray-500 text-white fixed left-0 top-0 bottom-0 overflow-y-auto">
     <div class="p-6">
         <h1 class="text-2xl font-bold">Admin Panel</h1>
         <p class="text-sm opacity-80">GearUp</p>
@@ -41,21 +41,9 @@
             <x-heroicon-o-arrow-uturn-left class="h-5 w-5 mr-3" />
             <span>Pengembalian</span>
         </a>
-        <a href="{{ route('admin.payments.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.payments.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
-            <x-heroicon-o-credit-card class="h-5 w-5 mr-3" />
-            <span>Payments</span>
-        </a>
-        <a href="{{ route('admin.reconciliation.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.reconciliation.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
-            <x-heroicon-o-calculator class="h-5 w-5 mr-3" />
-            <span>Rekonsiliasi</span>
-        </a>
         <a href="{{ route('admin.activity-log.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.activity-log.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
             <x-heroicon-o-clock class="h-5 w-5 mr-3" />
             <span>Log Aktivitas</span>
-        </a>
-        <a href="{{ route('admin.cms.index') }}" class="flex items-center px-6 py-3 {{ request()->routeIs('admin.cms.*') ? 'bg-white/20 border-r-4 border-white' : 'hover:bg-white/10' }} transition">
-            <x-heroicon-o-document-text class="h-5 w-5 mr-3" />
-            <span>Content Management</span>
         </a>
     </nav>
 </aside>

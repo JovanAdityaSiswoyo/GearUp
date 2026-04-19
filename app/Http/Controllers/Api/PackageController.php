@@ -16,7 +16,7 @@ class PackageController extends Controller
         $query = Package::with('products', 'books');
 
         if ($request->has('search')) {
-            $search = $request->get('search');
+            $search = $request->input('search');
             $query->where('name_package', 'like', "%{$search}%");
         }
 
@@ -41,7 +41,10 @@ class PackageController extends Controller
 
         $productIds = $validated['product_ids'] ?? [];
         $productQtys = $validated['product_qtys'] ?? [];
+        $validated['start_publish'] = $validated['publish_start'];
+        $validated['end_publish'] = $validated['publish_end'];
         unset($validated['product_ids'], $validated['product_qtys']);
+        unset($validated['publish_start'], $validated['publish_end']);
 
         $package = Package::create($validated);
         
@@ -84,7 +87,14 @@ class PackageController extends Controller
 
         $productIds = $validated['product_ids'] ?? null;
         $productQtys = $validated['product_qtys'] ?? [];
+        if (array_key_exists('publish_start', $validated)) {
+            $validated['start_publish'] = $validated['publish_start'];
+        }
+        if (array_key_exists('publish_end', $validated)) {
+            $validated['end_publish'] = $validated['publish_end'];
+        }
         unset($validated['product_ids'], $validated['product_qtys']);
+        unset($validated['publish_start'], $validated['publish_end']);
 
         $package->update($validated);
         
