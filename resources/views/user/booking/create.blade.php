@@ -139,9 +139,14 @@
                                     <x-heroicon-o-currency-dollar class="h-5 w-5" />
                                     Ringkasan Pembayaran
                                 </h4>
+                                @php
+                                    $initialDailyTotal = $products->sum(function ($product) {
+                                        return (float) $product->price_per_day;
+                                    });
+                                @endphp
                                 <div class="flex justify-between text-sm mb-2">
                                     <span>Total Harga Produk / Hari</span>
-                                    <span id="summary-product-price">Rp 0</span>
+                                    <span id="summary-product-price">Rp {{ number_format($initialDailyTotal, 0, ',', '.') }}</span>
                                 </div>
                                 <div class="flex justify-between text-sm mb-2">
                                     <span>Estimasi Hari Sewa</span>
@@ -158,17 +163,21 @@
                                     const daysSpan = document.getElementById('summary-days');
                                     const totalSpan = document.getElementById('summary-total');
                                     const priceSpan = document.getElementById('summary-product-price');
+
+                                    function formatRupiah(value) {
+                                        return 'Rp ' + (Number(value) || 0).toLocaleString('id-ID');
+                                    }
+
                                     function getProductData() {
-                                        const amounts = document.querySelectorAll('input[name^="amount["]');
                                         let total = 0;
-                                        @foreach($products as $product)
-                                            let val = 1;
-                                            const input = document.querySelector('input[name="amount[{{ $product->id }}]"]');
-                                            if (input && input.value) val = parseInt(input.value) || 1;
-                                            total += val * {{ $product->price_per_day }};
-                                        @endforeach
+                                        document.querySelectorAll('.booking-amount-input').forEach((input) => {
+                                            const quantity = Math.max(1, parseInt(input.value, 10) || 1);
+                                            const unitPrice = parseFloat(input.dataset.unitPrice || '0');
+                                            total += quantity * unitPrice;
+                                        });
                                         return total;
                                     }
+
                                     function updateSummary() {
                                         let days = 0;
                                         if (start && end && start.value && end.value) {
@@ -183,11 +192,13 @@
                                             totalSpan.textContent = 'Rp 0';
                                         } else {
                                             daysSpan.textContent = days + ' hari';
-                                            totalSpan.textContent = 'Rp ' + (totalPerDay * days).toLocaleString('id-ID');
+                                            totalSpan.textContent = formatRupiah(totalPerDay * days);
                                         }
                                     }
-                                    document.querySelectorAll('input[name^="amount["]').forEach(input => {
+
+                                    document.querySelectorAll('.booking-amount-input').forEach(input => {
                                         input.addEventListener('input', updateSummary);
+                                        input.addEventListener('change', updateSummary);
                                     });
                                     if (start && end) {
                                         start.addEventListener('change', updateSummary);
@@ -291,7 +302,8 @@
                                                             value="{{ old('amount.' . $product->id, 1) }}"
                                                             min="1"
                                                             max="{{ $product->stock }}"
-                                                            class="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                                                            data-unit-price="{{ $product->price_per_day }}"
+                                                            class="booking-amount-input w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                                                             required
                                                         >
                                                         <span class="text-gray-500 text-sm">/ stok: {{ $product->stock }}</span>
@@ -577,7 +589,7 @@
                                                 <li>Booking akan dikonfirmasi dalam 1x24 jam</li>
                                                 <li>Pastikan nomor telepon yang Anda masukkan aktif</li>
                                                 <li>Pembayaran dilakukan setelah booking dikonfirmasi</li>
-                                                <li>Area pengiriman khusus JADETABEK</li>
+                                                <li>Pengambilan dilakukan langsung di lokasi bersama officer</li>
                                             </ul>
                                         </div>
                                     </div>

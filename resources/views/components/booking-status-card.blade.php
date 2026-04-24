@@ -83,4 +83,45 @@
             @endif
         </div>
     </div>
+
+    @if(!empty($booking->pickup_photo) || !empty($booking->return_photo) || !empty($booking->issue_photo) || !empty($booking->issue_notes))
+        <div class="pt-3 border-t">
+            <h4 class="text-sm font-semibold text-gray-700 mb-3">Dokumentasi</h4>
+            <div class="space-y-3 text-xs text-gray-600">
+                @if(!empty($booking->pickup_photo))
+                    <div>
+                        <p class="font-medium text-gray-700 mb-2">Foto Serah Terima</p>
+                        <a href="{{ asset('storage/' . $booking->pickup_photo) }}" target="_blank" rel="noopener noreferrer">
+                            <img src="{{ asset('storage/' . $booking->pickup_photo) }}" alt="Foto serah terima" class="w-full max-w-xs rounded-lg border border-gray-200 object-cover">
+                        </a>
+                    </div>
+                @endif
+
+                @if(!empty($booking->return_photo))
+                    <div>
+                        <p class="font-medium text-gray-700 mb-2">Foto Selesai Pinjam</p>
+                        <a href="{{ asset('storage/' . $booking->return_photo) }}" target="_blank" rel="noopener noreferrer">
+                            <img src="{{ asset('storage/' . $booking->return_photo) }}" alt="Foto selesai pinjam" class="w-full max-w-xs rounded-lg border border-gray-200 object-cover">
+                        </a>
+                    </div>
+                @endif
+
+                @if(!empty($booking->issue_photo))
+                    <div>
+                        <p class="font-medium text-gray-700 mb-2">Foto Masalah</p>
+                        <a href="{{ asset('storage/' . $booking->issue_photo) }}" target="_blank" rel="noopener noreferrer">
+                            <img src="{{ asset('storage/' . $booking->issue_photo) }}" alt="Foto masalah" class="w-full max-w-xs rounded-lg border border-gray-200 object-cover">
+                        </a>
+                    </div>
+                @endif
+
+                @if(!empty($booking->issue_notes))
+                    <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-red-800">
+                        <p class="font-semibold mb-1">Catatan Masalah</p>
+                        <p class="leading-relaxed">{{ $booking->issue_notes }}</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>

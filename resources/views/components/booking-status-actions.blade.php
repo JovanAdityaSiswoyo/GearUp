@@ -56,82 +56,36 @@ function approveBooking(bookingId, type) {
 }
 
 function handoverToUser(bookingId, type) {
-    Swal.fire({
+    submitStatusChangeWithPhoto(`/officer/book-${type}s/${bookingId}/handover`, {
         title: 'Serah Terima ke User',
-        text: 'Pastikan user sudah hadir di lokasi sebelum melanjutkan',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#0891B2',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Serahkan'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitStatusChange(`/officer/book-${type}s/${bookingId}/handover`);
-        }
+        text: 'Ambil atau unggah foto saat barang diserahkan ke user.',
+        confirmText: 'Ya, Serahkan',
+        fieldName: 'handover_photo',
+        photoRequiredMessage: 'Foto serah terima wajib diunggah.'
     });
 }
 
 
 function completeOrder(bookingId, type) {
-    Swal.fire({
+    submitStatusChangeWithPhoto(`/officer/book-${type}s/${bookingId}/complete`, {
         title: 'Selesaikan Order',
-        html: '<p>Barang sudah dikembalikan dengan lengkap dan tanpa masalah</p>',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10B981',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Selesaikan'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitStatusChange(`/officer/book-${type}s/${bookingId}/complete`);
-        }
+        text: 'Unggah foto bukti saat barang selesai dipinjam dan dikembalikan.',
+        confirmText: 'Ya, Selesaikan',
+        fieldName: 'return_photo',
+        photoRequiredMessage: 'Foto selesai pinjam wajib diunggah.'
     });
 }
 
 function detectIssue(bookingId, type) {
-    Swal.fire({
+    submitStatusChangeWithPhoto(`/officer/book-${type}s/${bookingId}/detect-issue`, {
         title: 'Deteksi Masalah',
-        html: `
-            <div style="text-align: left;">
-                <label style="display: block; margin-bottom: 10px;">
-                    <span style="font-weight: bold; color: #333;">Catatan Masalah:</span>
-                    <textarea id="issue_notes" style="width: 100%; margin-top: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;" 
-                        placeholder="Jelaskan masalah yang ditemukan..." rows="4"></textarea>
-                </label>
-            </div>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#EF4444',
-        cancelButtonColor: '#6B7280',
-        confirmButtonText: 'Ya, Catat Masalah'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const notes = document.getElementById('issue_notes').value;
-            if (!notes.trim()) {
-                Swal.fire('Error', 'Catatan masalah harus diisi', 'error');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('issue_notes', notes);
-            formData.append('_token', getCsrfToken());
-            
-            fetch(`/officer/book-${type}s/${bookingId}/detect-issue`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
-        }
+        text: 'Masukkan catatan masalah dan foto bukti kerusakan atau temuan.',
+        confirmText: 'Ya, Catat Masalah',
+        fieldName: 'issue_photo',
+        notesFieldName: 'issue_notes',
+        notesRequired: true,
+        photoRequiredMessage: 'Foto masalah wajib diunggah.',
+        notesRequiredMessage: 'Catatan masalah harus diisi.'
     });
 }
 
@@ -199,6 +153,102 @@ function submitStatusChange(url) {
     })
     .catch(error => {
         Swal.fire('Error', 'Terjadi kesalahan: ' + error.message, 'error');
+    });
+}
+
+function submitStatusChangeWithPhoto(url, options) {
+    Swal.fire({
+        title: options.title,
+        html: `
+            <div style="text-align: left;">
+                <p style="margin-bottom: 12px; color: #4b5563; font-size: 14px;">${options.text ?? ''}</p>
+                ${options.notesRequired ? `
+                    <label style="display: block; margin-bottom: 14px;">
+                        <span style="font-weight: 600; color: #374151;">Catatan Masalah:</span>
+                        <textarea id="swal-notes" style="width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit;" placeholder="Jelaskan masalah yang ditemukan..." rows="4"></textarea>
+                    </label>
+                ` : ''}
+                <label style="display: block; margin-bottom: 10px;">
+                    <span style="font-weight: 600; color: #374151;">Foto Bukti:</span>
+                    <input id="swal-photo" type="file" accept="image/*" capture="environment" style="display:block; width:100%; margin-top:8px;" />
+                </label>
+                <img id="swal-preview" alt="Preview foto" style="display:none; width:100%; border-radius: 12px; border: 1px solid #e5e7eb; margin-top: 10px;" />
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: options.confirmColor || '#0891B2',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: options.confirmText,
+        showLoaderOnConfirm: true,
+        allowOutsideClick: () => !Swal.isLoading(),
+        didOpen: () => {
+            const photoInput = Swal.getPopup().querySelector('#swal-photo');
+            const preview = Swal.getPopup().querySelector('#swal-preview');
+
+            photoInput.addEventListener('change', () => {
+                const file = photoInput.files && photoInput.files[0];
+                if (!file) {
+                    preview.style.display = 'none';
+                    preview.src = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        },
+        preConfirm: () => {
+            const popup = Swal.getPopup();
+            const photoInput = popup.querySelector('#swal-photo');
+            const file = photoInput.files && photoInput.files[0];
+
+            if (!file) {
+                Swal.showValidationMessage(options.photoRequiredMessage || 'Foto wajib diunggah.');
+                return false;
+            }
+
+            const formData = new FormData();
+            formData.append(options.fieldName, file);
+
+            if (options.notesRequired) {
+                const notes = popup.querySelector('#swal-notes').value.trim();
+                if (!notes) {
+                    Swal.showValidationMessage(options.notesRequiredMessage || 'Catatan harus diisi.');
+                    return false;
+                }
+
+                formData.append(options.notesFieldName || 'issue_notes', notes);
+            }
+
+            formData.append('_token', getCsrfToken());
+
+            return fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(async (response) => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Gagal memproses aksi.');
+                }
+
+                return data;
+            }).catch((error) => {
+                Swal.showValidationMessage(error.message);
+                return false;
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            Swal.fire('Berhasil', result.value.message, 'success').then(() => location.reload());
+        }
     });
 }
 </script>

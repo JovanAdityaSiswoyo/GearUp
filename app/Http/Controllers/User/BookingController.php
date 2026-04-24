@@ -8,7 +8,9 @@ use App\Models\Product;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class BookingController extends Controller
 {
@@ -27,9 +29,7 @@ class BookingController extends Controller
                 'other_socials' => 'nullable|string|max:255',
                 'phone_number' => 'required|string|max:20',
                 'emergency_phone_number' => 'required|string|max:20',
-                'shipping_method' => 'nullable|in:pickup,delivery',
                 'renter_address' => 'required|string',
-                'shipping_date' => 'nullable|date|after_or_equal:today',
                 'rental_start_at' => 'required|date|after_or_equal:today',
                 'rental_end_at' => 'required|date|after:rental_start_at',
                 'identity_document' => 'required|image|mimes:jpeg,png,jpg|max:2048',
@@ -37,35 +37,46 @@ class BookingController extends Controller
 
             $identityPath = $request->file('identity_document')->store('identity_documents', 'public');
 
-            foreach ($validated['products'] as $productId) {
-                $bookProduct = BookProduct::create([
-                    'book_code' => 'BK-' . strtoupper(Str::random(8)),
-                    'id_user' => Auth::id(),
-                    'id_product' => $productId,
-                    'order_status' => OrderStatus::PENDING, // Menunggu validasi officer
-                    'checkin_appointment_start' => $validated['rental_start_at'],
-                    'checkout_appointment_end' => $validated['rental_end_at'],
-                    'amount' => $validated['amount'],
-                    'booker_name' => $validated['booker_name'],
-                    'booker_email' => $validated['booker_email'],
-                    'booker_telp' => $validated['booker_telp'],
-                ]);
+            DB::transaction(function () use ($validated, $identityPath) {
+                foreach ($validated['products'] as $productId) {
+                    $requestedAmount = (int) $validated['amount'];
+                    $product = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
 
-                DetailBookProduct::create([
-                    'id_book_product' => $bookProduct->id,
-                    'full_name' => $validated['full_name'],
-                    'instagram_handle' => $validated['instagram_handle'],
-                    'other_socials' => $validated['other_socials'],
-                    'phone_number' => $validated['phone_number'],
-                    'emergency_phone_number' => $validated['emergency_phone_number'],
-                    'shipping_method' => $validated['shipping_method'] ?? 'pickup',
-                    'renter_address' => $validated['renter_address'],
-                    'shipping_date' => $validated['shipping_date'] ?? $validated['rental_start_at'],
-                    'rental_start_at' => $validated['rental_start_at'],
-                    'rental_end_at' => $validated['rental_end_at'],
-                    'identity_document_path' => $identityPath,
-                ]);
-            }
+                    if ((int) $product->stock < $requestedAmount) {
+                        throw ValidationException::withMessages([
+                            'products' => "Stok {$product->name} tidak cukup. Tersedia {$product->stock}, diminta {$requestedAmount}.",
+                        ]);
+                    }
+
+                    $product->decrement('stock', $requestedAmount);
+
+                    $bookProduct = BookProduct::create([
+                        'book_code' => 'BK-' . strtoupper(Str::random(8)),
+                        'id_user' => Auth::id(),
+                        'id_product' => $productId,
+                        'order_status' => OrderStatus::PENDING, // Menunggu validasi officer
+                        'checkin_appointment_start' => $validated['rental_start_at'],
+                        'checkout_appointment_end' => $validated['rental_end_at'],
+                        'amount' => $requestedAmount,
+                        'booker_name' => $validated['booker_name'],
+                        'booker_email' => $validated['booker_email'],
+                        'booker_telp' => $validated['booker_telp'],
+                    ]);
+
+                    DetailBookProduct::create([
+                        'id_book_product' => $bookProduct->id,
+                        'full_name' => $validated['full_name'],
+                        'instagram_handle' => $validated['instagram_handle'],
+                        'other_socials' => $validated['other_socials'],
+                        'phone_number' => $validated['phone_number'],
+                        'emergency_phone_number' => $validated['emergency_phone_number'],
+                        'renter_address' => $validated['renter_address'],
+                        'rental_start_at' => $validated['rental_start_at'],
+                        'rental_end_at' => $validated['rental_end_at'],
+                        'identity_document_path' => $identityPath,
+                    ]);
+                }
+            });
 
             // Kosongkan session cart_checkout setelah booking
             session()->forget('cart_checkout');
@@ -119,9 +130,7 @@ class BookingController extends Controller
             'other_socials' => 'nullable|string|max:255',
             'phone_number' => 'required|string|max:20',
             'emergency_phone_number' => 'required|string|max:20',
-            'shipping_method' => 'nullable|in:pickup,delivery',
             'renter_address' => 'required|string',
-            'shipping_date' => 'nullable|date|after_or_equal:today',
             'rental_start_at' => 'required|date|after_or_equal:today',
             'rental_end_at' => 'required|date|after:rental_start_at',
             'identity_document' => 'required|image|mimes:jpeg,png,jpg|max:2048',
@@ -130,36 +139,46 @@ class BookingController extends Controller
         // Upload identity document
         $identityPath = $request->file('identity_document')->store('identity_documents', 'public');
 
-        foreach ($validated['products'] as $productId) {
-            $amount = $validated['amount'][$productId] ?? 1;
-            $bookProduct = BookProduct::create([
-                'book_code' => 'BK-' . strtoupper(Str::random(8)),
-                'id_user' => Auth::id(),
-                'id_product' => $productId,
-                'order_status' => OrderStatus::PENDING, // Menunggu validasi officer
-                'checkin_appointment_start' => $validated['rental_start_at'],
-                'checkout_appointment_end' => $validated['rental_end_at'],
-                'amount' => $amount,
-                'booker_name' => $validated['booker_name'],
-                'booker_email' => $validated['booker_email'],
-                'booker_telp' => $validated['booker_telp'],
-            ]);
+        DB::transaction(function () use ($validated, $identityPath) {
+            foreach ($validated['products'] as $productId) {
+                $amount = (int) ($validated['amount'][$productId] ?? 1);
+                $product = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
 
-            DetailBookProduct::create([
-                'id_book_product' => $bookProduct->id,
-                'full_name' => $validated['full_name'],
-                'instagram_handle' => $validated['instagram_handle'],
-                'other_socials' => $validated['other_socials'],
-                'phone_number' => $validated['phone_number'],
-                'emergency_phone_number' => $validated['emergency_phone_number'],
-                'shipping_method' => $validated['shipping_method'] ?? 'pickup',
-                'renter_address' => $validated['renter_address'],
-                'shipping_date' => $validated['shipping_date'] ?? $validated['rental_start_at'],
-                'rental_start_at' => $validated['rental_start_at'],
-                'rental_end_at' => $validated['rental_end_at'],
-                'identity_document_path' => $identityPath,
-            ]);
-        }
+                if ((int) $product->stock < $amount) {
+                    throw ValidationException::withMessages([
+                        'products' => "Stok {$product->name} tidak cukup. Tersedia {$product->stock}, diminta {$amount}.",
+                    ]);
+                }
+
+                $product->decrement('stock', $amount);
+
+                $bookProduct = BookProduct::create([
+                    'book_code' => 'BK-' . strtoupper(Str::random(8)),
+                    'id_user' => Auth::id(),
+                    'id_product' => $productId,
+                    'order_status' => OrderStatus::PENDING, // Menunggu validasi officer
+                    'checkin_appointment_start' => $validated['rental_start_at'],
+                    'checkout_appointment_end' => $validated['rental_end_at'],
+                    'amount' => $amount,
+                    'booker_name' => $validated['booker_name'],
+                    'booker_email' => $validated['booker_email'],
+                    'booker_telp' => $validated['booker_telp'],
+                ]);
+
+                DetailBookProduct::create([
+                    'id_book_product' => $bookProduct->id,
+                    'full_name' => $validated['full_name'],
+                    'instagram_handle' => $validated['instagram_handle'],
+                    'other_socials' => $validated['other_socials'],
+                    'phone_number' => $validated['phone_number'],
+                    'emergency_phone_number' => $validated['emergency_phone_number'],
+                    'renter_address' => $validated['renter_address'],
+                    'rental_start_at' => $validated['rental_start_at'],
+                    'rental_end_at' => $validated['rental_end_at'],
+                    'identity_document_path' => $identityPath,
+                ]);
+            }
+        });
 
         return redirect()->route('user.my-booking')->with('success', 'Booking untuk semua produk berhasil dibuat! Kami akan segera menghubungi Anda untuk konfirmasi booking.');
     }

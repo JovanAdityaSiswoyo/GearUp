@@ -59,75 +59,78 @@
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Book Code</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rental Period</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($returns as $return)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-semibold text-gray-900">{{ $return->book_code }}</div>
-                                    <div class="text-xs text-gray-500">{{ $return->created_at->format('M d, Y') }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $return->user->name ?? 'N/A' }}</div>
-                                    <div class="text-xs text-gray-500">{{ $return->booker_email }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">
-                                        {{ ($return->item_type ?? 'product') === 'package'
-                                            ? ($return->package->name_package ?? 'N/A')
-                                            : ($return->product->name ?? 'N/A') }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        {{ ($return->item_type ?? 'product') === 'package' ? 'Package' : 'Product' }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $return->checkin_appointment_start->format('M d') }}</div>
-                                    <div class="text-xs text-gray-500">to {{ $return->checkout_appointment_end->format('M d, Y') }}</div>
-                                    @php
-                                        $daysLeft = now()->diffInDays($return->checkout_appointment_end, false);
-                                    @endphp
-                                    @if($daysLeft < 0)
-                                        <span class="text-xs text-red-600 font-semibold">Overdue {{ abs($daysLeft) }} days</span>
-                                    @elseif($daysLeft <= 3)
-                                        <span class="text-xs text-orange-600 font-semibold">{{ $daysLeft }} days left</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $return->amount }} pcs
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        @if($return->status === 'active') bg-green-100 text-green-800
-                                        @else bg-gray-100 text-gray-800
-                                        @endif">
-                                        {{ ucfirst($return->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <a href="{{ route('admin.returns.show', ['type' => $return->item_type ?? 'product', 'return' => $return->id]) }}" class="text-blue-600 hover:text-blue-900">View</a>
-                                    @if($return->status === 'active')
-                                    <button onclick="processReturn('{{ $return->id }}', '{{ $return->item_type ?? 'product' }}')" class="text-green-600 hover:text-green-900">Complete</button>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No returns found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>                    </div>
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Book Code</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rental Period</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse($returns as $return)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-semibold text-gray-900">{{ $return->book_code }}</div>
+                                        <div class="text-xs text-gray-500">{{ $return->created_at->format('M d, Y') }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $return->user->name ?? 'N/A' }}</div>
+                                        <div class="text-xs text-gray-500">{{ $return->booker_email }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">
+                                            {{ ($return->item_type ?? 'product') === 'package'
+                                                ? ($return->package->name_package ?? 'N/A')
+                                                : ($return->product->name ?? 'N/A') }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ ($return->item_type ?? 'product') === 'package' ? 'Package' : 'Product' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $return->checkin_appointment_start->format('M d') }}</div>
+                                        <div class="text-xs text-gray-500">to {{ $return->checkout_appointment_end->format('M d, Y') }}</div>
+                                        @php
+                                            $daysLeft = now()->diffInDays($return->checkout_appointment_end, false);
+                                        @endphp
+                                        @if($daysLeft < 0)
+                                            <span class="text-xs text-red-600 font-semibold">Overdue {{ abs($daysLeft) }} days</span>
+                                        @elseif($daysLeft <= 3)
+                                            <span class="text-xs text-orange-600 font-semibold">{{ $daysLeft }} days left</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $return->amount }} pcs
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $statusBadgeClass = $return->status === 'active'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-gray-100 text-gray-800';
+                                        @endphp
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClass }}">
+                                            {{ ucfirst($return->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        <a href="{{ route('admin.returns.show', ['type' => $return->item_type ?? 'product', 'return' => $return->id]) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                        @if($return->status === 'active')
+                                        <button onclick="processReturn('{{ $return->id }}', '{{ $return->item_type ?? 'product' }}')" class="text-green-600 hover:text-green-900">Complete</button>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">No returns found</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="px-6 py-4 border-t border-gray-200">
                         {{ $returns->links() }}
                     </div>

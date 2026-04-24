@@ -10,6 +10,8 @@ use App\Models\DetailBook;
 use App\Enums\OrderStatus;
 use App\Enums\ItemStatus;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BookingPackageController extends Controller
 {
@@ -33,53 +35,66 @@ class BookingPackageController extends Controller
             'other_socials' => 'nullable|string|max:255',
             'renter_address' => 'required|string|max:500',
             'identity_document' => 'required|image|mimes:jpg,jpeg,png|max:4096',
-            'shipping_method' => 'required|in:pickup,delivery',
-            'shipping_date' => 'required|date',
             'rental_start_at' => 'required|date|after_or_equal:today',
             'rental_end_at' => 'required|date|after_or_equal:rental_start_at',
         ]);
-        // Simpan booking package ke tabel book
-        $booking = new Book();
-        $booking->id_user = Auth::id();
-        $booking->id_package = $package->id;
-        $booking->book_code = 'BK-' . strtoupper(uniqid());
-        $booking->status = 'pending';
-        $booking->order_status = OrderStatus::PENDING; // Menunggu validasi officer
-        $booking->item_status = ItemStatus::BOOKED; // Item is now booked for this user's dates
-        $booking->checkin_appointment_start = $validated['rental_start_at'];
-        $booking->checkout_appointment_end = $validated['rental_end_at'];
-        $booking->amount = 1;
-        $booking->booker_name = $validated['booker_name'];
-        $booking->booker_email = $validated['booker_email'];
-        $booking->booker_telp = $validated['booker_telp'];
-        $booking->save();
-
         // Simpan detail penyewa ke tabel detail_books
         $identityPath = $request->file('identity_document')->store('identity_docs', 'public');
-        $detail = new DetailBook();
-        $detail->id_book = $booking->id;
-        $detail->full_name = $validated['full_name'];
-        $detail->instagram_handle = $validated['instagram_handle'] ?? null;
-        $detail->other_socials = $validated['other_socials'] ?? null;
-        $detail->phone_number = $validated['phone_number'];
-        $detail->emergency_phone_number = $validated['emergency_phone_number'];
-        $detail->shipping_method = $validated['shipping_method'];
-        $detail->renter_address = $validated['renter_address'];
-        $detail->shipping_date = $validated['shipping_date'];
-        $detail->rental_start_at = $validated['rental_start_at'];
-        $detail->rental_end_at = $validated['rental_end_at'];
-        $detail->identity_document_path = $identityPath;
-        $detail->save();
 
-        // Simpan detail produk-produk package ke tabel book_package_products
-        foreach ($package->products as $product) {
-            \App\Models\BookPackageProduct::create([
-                'id' => (string) \Illuminate\Support\Str::uuid(),
-                'id_book' => $booking->id,
-                'id_product' => $product->id,
-                'qty' => 1 // Atur qty sesuai kebutuhan jika package bisa punya jumlah per produk
-            ]);
-        }
+        DB::transaction(function () use ($package, $validated, $identityPath) {
+            foreach ($package->products as $packageProduct) {
+                $requestedQty = (int) ($packageProduct->pivot->qty ?? 1);
+                $lockedProduct = \App\Models\Product::whereKey($packageProduct->id)->lockForUpdate()->firstOrFail();
+
+                if ((int) $lockedProduct->stock < $requestedQty) {
+                    throw ValidationException::withMessages([
+                        'package' => "Stok {$lockedProduct->name} tidak cukup. Tersedia {$lockedProduct->stock}, dibutuhkan {$requestedQty}.",
+                    ]);
+                }
+
+                $lockedProduct->decrement('stock', $requestedQty);
+            }
+
+            // Simpan booking package ke tabel book
+            $booking = new Book();
+            $booking->id_user = Auth::id();
+            $booking->id_package = $package->id;
+            $booking->book_code = 'BK-' . strtoupper(uniqid());
+            $booking->status = 'pending';
+            $booking->order_status = OrderStatus::PENDING; // Menunggu validasi officer
+            $booking->item_status = ItemStatus::BOOKED; // Item is now booked for this user's dates
+            $booking->checkin_appointment_start = $validated['rental_start_at'];
+            $booking->checkout_appointment_end = $validated['rental_end_at'];
+            $booking->amount = 1;
+            $booking->booker_name = $validated['booker_name'];
+            $booking->booker_email = $validated['booker_email'];
+            $booking->booker_telp = $validated['booker_telp'];
+            $booking->save();
+
+            $detail = new DetailBook();
+            $detail->id_book = $booking->id;
+            $detail->full_name = $validated['full_name'];
+            $detail->instagram_handle = $validated['instagram_handle'] ?? null;
+            $detail->other_socials = $validated['other_socials'] ?? null;
+            $detail->phone_number = $validated['phone_number'];
+            $detail->emergency_phone_number = $validated['emergency_phone_number'];
+            $detail->renter_address = $validated['renter_address'];
+            $detail->rental_start_at = $validated['rental_start_at'];
+            $detail->rental_end_at = $validated['rental_end_at'];
+            $detail->identity_document_path = $identityPath;
+            $detail->save();
+
+            // Simpan detail produk-produk package ke tabel book_package_products
+            foreach ($package->products as $packageProduct) {
+                $requestedQty = (int) ($packageProduct->pivot->qty ?? 1);
+                \App\Models\BookPackageProduct::create([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'id_book' => $booking->id,
+                    'id_product' => $packageProduct->id,
+                    'qty' => $requestedQty,
+                ]);
+            }
+        });
 
         // Redirect ke halaman sukses atau detail booking
         return redirect()->route('user.my-booking')->with('success', 'Booking paket berhasil dibuat!');

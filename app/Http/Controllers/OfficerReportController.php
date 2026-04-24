@@ -33,20 +33,16 @@ class OfficerReportController extends Controller
         
         // Filter by type
         if ($type == 'loan') {
-            // Loan: barang yang sudah dikirim ke user
+            // Loan: transaksi yang masih berjalan (pending + dipinjam)
             $statuses = [
-                OrderStatus::DIPINJAM->value,
-                OrderStatus::DIPINJAM->value,
                 OrderStatus::PENDING->value,
+                OrderStatus::DIPINJAM->value,
             ];
             $bookProductQuery->whereIn('order_status', $statuses);
             $bookQuery->whereIn('order_status', $statuses);
         } elseif ($type == 'return') {
-            // Return: barang yang sudah atau sedang dikembalikan
+            // Return: transaksi yang sudah selesai
             $statuses = [
-                OrderStatus::DIPINJAM->value,
-                OrderStatus::DIPINJAM->value,
-                OrderStatus::SELESAI->value,
                 OrderStatus::SELESAI->value,
             ];
             $bookProductQuery->whereIn('order_status', $statuses);
@@ -66,7 +62,7 @@ class OfficerReportController extends Controller
         
         // Manual pagination
         $page = $request->get('page', 1);
-        $perPage = 20;
+        $perPage = 10;
         $total = $allReports->count();
         $items = $allReports->slice(($page - 1) * $perPage, $perPage);
         

@@ -29,6 +29,10 @@ class BookProduct extends Model
         'status',
         'item_status',
         'order_status',
+        'pickup_photo',
+        'return_photo',
+        'issue_photo',
+        'issue_notes',
         'checkin_appointment_start',
         'checkout_appointment_end',
         'delivery_at',
@@ -49,6 +53,35 @@ class BookProduct extends Model
         'item_status' => ItemStatus::class,
         'order_status' => OrderStatus::class,
     ];
+
+    public function getRentalDaysAttribute(): int
+    {
+        if (!$this->checkin_appointment_start || !$this->checkout_appointment_end) {
+            return 0;
+        }
+
+        $startDate = $this->checkin_appointment_start->copy()->startOfDay();
+        $endDate = $this->checkout_appointment_end->copy()->startOfDay();
+
+        return max(1, $startDate->diffInDays($endDate) + 1);
+    }
+
+    public function getUnitRentalPriceAttribute(): float
+    {
+        return (float) ($this->product?->price_per_day ?? $this->product?->price ?? 0);
+    }
+
+    public function getDailyRentalTotalAttribute(): float
+    {
+        $quantity = max(1, (int) ($this->amount ?? 1));
+
+        return $this->unit_rental_price * $quantity;
+    }
+
+    public function getRentalTotalAttribute(): float
+    {
+        return $this->daily_rental_total * $this->rental_days;
+    }
 
     public function user()
     {

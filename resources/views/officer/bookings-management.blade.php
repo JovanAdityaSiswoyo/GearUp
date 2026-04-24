@@ -79,6 +79,12 @@
                                     'selesai' => 'bg-emerald-100 text-emerald-800',
                                     default => 'bg-gray-100 text-gray-800',
                                 };
+                                $displayStatusLabel = $isApproved && $orderStatusValue === 'pending'
+                                    ? 'Approved'
+                                    : $booking->order_status->label();
+                                $displayStatusBadgeClass = $isApproved && $orderStatusValue === 'pending'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : $statusBadgeClass;
                             @endphp
                             <tr class="hover:bg-gray-50 border-l-4 {{ $rowBorderClass }}">
                                 <td class="px-4 py-4 text-center">
@@ -111,10 +117,12 @@
                                     <div class="text-sm text-gray-900">{{ $booking->booker_name }}</div>
                                     <div class="text-xs text-gray-500">{{ $booking->booker_telp }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClass }}">
-                                        {{ $booking->order_status->label() }}
-                                    </span>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex flex-col gap-1 items-center">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $displayStatusBadgeClass }} justify-center">
+                                            {{ $displayStatusLabel }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2 items-center">
@@ -141,6 +149,12 @@
                                     'selesai' => 'bg-emerald-100 text-emerald-800',
                                     default => 'bg-gray-100 text-gray-800',
                                 };
+                                $displayStatusLabel = $isApproved && $orderStatusValue === 'pending'
+                                    ? 'Approved'
+                                    : $booking->order_status->label();
+                                $displayStatusBadgeClass = $isApproved && $orderStatusValue === 'pending'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : $statusBadgeClass;
                             @endphp
                             <tr class="hover:bg-gray-50 border-l-4 {{ $rowBorderClass }}">
                                 <td class="px-4 py-4 text-center">
@@ -172,10 +186,12 @@
                                     <div class="text-sm text-gray-900">{{ $booking->booker_name }}</div>
                                     <div class="text-xs text-gray-500">{{ $booking->booker_telp }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusBadgeClass }}">
-                                        {{ $booking->order_status->label() }}
-                                    </span>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex flex-col gap-1 items-center">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $displayStatusBadgeClass }} justify-center">
+                                            {{ $displayStatusLabel }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2 items-center">

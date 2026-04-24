@@ -14,16 +14,16 @@
 
         <div class="print:hidden mb-6 bg-white rounded-lg shadow-sm p-6">
             <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">Filter Laporan</h3>
-            <form method="GET" action="{{ route('officer.reports.print') }}" class="flex flex-wrap gap-4 items-end">
-                <div class="flex-1 min-w-40">
+            <form method="GET" action="{{ route('officer.reports.print') }}" class="flex flex-wrap md:flex-nowrap gap-4 items-end">
+                <div class="w-full md:w-48">
                     <label class="block text-xs font-semibold mb-1 text-gray-700">Dari Tanggal</label>
                     <input type="date" name="from" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="{{ request('from') }}">
                 </div>
-                <div class="flex-1 min-w-40">
+                <div class="w-full md:w-48">
                     <label class="block text-xs font-semibold mb-1 text-gray-700">Sampai Tanggal</label>
                     <input type="date" name="to" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="{{ request('to') }}">
                 </div>
-                <div class="flex-1 min-w-40">
+                <div class="w-full md:w-48">
                     <label class="block text-xs font-semibold mb-1 text-gray-700">Tipe</label>
                     <select name="type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="all" {{ request('type') == 'all' ? 'selected' : '' }}>Semua</option>
@@ -31,7 +31,7 @@
                         <option value="return" {{ request('type') == 'return' ? 'selected' : '' }}>Pengembalian</option>
                     </select>
                 </div>
-                <div class="flex gap-2">
+                <div class="w-full md:w-auto md:ml-auto flex gap-2 justify-end">
                     <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition flex items-center gap-2">
                         <x-heroicon-o-funnel class="h-5 w-5" />
                         Filter
@@ -44,24 +44,24 @@
             </form>
         </div>
 
-        <!-- Print Header -->
-        <div class="hidden print:block text-center mb-6">
-            <h2 class="text-2xl font-bold">Laporan Peminjaman & Pengembalian Barang</h2>
-            @if(request('from') || request('to'))
-                <p class="text-sm text-gray-600 mt-2">
-                    Periode: 
-                    {{ request('from') ? \Carbon\Carbon::parse(request('from'))->format('d M Y') : 'Awal' }}
-                    s/d
-                    {{ request('to') ? \Carbon\Carbon::parse(request('to'))->format('d M Y') : 'Sekarang' }}
-                </p>
-            @endif
-            @if(request('type') != 'all')
-                <p class="text-sm text-gray-600">Tipe: {{ request('type') == 'loan' ? 'Peminjaman' : 'Pengembalian' }}</p>
-            @endif
-            <p class="text-xs text-gray-500 mt-1">Dicetak pada: {{ \Carbon\Carbon::now()->format('d M Y H:i') }}</p>
-        </div>
+        <div class="print-area bg-white rounded-lg shadow-sm overflow-hidden">
+            <!-- Print Header -->
+            <div class="hidden print:block text-center mb-6 px-6 pt-6">
+                <h2 class="text-2xl font-bold">Laporan Peminjaman & Pengembalian Barang</h2>
+                @if(request('from') || request('to'))
+                    <p class="text-sm text-gray-600 mt-2">
+                        Periode:
+                        {{ request('from') ? \Carbon\Carbon::parse(request('from'))->format('d M Y') : 'Awal' }}
+                        s/d
+                        {{ request('to') ? \Carbon\Carbon::parse(request('to'))->format('d M Y') : 'Sekarang' }}
+                    </p>
+                @endif
+                @if(request('type') != 'all')
+                    <p class="text-sm text-gray-600">Tipe: {{ request('type') == 'loan' ? 'Peminjaman' : 'Pengembalian' }}</p>
+                @endif
+                <p class="text-xs text-gray-500 mt-1">Dicetak pada: {{ \Carbon\Carbon::now()->format('d M Y H:i') }}</p>
+            </div>
 
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -105,11 +105,12 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php
                                     $displayDate = null;
-                                    // Tentukan tanggal yang relevan berdasarkan order_status
-                                    if (in_array($report->order_status?->value, ['Delivered', 'Out for Delivery'])) {
-                                        $displayDate = $report->delivery_at;
-                                    } elseif (in_array($report->order_status?->value, ['Completed', 'Pending Review', 'On Process Return'])) {
-                                        $displayDate = $report->returned_at ?? $report->delivery_at;
+                                    $orderStatusValue = $report->order_status?->value;
+
+                                    if ($orderStatusValue === 'selesai') {
+                                        $displayDate = $report->returned_at ?? $report->updated_at ?? $report->created_at;
+                                    } elseif ($orderStatusValue === 'dipinjam') {
+                                        $displayDate = $report->delivery_at ?? $report->updated_at ?? $report->created_at;
                                     } else {
                                         $displayDate = $report->created_at;
                                     }
@@ -128,19 +129,9 @@
                                 @php
                                     $orderStatus = $report->order_status;
                                     $statusColors = [
-                                        'Draft' => 'bg-gray-100 text-gray-800',
-                                        'Awaiting Validation' => 'bg-yellow-100 text-yellow-800',
-                                        'Confirmed' => 'bg-blue-100 text-blue-800',
-                                        'Ready for Pickup' => 'bg-indigo-100 text-indigo-800',
-                                        'Out for Delivery' => 'bg-purple-100 text-purple-800',
-                                        'Delivered' => 'bg-green-100 text-green-800',
-                                        'Pickup Scheduled' => 'bg-orange-100 text-orange-800',
-                                        'On Process Return' => 'bg-teal-100 text-teal-800',
-                                        'Pending Review' => 'bg-amber-100 text-amber-800',
-                                        'Completed' => 'bg-emerald-100 text-emerald-800',
-                                        'Issue Detected' => 'bg-red-100 text-red-800',
-                                        'Overdue' => 'bg-red-100 text-red-800',
-                                        'Cancelled' => 'bg-gray-100 text-gray-800',
+                                        'pending' => 'bg-amber-100 text-amber-800',
+                                        'dipinjam' => 'bg-blue-100 text-blue-800',
+                                        'selesai' => 'bg-emerald-100 text-emerald-800',
                                     ];
                                     $colorClass = $statusColors[$orderStatus?->value] ?? 'bg-gray-100 text-gray-800';
                                 @endphp
@@ -184,22 +175,73 @@
         </div>
 
 <style>
+    @page {
+        size: A4 portrait;
+        margin: 12mm;
+    }
+
     @media print {
+        html, body {
+            width: 100%;
+            background: #fff;
+        }
+
         body * {
             visibility: hidden;
         }
-        .bg-white, .bg-white * {
+
+        .print-area, .print-area * {
             visibility: visible;
         }
-        .bg-white {
+
+        .print-area {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
         }
+
+        .print-area table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .print-area th,
+        .print-area td {
+            padding: 8px 6px !important;
+            font-size: 11px;
+            vertical-align: top;
+            word-break: break-word;
+            white-space: normal !important;
+            line-height: 1.35;
+        }
+
+        .print-area thead th {
+            font-size: 10px;
+        }
+
+        .print-area .rounded-full {
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        .print-area tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .print-area img {
+            max-width: 48px !important;
+            max-height: 48px !important;
+        }
+
         .print\:hidden {
             display: none !important;
         }
+
         .print\:block {
             display: block !important;
         }

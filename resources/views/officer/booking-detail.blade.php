@@ -9,18 +9,16 @@
             $packageName = data_get($booking, 'package.name_package', 'Paket Dihapus');
             $packageDescription = data_get($booking, 'package.description', '-');
             $packagePrice = data_get($booking, 'package.price', 0);
-            $rentalDays = null;
-            if ($booking->checkin_appointment_start && $booking->checkout_appointment_end) {
-                $startDate = $booking->checkin_appointment_start->copy()->startOfDay();
-                $endDate = $booking->checkout_appointment_end->copy()->startOfDay();
-                $rentalDays = max(1, $startDate->diffInDays($endDate) + 1);
-            }
-
-            $dailyRentalPrice = $isProductBooking
-                ? ($booking->product->price_per_day ?? $booking->product->price ?? 0)
+            $rentalDays = $isProductBooking ? $booking->rental_days : null;
+            $unitRentalPrice = $isProductBooking
+                ? $booking->unit_rental_price
                 : $packagePrice;
-
-            $totalRentalPrice = $dailyRentalPrice * ($rentalDays ?? 0);
+            $dailyRentalTotal = $isProductBooking
+                ? $booking->daily_rental_total
+                : $packagePrice;
+            $totalRentalPrice = $isProductBooking
+                ? $booking->rental_total
+                : $packagePrice * ($rentalDays ?? 0);
             $depositAmount = $booking->deposit_amount ?? 0;
             $grandTotal = $totalRentalPrice + $depositAmount;
 
@@ -126,8 +124,16 @@
                                         <p class="font-semibold">{{ $booking->product->brand->name ?? '-' }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-gray-600">Harga Sewa/Hari</p>
-                                        <p class="font-semibold text-green-600">Rp {{ number_format($booking->product->price_per_day ?? $booking->product->price ?? 0, 0, ',', '.') }}</p>
+                                        <p class="text-xs text-gray-600">Harga Sewa/Hari per Unit</p>
+                                        <p class="font-semibold text-green-600">Rp {{ number_format($unitRentalPrice, 0, ',', '.') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Jumlah Unit</p>
+                                        <p class="font-semibold text-gray-900">{{ $booking->amount }} pcs</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Total Sewa/Hari</p>
+                                        <p class="font-semibold text-green-600">Rp {{ number_format($dailyRentalTotal, 0, ',', '.') }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-gray-600">Jumlah Hari</p>
@@ -224,7 +230,15 @@
                     <h2 class="text-lg font-bold text-gray-900 mb-4">Ringkasan Finansial</h2>
                     <div class="space-y-2 mb-4">
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Harga Sewa</span>
+                            <span class="text-gray-600">Total Sewa/Hari</span>
+                            <span class="font-semibold">Rp {{ number_format($dailyRentalTotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Jumlah Hari</span>
+                            <span class="font-semibold">{{ $rentalDays ?? 0 }} hari</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Sewa</span>
                             <span class="font-semibold">Rp {{ number_format($totalRentalPrice, 0, ',', '.') }}</span>
                         </div>
                         <div class="border-t pt-2 flex justify-between">
@@ -281,6 +295,9 @@
                         </button>
                         @php
                             $bookingType = $isProductBooking ? 'product' : 'package';
+                            $issueRoute = $isProductBooking
+                                ? url('/officer/book-products/' . $booking->id . '/detect-issue')
+                                : url('/officer/book-packages/' . $booking->id . '/detect-issue');
                         @endphp
 
                         @if($booking->order_status == \App\Enums\OrderStatus::PENDING)
@@ -293,13 +310,13 @@
                                     Booking harus di-approve officer sebelum bisa masuk status dipinjam.
                                 </div>
                             @else
-                                <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/handover') : url('/officer/book-packages/' . $booking->id . '/handover') }}', 'Serahkan ke User')" 
+                                <button onclick="confirmActionWithPhoto('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/handover') : url('/officer/book-packages/' . $booking->id . '/handover') }}', 'Serahkan ke User', 'handover_photo')" 
                                     class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-3 rounded transition">
                                     🚚 Serahkan ke User (Dipinjam)
                                 </button>
                             @endif
                         @elseif($booking->order_status == \App\Enums\OrderStatus::DIPINJAM)
-                            <button onclick="confirmAction('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/complete') : url('/officer/book-packages/' . $booking->id . '/complete') }}', 'Selesaikan Booking')" 
+                            <button onclick="confirmActionWithPhoto('{{ $isProductBooking ? url('/officer/book-products/' . $booking->id . '/complete') : url('/officer/book-packages/' . $booking->id . '/complete') }}', 'Selesaikan Booking', 'return_photo')" 
                                 class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2 px-3 rounded transition">
                                 ✓ Selesai
                             </button>
@@ -367,19 +384,26 @@
     </div>
 </div>
 
-<!-- Issue Modal -->
-<div id="issueModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+<!-- Photo Action Modal -->
+<div id="photoActionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
     <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">Deteksi Issue</h3>
-        <form id="issueForm">
-            <textarea id="issueDescription" name="description" placeholder="Deskripsi issue..." 
-                class="w-full border rounded p-3 mb-4 text-sm" rows="4" required></textarea>
+        <h3 id="photoActionTitle" class="text-xl font-bold text-gray-900 mb-4">Dokumentasi Aksi</h3>
+        <form id="photoActionForm">
+            <div id="photoActionNotesWrapper" class="hidden mb-4">
+                <textarea id="photoActionNotes" name="issue_notes" placeholder="Deskripsi issue..." 
+                    class="w-full border rounded p-3 text-sm" rows="4"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti</label>
+                <input id="photoActionFile" type="file" accept="image/*" capture="environment" class="block w-full text-sm">
+                <img id="photoActionPreview" alt="Preview foto" class="hidden mt-3 w-full rounded-lg border border-gray-200 object-cover">
+            </div>
             <div class="flex space-x-2">
-                <button type="button" onclick="closeIssueModal()" 
+                <button type="button" onclick="closePhotoActionModal()" 
                     class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-medium py-2 rounded transition">
                     Batal
                 </button>
-                <button type="button" onclick="submitIssue()" 
+                <button type="button" onclick="submitPhotoAction()" 
                     class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 rounded transition">
                     Konfirmasi
                 </button>
@@ -390,6 +414,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    let currentPhotoActionConfig = null;
+
     function confirmAction(url, action) {
         Swal.fire({
             title: action,
@@ -420,6 +446,23 @@
                 });
             }
         });
+    }
+
+    function confirmActionWithPhoto(url, action, fieldName, notesRequired = false) {
+        currentPhotoActionConfig = {
+            url,
+            action,
+            fieldName,
+            notesRequired
+        };
+
+        document.getElementById('photoActionTitle').textContent = action;
+        document.getElementById('photoActionNotesWrapper').classList.toggle('hidden', !notesRequired);
+        document.getElementById('photoActionPreview').classList.add('hidden');
+        document.getElementById('photoActionPreview').src = '';
+        document.getElementById('photoActionFile').value = '';
+        document.getElementById('photoActionNotes').value = '';
+        document.getElementById('photoActionModal').classList.remove('hidden');
     }
 
     function openEditModal() {
@@ -501,36 +544,69 @@
     }
 
     function openIssueModal() {
-        document.getElementById('issueModal').classList.remove('hidden');
+        confirmActionWithPhoto('{{ $issueRoute }}', 'Deteksi Issue', 'issue_photo', true);
     }
 
-    function closeIssueModal() {
-        document.getElementById('issueModal').classList.add('hidden');
-        document.getElementById('issueForm').reset();
+    function closePhotoActionModal() {
+        document.getElementById('photoActionModal').classList.add('hidden');
+        document.getElementById('photoActionForm').reset();
+        document.getElementById('photoActionPreview').classList.add('hidden');
+        document.getElementById('photoActionPreview').src = '';
+        currentPhotoActionConfig = null;
     }
 
-    function submitIssue() {
-        const description = document.getElementById('issueDescription').value;
-        if (!description.trim()) {
-            Swal.fire('Error!', 'Deskripsi issue harus diisi', 'error');
+    document.getElementById('photoActionFile').addEventListener('change', function() {
+        const preview = document.getElementById('photoActionPreview');
+        const file = this.files && this.files[0];
+
+        if (!file) {
+            preview.classList.add('hidden');
+            preview.src = '';
             return;
         }
 
-        @php
-            $isProductBooking = $booking instanceof \App\Models\BookProduct;
-            $issueRoute = $isProductBooking
-                ? url('/officer/book-products/' . $booking->id . '/detect-issue')
-                : url('/officer/book-packages/' . $booking->id . '/detect-issue');
-        @endphp
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            preview.src = event.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
 
-        fetch('{{ $issueRoute }}', {
+    function submitPhotoAction() {
+        if (!currentPhotoActionConfig) {
+            Swal.fire('Error!', 'Aksi tidak ditemukan', 'error');
+            return;
+        }
+
+        const fileInput = document.getElementById('photoActionFile');
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            Swal.fire('Error!', 'Foto bukti harus diunggah', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append(currentPhotoActionConfig.fieldName, file);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+        if (currentPhotoActionConfig.notesRequired) {
+            const notes = document.getElementById('photoActionNotes').value.trim();
+            if (!notes) {
+                Swal.fire('Error!', 'Deskripsi issue harus diisi', 'error');
+                return;
+            }
+
+            formData.append('issue_notes', notes);
+        }
+
+        fetch(currentPhotoActionConfig.url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ issue_notes: description })
+            body: formData
         })
         .then(r => r.json())
         .then(data => {
@@ -542,5 +618,11 @@
             }
         });
     }
+
+    document.getElementById('photoActionModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closePhotoActionModal();
+        }
+    });
 </script>
 @endsection

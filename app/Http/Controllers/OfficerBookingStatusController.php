@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\BookProduct;
 use App\Models\Book;
+use App\Models\BookPackageProduct;
+use App\Models\Product;
 use App\Models\ActivityLog;
 use App\Enums\OrderStatus;
 use App\Services\ItemStatusTransitionService;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Enums\ItemStatus;
@@ -77,13 +80,20 @@ class OfficerBookingStatusController extends Controller
     /**
      * Serahkan BookProduct langsung ke user di lokasi
      */
-    public function handoverProduct($id): JsonResponse
+    public function handoverProduct(Request $request, $id): JsonResponse
     {
+        $request->validate([
+            'handover_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
+
+        $photoPath = $request->file('handover_photo')->store('booking-proofs/handover', 'public');
+
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::DIPINJAM,
             'Barang berhasil diserahkan ke user',
-            'handover'
+            'handover',
+            ['pickup_photo' => $photoPath]
         );
     }
 
@@ -116,60 +126,45 @@ class OfficerBookingStatusController extends Controller
     /**
      * Complete BookProduct order
      */
-    public function completeProduct($id): JsonResponse
+    public function completeProduct(Request $request, $id): JsonResponse
     {
+        $request->validate([
+            'return_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
+
+        $photoPath = $request->file('return_photo')->store('booking-proofs/return', 'public');
+
         return $this->updateOrderStatus(
             BookProduct::find($id),
             OrderStatus::SELESAI,
             'Order berhasil diselesaikan',
-            'complete'
+            'complete',
+            ['return_photo' => $photoPath]
         );
     }
 
     /**
      * Detect issue on BookProduct
      */
-    public function detectIssueProduct($id): JsonResponse
+    public function detectIssueProduct(Request $request, $id): JsonResponse
     {
-        $notes = request('issue_notes', '');
-        
-        $booking = BookProduct::find($id);
-        if (!$booking) {
-            return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
-        }
+        $validated = $request->validate([
+            'issue_notes' => 'required|string|min:10',
+            'issue_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
 
-        if (!$this->hasAuthenticatedActor()) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
-        }
+        $photoPath = $request->file('issue_photo')->store('booking-proofs/issue', 'public');
 
-        DB::beginTransaction();
-        try {
-            $booking->update([
-                'order_status' => OrderStatus::SELESAI,
-                'notes' => $notes
-            ]);
-            $this->logBookingActivity(
-                $booking,
-                'detect_issue',
-                'Officer mencatat issue pada booking',
-                [
-                    'new_order_status' => OrderStatus::SELESAI->value,
-                    'notes' => $notes,
-                ]
-            );
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Masalah berhasil dicatat'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mencatat masalah: ' . $e->getMessage()
-            ], 500);
-        }
+        return $this->updateOrderStatus(
+            BookProduct::find($id),
+            OrderStatus::SELESAI,
+            'Masalah berhasil dicatat',
+            'detect_issue',
+            [
+                'issue_notes' => $validated['issue_notes'],
+                'issue_photo' => $photoPath,
+            ]
+        );
     }
 
     /**
@@ -178,44 +173,14 @@ class OfficerBookingStatusController extends Controller
     public function cancelProduct($id): JsonResponse
     {
         $reason = request('reason', '');
-        
-        $booking = BookProduct::find($id);
-        if (!$booking) {
-            return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
-        }
 
-        if (!$this->hasAuthenticatedActor()) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
-        }
-
-        DB::beginTransaction();
-        try {
-            $booking->update([
-                'order_status' => OrderStatus::SELESAI,
-                'notes' => $reason
-            ]);
-            $this->logBookingActivity(
-                $booking,
-                'cancel',
-                'Officer membatalkan booking',
-                [
-                    'new_order_status' => OrderStatus::SELESAI->value,
-                    'reason' => $reason,
-                ]
-            );
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order berhasil dibatalkan'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membatalkan order: ' . $e->getMessage()
-            ], 500);
-        }
+        return $this->updateOrderStatus(
+            BookProduct::find($id),
+            OrderStatus::SELESAI,
+            'Order berhasil dibatalkan',
+            'cancel',
+            ['notes' => $reason]
+        );
     }
 
     // Package routes
@@ -261,13 +226,20 @@ class OfficerBookingStatusController extends Controller
     /**
      * Serahkan Book (Package) langsung ke user di lokasi
      */
-    public function handoverPackage($id): JsonResponse
+    public function handoverPackage(Request $request, $id): JsonResponse
     {
+        $request->validate([
+            'handover_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
+
+        $photoPath = $request->file('handover_photo')->store('booking-proofs/handover', 'public');
+
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::DIPINJAM,
             'Barang berhasil diserahkan ke user',
-            'handover'
+            'handover',
+            ['pickup_photo' => $photoPath]
         );
     }
 
@@ -300,60 +272,45 @@ class OfficerBookingStatusController extends Controller
     /**
      * Complete Book (Package) order
      */
-    public function completePackage($id): JsonResponse
+    public function completePackage(Request $request, $id): JsonResponse
     {
+        $request->validate([
+            'return_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
+
+        $photoPath = $request->file('return_photo')->store('booking-proofs/return', 'public');
+
         return $this->updateOrderStatus(
             Book::find($id),
             OrderStatus::SELESAI,
             'Order berhasil diselesaikan',
-            'complete'
+            'complete',
+            ['return_photo' => $photoPath]
         );
     }
 
     /**
      * Detect issue on Book (Package)
      */
-    public function detectIssuePackage($id): JsonResponse
+    public function detectIssuePackage(Request $request, $id): JsonResponse
     {
-        $notes = request('issue_notes', '');
-        
-        $booking = Book::find($id);
-        if (!$booking) {
-            return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
-        }
+        $validated = $request->validate([
+            'issue_notes' => 'required|string|min:10',
+            'issue_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
 
-        if (!$this->hasAuthenticatedActor()) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
-        }
+        $photoPath = $request->file('issue_photo')->store('booking-proofs/issue', 'public');
 
-        DB::beginTransaction();
-        try {
-            $booking->update([
-                'order_status' => OrderStatus::SELESAI,
-                'notes' => $notes
-            ]);
-            $this->logBookingActivity(
-                $booking,
-                'detect_issue',
-                'Officer mencatat issue pada booking',
-                [
-                    'new_order_status' => OrderStatus::SELESAI->value,
-                    'notes' => $notes,
-                ]
-            );
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Masalah berhasil dicatat'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mencatat masalah: ' . $e->getMessage()
-            ], 500);
-        }
+        return $this->updateOrderStatus(
+            Book::find($id),
+            OrderStatus::SELESAI,
+            'Masalah berhasil dicatat',
+            'detect_issue',
+            [
+                'issue_notes' => $validated['issue_notes'],
+                'issue_photo' => $photoPath,
+            ]
+        );
     }
 
     /**
@@ -362,50 +319,20 @@ class OfficerBookingStatusController extends Controller
     public function cancelPackage($id): JsonResponse
     {
         $reason = request('reason', '');
-        
-        $booking = Book::find($id);
-        if (!$booking) {
-            return response()->json(['success' => false, 'message' => 'Booking tidak ditemukan'], 404);
-        }
 
-        if (!$this->hasAuthenticatedActor()) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses'], 403);
-        }
-
-        DB::beginTransaction();
-        try {
-            $booking->update([
-                'order_status' => OrderStatus::SELESAI,
-                'notes' => $reason
-            ]);
-            $this->logBookingActivity(
-                $booking,
-                'cancel',
-                'Officer membatalkan booking',
-                [
-                    'new_order_status' => OrderStatus::SELESAI->value,
-                    'reason' => $reason,
-                ]
-            );
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order berhasil dibatalkan'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membatalkan order: ' . $e->getMessage()
-            ], 500);
-        }
+        return $this->updateOrderStatus(
+            Book::find($id),
+            OrderStatus::SELESAI,
+            'Order berhasil dibatalkan',
+            'cancel',
+            ['notes' => $reason]
+        );
     }
 
     /**
      * Update order status helper method
      */
-    private function updateOrderStatus($booking, $newStatus, $successMessage, string $action): JsonResponse
+    private function updateOrderStatus($booking, $newStatus, $successMessage, string $action, array $extraUpdates = []): JsonResponse
     {
         if (!$booking) {
             return response()->json([
@@ -434,7 +361,7 @@ class OfficerBookingStatusController extends Controller
 
         DB::beginTransaction();
         try {
-            $previousOrderStatus = $booking->order_status?->value;
+            $previousOrderStatus = $booking->order_status;
             $previousItemStatus = $booking->item_status?->value;
             
             // Get the corresponding item status from order status
@@ -444,16 +371,32 @@ class OfficerBookingStatusController extends Controller
             if ($correspondingItemStatus) {
                 $booking->item_status = $correspondingItemStatus;
             }
+
+            if ($newStatus === OrderStatus::DIPINJAM) {
+                $booking->delivery_at = now();
+            }
+
+            if ($newStatus === OrderStatus::SELESAI) {
+                $booking->returned_at = now();
+            }
+
+            foreach ($extraUpdates as $field => $value) {
+                $booking->{$field} = $value;
+            }
             
             $booking->order_status = $newStatus;
             $booking->save();
+
+            if ($previousOrderStatus !== OrderStatus::SELESAI && $newStatus === OrderStatus::SELESAI) {
+                $this->restoreStockForBooking($booking);
+            }
             
             $this->logBookingActivity(
                 $booking,
                 $action,
                 'Officer mengubah status booking',
                 [
-                    'previous_order_status' => $previousOrderStatus,
+                    'previous_order_status' => $previousOrderStatus?->value,
                     'new_order_status' => $newStatus->value,
                     'previous_item_status' => $previousItemStatus,
                     'new_item_status' => $booking->item_status?->value,
@@ -469,6 +412,33 @@ class OfficerBookingStatusController extends Controller
                 'success' => false,
                 'message' => 'Gagal mengubah status: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function restoreStockForBooking($booking): void
+    {
+        if ($booking instanceof BookProduct) {
+            $quantity = max(1, (int) ($booking->amount ?? 1));
+            $product = Product::whereKey($booking->id_product)->lockForUpdate()->first();
+            if ($product) {
+                $product->increment('stock', $quantity);
+            }
+
+            return;
+        }
+
+        if ($booking instanceof Book) {
+            $packageItems = BookPackageProduct::query()
+                ->where('id_book', $booking->id)
+                ->get(['id_product', 'qty']);
+
+            foreach ($packageItems as $item) {
+                $quantity = max(1, (int) ($item->qty ?? 1));
+                $product = Product::whereKey($item->id_product)->lockForUpdate()->first();
+                if ($product) {
+                    $product->increment('stock', $quantity);
+                }
+            }
         }
     }
 

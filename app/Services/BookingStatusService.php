@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Models\BookProduct;
 use App\Models\Book;
+use App\Models\BookPackageProduct;
+use App\Models\Product;
 use App\Enums\ItemStatus;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Service untuk mengelola status transitions pada booking
@@ -40,31 +43,66 @@ class BookingStatusService
             }
         }
 
-        // Validasi status transition yang diizinkan
-        $this->validateStatusTransition($booking->order_status, $newStatus);
+        return DB::transaction(function () use ($booking, $newStatus, $additionalData) {
+            $currentStatus = $booking->order_status;
 
-        $updateData = ['order_status' => $newStatus];
-        
-        $updateData['item_status'] = match ($newStatus) {
-            OrderStatus::PENDING => ItemStatus::BOOKED,
-            OrderStatus::DIPINJAM => ItemStatus::DEPLOYED,
-            OrderStatus::SELESAI => ItemStatus::AVAILABLE,
-        };
+            // Validasi status transition yang diizinkan
+            $this->validateStatusTransition($currentStatus, $newStatus);
 
-        // Handle additional timestamps
-        if ($newStatus === OrderStatus::DIPINJAM) {
-            $updateData['delivery_at'] = now();
+            $updateData = ['order_status' => $newStatus];
+
+            $updateData['item_status'] = match ($newStatus) {
+                OrderStatus::PENDING => ItemStatus::BOOKED,
+                OrderStatus::DIPINJAM => ItemStatus::DEPLOYED,
+                OrderStatus::SELESAI => ItemStatus::AVAILABLE,
+            };
+
+            // Handle additional timestamps
+            if ($newStatus === OrderStatus::DIPINJAM) {
+                $updateData['delivery_at'] = now();
+            }
+
+            if ($newStatus === OrderStatus::SELESAI) {
+                $updateData['returned_at'] = now();
+            }
+
+            // Merge dengan additional data dan save
+            $updateData = array_merge($updateData, $additionalData);
+            $booking->update($updateData);
+
+            // Restore stok hanya sekali saat transisi pertama ke SELESAI
+            if ($currentStatus !== OrderStatus::SELESAI && $newStatus === OrderStatus::SELESAI) {
+                $this->restoreStockForBooking($booking);
+            }
+
+            return true;
+        });
+    }
+
+    private function restoreStockForBooking(Model $booking): void
+    {
+        if ($booking instanceof BookProduct) {
+            $quantity = max(1, (int) ($booking->amount ?? 1));
+            $product = Product::whereKey($booking->id_product)->lockForUpdate()->first();
+            if ($product) {
+                $product->increment('stock', $quantity);
+            }
+            return;
         }
 
-        if ($newStatus === OrderStatus::SELESAI) {
-            $updateData['returned_at'] = now();
+        if ($booking instanceof Book) {
+            $items = BookPackageProduct::query()
+                ->where('id_book', $booking->id)
+                ->get(['id_product', 'qty']);
+
+            foreach ($items as $item) {
+                $quantity = max(1, (int) ($item->qty ?? 1));
+                $product = Product::whereKey($item->id_product)->lockForUpdate()->first();
+                if ($product) {
+                    $product->increment('stock', $quantity);
+                }
+            }
         }
-
-        // Merge dengan additional data dan save
-        $updateData = array_merge($updateData, $additionalData);
-        $booking->update($updateData);
-
-        return true;
     }
 
     /**

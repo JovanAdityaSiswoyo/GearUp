@@ -376,45 +376,6 @@
                                     <span>Informasi Penyewaan</span>
                                 </h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- Shipping Method -->
-                                    <div>
-                                        <label for="shipping_method" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Metode Pengiriman <span class="text-red-500">*</span>
-                                        </label>
-                                        <select 
-                                            id="shipping_method"
-                                            name="shipping_method"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                                            required
-                                        >
-                                            <option value="">Pilih Metode</option>
-                                            <option value="pickup" {{ old('shipping_method') == 'pickup' ? 'selected' : '' }}>Ambil Sendiri</option>
-                                            <option value="delivery" {{ old('shipping_method') == 'delivery' ? 'selected' : '' }}>Antar ke Alamat</option>
-                                        </select>
-                                        @error('shipping_method')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Shipping Date -->
-                                    <div>
-                                        <label for="shipping_date" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Tanggal Pengiriman <span class="text-red-500">*</span>
-                                        </label>
-                                        <input 
-                                            type="date" 
-                                            id="shipping_date"
-                                            name="shipping_date"
-                                            value="{{ old('shipping_date') }}"
-                                            min="{{ date('Y-m-d') }}"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                                            required
-                                        >
-                                        @error('shipping_date')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-
                                     <!-- Rental Start -->
                                     <div>
                                         <label for="rental_start_at" class="block text-sm font-medium text-gray-700 mb-2">
@@ -465,7 +426,7 @@
                                             <li>Booking akan dikonfirmasi dalam 1x24 jam</li>
                                             <li>Pastikan nomor telepon yang Anda masukkan aktif</li>
                                             <li>Pembayaran dilakukan setelah booking dikonfirmasi</li>
-                                            <li>Area pengiriman khusus JADETABEK</li>
+                                            <li>Pengambilan dilakukan langsung di lokasi bersama officer</li>
                                         </ul>
                                     </div>
                                 </div>

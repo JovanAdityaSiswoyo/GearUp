@@ -67,43 +67,30 @@ class OfficerBookingController extends Controller
             }
         }
 
-        // Apply status filter and pagination
-        if ($filter === 'draft') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'package_page');
-        } elseif ($filter === 'awaiting_validation') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'package_page');
-        } elseif ($filter === 'confirmed') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::PENDING)->latest()->paginate($perPage, ['*'], 'package_page');
-        } elseif ($filter === 'delivery') {
-            $bookProducts = $bookProductsQuery->whereIn('order_status', [
-                OrderStatus::PENDING,
-                OrderStatus::DIPINJAM,
-                OrderStatus::DIPINJAM
-            ])->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->whereIn('order_status', [
-                OrderStatus::PENDING,
-                OrderStatus::DIPINJAM,
-                OrderStatus::DIPINJAM
-            ])->latest()->paginate($perPage, ['*'], 'package_page');
-        } elseif ($filter === 'return') {
-            $bookProducts = $bookProductsQuery->whereIn('order_status', [
-                OrderStatus::DIPINJAM,
-                OrderStatus::DIPINJAM,
-                OrderStatus::SELESAI
-            ])->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->whereIn('order_status', [
-                OrderStatus::DIPINJAM,
-                OrderStatus::DIPINJAM,
-                OrderStatus::SELESAI
-            ])->latest()->paginate($perPage, ['*'], 'package_page');
-        } elseif ($filter === 'completed') {
-            $bookProducts = $bookProductsQuery->where('order_status', OrderStatus::SELESAI)->latest()->paginate($perPage, ['*'], 'product_page');
-            $books = $booksQuery->where('order_status', OrderStatus::SELESAI)->latest()->paginate($perPage, ['*'], 'package_page');
+        $statusByFilter = [
+            'draft' => OrderStatus::PENDING,
+            'awaiting_validation' => OrderStatus::PENDING,
+            'confirmed' => OrderStatus::PENDING,
+            'pending' => OrderStatus::PENDING,
+            'delivery' => OrderStatus::DIPINJAM,
+            'return' => OrderStatus::DIPINJAM,
+            'dipinjam' => OrderStatus::DIPINJAM,
+            'completed' => OrderStatus::SELESAI,
+            'selesai' => OrderStatus::SELESAI,
+        ];
+
+        if (isset($statusByFilter[$filter])) {
+            $targetStatus = $statusByFilter[$filter];
+            $bookProducts = $bookProductsQuery
+                ->where('order_status', $targetStatus)
+                ->latest()
+                ->paginate($perPage, ['*'], 'product_page');
+            $books = $booksQuery
+                ->where('order_status', $targetStatus)
+                ->latest()
+                ->paginate($perPage, ['*'], 'package_page');
         } else {
-            // Default to 'all' filter
+            // Default to all statuses
             $bookProducts = $bookProductsQuery->latest()->paginate($perPage, ['*'], 'product_page');
             $books = $booksQuery->latest()->paginate($perPage, ['*'], 'package_page');
         }

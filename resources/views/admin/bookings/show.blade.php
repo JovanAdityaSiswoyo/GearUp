@@ -27,6 +27,21 @@
                     $renterDetail = $booking->item_type === 'product'
                         ? $booking->detailBookProduct
                         : $booking->detailBook;
+                    $productUnitPrice = $booking->item_type === 'product'
+                        ? ($booking->product->price_per_day ?? $booking->product->price ?? 0)
+                        : 0;
+                    $productRentalDays = null;
+                    if ($booking->item_type === 'product' && $booking->checkin_appointment_start && $booking->checkout_appointment_end) {
+                        $startDate = $booking->checkin_appointment_start->copy()->startOfDay();
+                        $endDate = $booking->checkout_appointment_end->copy()->startOfDay();
+                        $productRentalDays = max(1, $startDate->diffInDays($endDate) + 1);
+                    }
+                    $productDailyTotal = $booking->item_type === 'product'
+                        ? $productUnitPrice * max(1, (int) ($booking->amount ?? 1))
+                        : 0;
+                    $productTotalCost = $booking->item_type === 'product'
+                        ? $productDailyTotal * ($productRentalDays ?? 0)
+                        : 0;
                 @endphp
                 <!-- Header -->
                 <div class="mb-8 flex justify-between items-center">
@@ -208,9 +223,13 @@
                                     <span class="text-gray-600">Amount</span>
                                     <span class="font-semibold">{{ $booking->amount }} pcs</span>
                                 </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Total per Day</span>
+                                    <span class="font-semibold">Rp {{ number_format($productDailyTotal, 0, ',', '.') }}</span>
+                                </div>
                                 <div class="border-t pt-3 flex justify-between">
                                     <span class="font-bold text-gray-900">Total Cost</span>
-                                    <span class="font-bold text-lg text-purple-600">Rp {{ number_format($booking->amount * 100000, 0, ',', '.') }}</span>
+                                    <span class="font-bold text-lg text-purple-600">Rp {{ number_format($productTotalCost, 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         </div>

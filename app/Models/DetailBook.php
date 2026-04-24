@@ -19,9 +19,7 @@ class DetailBook extends Model
         'other_socials',
         'phone_number',
         'emergency_phone_number',
-        'shipping_method',
         'renter_address',
-        'shipping_date',
         'rental_start_at',
         'rental_end_at',
         'identity_document_path',
@@ -30,7 +28,6 @@ class DetailBook extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'shipping_date' => 'date',
         'rental_start_at' => 'datetime',
         'rental_end_at' => 'datetime',
     ];
