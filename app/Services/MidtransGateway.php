@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class MidtransGateway
 {
@@ -16,6 +15,44 @@ class MidtransGateway
         );
     }
 
+    private function snapUrl(): string
+    {
+        return config('midtrans.is_production')
+            ? 'https://app.midtrans.com/snap/v1/transactions'
+            : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+    }
+
+    public function createSnapToken(string $orderId, int $amount, array $customer): string
+    {
+        $grossAmount = (int) round($amount / 100);
+
+        $payload = [
+            'transaction_details' => [
+                'order_id'     => $orderId,
+                'gross_amount' => $grossAmount,
+            ],
+            'customer_details' => [
+                'first_name' => $customer['first_name'] ?? null,
+                'email'      => $customer['email'] ?? null,
+                'phone'      => $customer['phone'] ?? null,
+            ],
+        ];
+
+        $response = Http::withBasicAuth(config('midtrans.server_key'), '')
+            ->acceptJson()
+            ->post($this->snapUrl(), $payload);
+
+        $response->throw();
+
+        $token = $response->json('token');
+
+        if (! $token) {
+            throw new \RuntimeException('Midtrans Snap token kosong. Response: ' . $response->body());
+        }
+
+        return $token;
+    }
+
     public function createBankTransferCharge(string $orderId, int $amount, array $customer, string $bank = null): array
     {
         $grossAmount = (int) round($amount / 100);
@@ -23,13 +60,13 @@ class MidtransGateway
         $payload = [
             'payment_type' => 'bank_transfer',
             'transaction_details' => [
-                'order_id' => $orderId,
+                'order_id'     => $orderId,
                 'gross_amount' => $grossAmount,
             ],
             'customer_details' => [
                 'first_name' => $customer['first_name'] ?? null,
-                'email' => $customer['email'] ?? null,
-                'phone' => $customer['phone'] ?? null,
+                'email'      => $customer['email'] ?? null,
+                'phone'      => $customer['phone'] ?? null,
             ],
         ];
 

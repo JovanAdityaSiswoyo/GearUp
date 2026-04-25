@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Kecualikan webhook Midtrans dari CSRF — request datang dari server Midtrans
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/midtrans',
+        ]);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
@@ -21,18 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Handle unauthenticated access to protected routes
         $exceptions->render(function (Throwable $e, $request) {
-            // Handle authentication exception for all guards
             if ($e instanceof \Illuminate\Auth\AuthenticationException) {
-                // For JSON requests (API), return JSON response
                 if ($request->expectsJson()) {
                     return response()->json([
                         'message' => 'Unauthenticated'
                     ], 401);
                 }
-                
-                // For HTML requests, show the custom 401 page
+
                 return response()->view('errors.401', [], 401);
             }
         });

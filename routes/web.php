@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+
 // Landing Page (Public)
 Route::get('/', function () {
     return view('home');
