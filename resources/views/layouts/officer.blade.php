@@ -42,6 +42,14 @@
                     <x-heroicon-o-printer class="h-5 w-5 mr-3" />
                     <span>Print Report</span>
                 </a>
+                <a href="{{ route('officer.payments.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition {{ request()->routeIs('officer.payments.*') ? 'bg-white/20 border-r-4 border-white' : '' }}">
+                    <x-heroicon-o-banknotes class="h-5 w-5 mr-3" />
+                    <span>Payments</span>
+                </a>
+                <a href="{{ route('officer.penalties.index') }}" class="flex items-center px-6 py-3 hover:bg-white/10 transition {{ request()->routeIs('officer.penalties.*') ? 'bg-white/20 border-r-4 border-white' : '' }}">
+                    <x-heroicon-o-exclamation-triangle class="h-5 w-5 mr-3" />
+                    <span>Denda User</span>
+                </a>
             </nav>
         </aside>
 

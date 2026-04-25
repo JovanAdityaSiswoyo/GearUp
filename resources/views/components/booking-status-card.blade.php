@@ -2,12 +2,22 @@
     use App\Enums\OrderStatus;
     use App\Enums\ItemStatus;
 
-    $orderBadgeClass = match ($booking->order_status) {
-        OrderStatus::PENDING => 'bg-yellow-100 text-yellow-800',
-        OrderStatus::DIPINJAM => 'bg-blue-100 text-blue-800',
-        OrderStatus::SELESAI => 'bg-emerald-100 text-emerald-800',
-        default => 'bg-gray-100 text-gray-800',
-    };
+    $hasDetectedIssue = !empty($booking->issue_condition) || !empty($booking->issue_notes) || !empty($booking->issue_photo);
+
+    $orderBadgeClass = $hasDetectedIssue
+        ? 'bg-red-100 text-red-800'
+        : match ($booking->order_status) {
+            OrderStatus::PENDING => 'bg-yellow-100 text-yellow-800',
+            OrderStatus::DIPINJAM => 'bg-blue-100 text-blue-800',
+            OrderStatus::SELESAI => 'bg-emerald-100 text-emerald-800',
+            default => 'bg-gray-100 text-gray-800',
+        };
+
+    $displayOrderLabel = $hasDetectedIssue ? 'Masalah Terdeteksi' : $booking->order_status->label();
+    $displayOrderDescription = $hasDetectedIssue
+        ? 'Barang terdeteksi bermasalah saat pengembalian dan menunggu penyelesaian denda/tindak lanjut.'
+        : $booking->order_status->description();
+    $displayOrderPhase = $hasDetectedIssue ? 'Fase Inspeksi Masalah' : $booking->order_status->phase();
 
     $itemBadgeClass = match ($booking->item_status) {
         ItemStatus::AVAILABLE => 'bg-green-100 text-green-800',
@@ -29,10 +39,10 @@
         <h4 class="text-sm font-semibold text-gray-700 mb-2">Status Order</h4>
         <div class="flex flex-col items-start space-y-2">
             <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $orderBadgeClass }}">
-                {{ $booking->order_status->label() }}
+                {{ $displayOrderLabel }}
             </span>
-            <p class="text-xs text-gray-600">{{ $booking->order_status->description() }}</p>
-            <p class="text-xs font-medium text-gray-700">📍 Fase: {{ $booking->order_status->phase() }}</p>
+            <p class="text-xs text-gray-600">{{ $displayOrderDescription }}</p>
+            <p class="text-xs font-medium text-gray-700">📍 Fase: {{ $displayOrderPhase }}</p>
         </div>
     </div>
 
@@ -119,6 +129,29 @@
                     <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-red-800">
                         <p class="font-semibold mb-1">Catatan Masalah</p>
                         <p class="leading-relaxed">{{ $booking->issue_notes }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($booking->issue_condition) || !empty($booking->fine_amount))
+                    @php
+                        $conditionLabels = [
+                            'rusak_ringan' => 'Rusak Ringan',
+                            'rusak_sedang' => 'Rusak Sedang',
+                            'rusak_berat' => 'Rusak Berat',
+                            'hilang' => 'Hilang',
+                        ];
+                    @endphp
+                    <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-amber-900">
+                        <p class="font-semibold mb-1">Denda Kerusakan</p>
+                        @if(!empty($booking->issue_condition))
+                            <p class="leading-relaxed text-xs">Kondisi: {{ $conditionLabels[$booking->issue_condition] ?? $booking->issue_condition }}</p>
+                        @endif
+                        @if(!empty($booking->fine_percentage))
+                            <p class="leading-relaxed text-xs">Persentase: {{ $booking->fine_percentage }}%</p>
+                        @endif
+                        @if(!empty($booking->fine_amount))
+                            <p class="leading-relaxed text-xs font-semibold">Nominal: Rp {{ number_format($booking->fine_amount / 100, 0, ',', '.') }}</p>
+                        @endif
                     </div>
                 @endif
             </div>

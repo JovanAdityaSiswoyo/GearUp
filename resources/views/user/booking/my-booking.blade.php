@@ -37,6 +37,19 @@
         </script>
     @endif
 
+    @if (session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Booking Ditahan',
+                    text: @js(session('error')),
+                    confirmButtonColor: '#f59e0b'
+                });
+            });
+        </script>
+    @endif
+
     <div class="min-h-screen flex flex-col">
         <!-- Header/Navbar -->
         
@@ -53,6 +66,48 @@
                     </div>
                     <p class="text-gray-600">Lihat semua booking dan status penyewaan Anda</p>
                 </div>
+
+                @if(isset($pendingPenalties) && $pendingPenalties->isNotEmpty())
+                    <div class="mb-8 bg-amber-50 border border-amber-300 rounded-xl p-5">
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-amber-900">Denda Belum Dibayar</h2>
+                                <p class="text-sm text-amber-800">Booking baru akan dibuka kembali setelah denda berstatus lunas.</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-amber-700">Total Denda</p>
+                                <p class="text-xl font-bold text-amber-900">Rp {{ number_format($pendingPenalties->sum('amount') / 100, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            @foreach($pendingPenalties as $penalty)
+                                @php
+                                    $conditionMap = [
+                                        'rusak_ringan' => 'Rusak Ringan',
+                                        'rusak_sedang' => 'Rusak Sedang',
+                                        'rusak_berat' => 'Rusak Berat',
+                                        'hilang' => 'Hilang',
+                                    ];
+                                    $conditionValue = data_get($penalty->meta, 'issue_condition');
+                                    $percentageValue = data_get($penalty->meta, 'fine_percentage');
+                                @endphp
+                                <div class="bg-white border border-amber-200 rounded-lg p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Booking: {{ data_get($penalty->meta, 'book_code', '-') }}</p>
+                                        <p class="text-xs text-gray-600">
+                                            Kondisi: {{ $conditionMap[$conditionValue] ?? '-' }}
+                                            @if($percentageValue)
+                                                ({{ $percentageValue }}%)
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <p class="text-sm font-bold text-amber-900">Rp {{ number_format($penalty->amount / 100, 0, ',', '.') }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 @if((isset($packageBookings) && $packageBookings->isNotEmpty()) || ($bookings && $bookings->isNotEmpty()))
                     <!-- Bookings Grid -->
@@ -105,7 +160,54 @@
                                                     <x-booking-status-card :booking="$booking" />
                                                     <x-booking-status-actions :booking="$booking" type="package" />
                                                 </div>
+
+                                                @php
+                                                    $bookingPaymentPending = $booking->payments->where('method', 'booking')->where('status', 'pending')->first();
+                                                    $bookingPaymentPaid = $booking->payments->where('method', 'booking')->where('status', 'paid')->first();
+                                                @endphp
+                                                @if(! $bookingPaymentPaid)
+                                                    <div class="mt-4">
+                                                        <form action="{{ route('user.booking.pay', ['type' => 'package', 'booking' => $booking->id]) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="w-full py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-all">
+                                                                {{ $bookingPaymentPending ? 'Lanjutkan Pembayaran Booking' : 'Bayar Booking' }}
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endif
                                             </div>
+
+                                            @php
+                                                $penalty = $booking->payments->firstWhere('method', 'penalty');
+                                                $issueConditionLabel = $booking->issue_condition
+                                                    ? ([
+                                                        'rusak_ringan' => 'Rusak Ringan',
+                                                        'rusak_sedang' => 'Rusak Sedang',
+                                                        'rusak_berat' => 'Rusak Berat',
+                                                        'hilang' => 'Hilang',
+                                                    ][$booking->issue_condition] ?? ucfirst(str_replace('_', ' ', $booking->issue_condition)))
+                                                    : data_get($penalty, 'meta.issue_condition');
+                                                $finePercentage = $booking->fine_percentage ?? data_get($penalty, 'meta.fine_percentage');
+                                                $fineAmount = $penalty?->amount;
+                                            @endphp
+                                            @if($penalty || $issueConditionLabel)
+                                                <div class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div class="bg-white border border-gray-200 rounded-xl p-4">
+                                                            <p class="text-xs text-gray-500 uppercase tracking-wide">Catatan Masalah</p>
+                                                            <p class="mt-2 text-sm font-semibold text-gray-900">{{ $issueConditionLabel ?? '-' }}</p>
+                                                        </div>
+                                                        <div class="bg-white border border-gray-200 rounded-xl p-4">
+                                                            <p class="text-xs text-gray-500 uppercase tracking-wide">Denda Kerusakan</p>
+                                                            <div class="mt-3 space-y-2 text-sm text-gray-700">
+                                                                <p><span class="font-semibold">Kondisi:</span> {{ $issueConditionLabel ?? '-' }}</p>
+                                                                <p><span class="font-semibold">Persentase:</span> {{ $finePercentage ? $finePercentage . '%' : '-' }}</p>
+                                                                <p><span class="font-semibold">Nominal:</span> {{ $fineAmount ? 'Rp ' . number_format($fineAmount / 100, 0, ',', '.') : '-' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
                                             <!-- Contact Info -->
                                             <div class="mt-6 pt-6 border-t">
                                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -182,7 +284,54 @@
                                                     <x-booking-status-card :booking="$booking" />
                                                     <x-booking-status-actions :booking="$booking" type="product" />
                                                 </div>
+
+                                                @php
+                                                    $bookingPaymentPending = $booking->payments->where('method', 'booking')->where('status', 'pending')->first();
+                                                    $bookingPaymentPaid = $booking->payments->where('method', 'booking')->where('status', 'paid')->first();
+                                                @endphp
+                                                @if(! $bookingPaymentPaid)
+                                                    <div class="mt-4">
+                                                        <form action="{{ route('user.booking.pay', ['type' => 'product', 'booking' => $booking->id]) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="w-full py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-all">
+                                                                {{ $bookingPaymentPending ? 'Lanjutkan Pembayaran Booking' : 'Bayar Booking' }}
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endif
                                             </div>
+
+                                            @php
+                                                $penalty = $booking->payments->firstWhere('method', 'penalty');
+                                                $issueConditionLabel = $booking->issue_condition
+                                                    ? ([
+                                                        'rusak_ringan' => 'Rusak Ringan',
+                                                        'rusak_sedang' => 'Rusak Sedang',
+                                                        'rusak_berat' => 'Rusak Berat',
+                                                        'hilang' => 'Hilang',
+                                                    ][$booking->issue_condition] ?? ucfirst(str_replace('_', ' ', $booking->issue_condition)))
+                                                    : data_get($penalty, 'meta.issue_condition');
+                                                $finePercentage = $booking->fine_percentage ?? data_get($penalty, 'meta.fine_percentage');
+                                                $fineAmount = $penalty?->amount;
+                                            @endphp
+                                            @if($penalty || $issueConditionLabel)
+                                                <div class="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div class="bg-white border border-gray-200 rounded-xl p-4">
+                                                            <p class="text-xs text-gray-500 uppercase tracking-wide">Catatan Masalah</p>
+                                                            <p class="mt-2 text-sm font-semibold text-gray-900">{{ $issueConditionLabel ?? '-' }}</p>
+                                                        </div>
+                                                        <div class="bg-white border border-gray-200 rounded-xl p-4">
+                                                            <p class="text-xs text-gray-500 uppercase tracking-wide">Denda Kerusakan</p>
+                                                            <div class="mt-3 space-y-2 text-sm text-gray-700">
+                                                                <p><span class="font-semibold">Kondisi:</span> {{ $issueConditionLabel ?? '-' }}</p>
+                                                                <p><span class="font-semibold">Persentase:</span> {{ $finePercentage ? $finePercentage . '%' : '-' }}</p>
+                                                                <p><span class="font-semibold">Nominal:</span> {{ $fineAmount ? 'Rp ' . number_format($fineAmount / 100, 0, ',', '.') : '-' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
                                             <!-- Contact Info -->
                                             <div class="mt-6 pt-6 border-t">
                                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

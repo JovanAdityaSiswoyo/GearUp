@@ -11,6 +11,7 @@
     <main class="container mx-auto px-4">
         @yield('content')
     </main>
+    @stack('scripts')
     @yield('scripts')
 </body>
 </html>

@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\DetailBookController;
 use App\Http\Controllers\Api\BookProductController;
 use App\Http\Controllers\Api\DetailBookProductController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\MidtransNotificationController;
 use App\Http\Controllers\Api\CartController;
 
 // Authentication routes
@@ -25,6 +26,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
 Route::apiResource('packages', PackageController::class)->only(['index', 'show']);
+
+// Midtrans notification endpoint
+Route::post('midtrans/notification', [MidtransNotificationController::class, 'handle']);
 
 // Protected routes (perlu authentication)
 Route::middleware('auth:sanctum')->group(function () {

@@ -84,8 +84,17 @@ function detectIssue(bookingId, type) {
         fieldName: 'issue_photo',
         notesFieldName: 'issue_notes',
         notesRequired: true,
+        conditionRequired: true,
+        conditionFieldName: 'issue_condition',
+        conditionOptions: [
+            { value: 'rusak_ringan', label: 'Rusak Ringan (15%)' },
+            { value: 'rusak_sedang', label: 'Rusak Sedang (30%)' },
+            { value: 'rusak_berat', label: 'Rusak Berat (70%)' },
+            { value: 'hilang', label: 'Hilang (100%)' }
+        ],
         photoRequiredMessage: 'Foto masalah wajib diunggah.',
-        notesRequiredMessage: 'Catatan masalah harus diisi.'
+        notesRequiredMessage: 'Catatan masalah harus diisi.',
+        conditionRequiredMessage: 'Kondisi barang harus dipilih.'
     });
 }
 
@@ -168,6 +177,15 @@ function submitStatusChangeWithPhoto(url, options) {
                         <textarea id="swal-notes" style="width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit;" placeholder="Jelaskan masalah yang ditemukan..." rows="4"></textarea>
                     </label>
                 ` : ''}
+                ${options.conditionRequired ? `
+                    <label style="display: block; margin-bottom: 14px;">
+                        <span style="font-weight: 600; color: #374151;">Kondisi Barang:</span>
+                        <select id="swal-condition" style="width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; background-color: #fff;">
+                            <option value="">-- Pilih kondisi --</option>
+                            ${(options.conditionOptions || []).map((option) => `<option value="${option.value}">${option.label}</option>`).join('')}
+                        </select>
+                    </label>
+                ` : ''}
                 <label style="display: block; margin-bottom: 10px;">
                     <span style="font-weight: 600; color: #374151;">Foto Bukti:</span>
                     <input id="swal-photo" type="file" accept="image/*" capture="environment" style="display:block; width:100%; margin-top:8px;" />
@@ -223,6 +241,16 @@ function submitStatusChangeWithPhoto(url, options) {
                 }
 
                 formData.append(options.notesFieldName || 'issue_notes', notes);
+            }
+
+            if (options.conditionRequired) {
+                const condition = popup.querySelector('#swal-condition').value;
+                if (!condition) {
+                    Swal.showValidationMessage(options.conditionRequiredMessage || 'Kondisi harus dipilih.');
+                    return false;
+                }
+
+                formData.append(options.conditionFieldName || 'issue_condition', condition);
             }
 
             formData.append('_token', getCsrfToken());

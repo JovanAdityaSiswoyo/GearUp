@@ -6,6 +6,7 @@ use App\Models\BookProduct;
 use App\Models\Book;
 use App\Models\BookPackageProduct;
 use App\Models\Product;
+use App\Models\Payment;
 use App\Models\ActivityLog;
 use App\Enums\OrderStatus;
 use App\Services\ItemStatusTransitionService;
@@ -16,6 +17,13 @@ use App\Enums\ItemStatus;
 
 class OfficerBookingStatusController extends Controller
 {
+    private const PENALTY_MAP = [
+        'rusak_ringan' => 15,
+        'rusak_sedang' => 30,
+        'rusak_berat' => 70,
+        'hilang' => 100,
+    ];
+
     protected ItemStatusTransitionService $transitionService;
 
     public function __construct(ItemStatusTransitionService $transitionService)
@@ -150,21 +158,49 @@ class OfficerBookingStatusController extends Controller
     {
         $validated = $request->validate([
             'issue_notes' => 'required|string|min:10',
+            'issue_condition' => 'required|string|in:rusak_ringan,rusak_sedang,rusak_berat,hilang',
             'issue_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
         ]);
 
+        $booking = BookProduct::find($id);
+        if (! $booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan',
+            ], 404);
+        }
+
+        $penalty = $this->calculatePenalty($booking, $validated['issue_condition']);
         $photoPath = $request->file('issue_photo')->store('booking-proofs/issue', 'public');
 
-        return $this->updateOrderStatus(
-            BookProduct::find($id),
+        $response = $this->updateOrderStatus(
+            $booking,
             OrderStatus::SELESAI,
-            'Masalah berhasil dicatat',
+            'Masalah berhasil dicatat. Denda otomatis berhasil dibuat.',
             'detect_issue',
             [
                 'issue_notes' => $validated['issue_notes'],
+                'issue_condition' => $validated['issue_condition'],
+                'fine_percentage' => $penalty['percentage'],
+                'fine_amount' => $penalty['amount'],
                 'issue_photo' => $photoPath,
             ]
         );
+
+        if ($response->getStatusCode() >= 400) {
+            return $response;
+        }
+
+        $this->createOrUpdatePenaltyPayment($booking, $penalty, $validated['issue_condition']);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf(
+                'Masalah berhasil dicatat. Denda %d%% = Rp %s dibuat dan menunggu pembayaran user.',
+                $penalty['percentage'],
+                number_format($penalty['amount'] / 100, 0, ',', '.')
+            ),
+        ]);
     }
 
     /**
@@ -296,21 +332,49 @@ class OfficerBookingStatusController extends Controller
     {
         $validated = $request->validate([
             'issue_notes' => 'required|string|min:10',
+            'issue_condition' => 'required|string|in:rusak_ringan,rusak_sedang,rusak_berat,hilang',
             'issue_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
         ]);
 
+        $booking = Book::find($id);
+        if (! $booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan',
+            ], 404);
+        }
+
+        $penalty = $this->calculatePenalty($booking, $validated['issue_condition']);
         $photoPath = $request->file('issue_photo')->store('booking-proofs/issue', 'public');
 
-        return $this->updateOrderStatus(
-            Book::find($id),
+        $response = $this->updateOrderStatus(
+            $booking,
             OrderStatus::SELESAI,
-            'Masalah berhasil dicatat',
+            'Masalah berhasil dicatat. Denda otomatis berhasil dibuat.',
             'detect_issue',
             [
                 'issue_notes' => $validated['issue_notes'],
+                'issue_condition' => $validated['issue_condition'],
+                'fine_percentage' => $penalty['percentage'],
+                'fine_amount' => $penalty['amount'],
                 'issue_photo' => $photoPath,
             ]
         );
+
+        if ($response->getStatusCode() >= 400) {
+            return $response;
+        }
+
+        $this->createOrUpdatePenaltyPayment($booking, $penalty, $validated['issue_condition']);
+
+        return response()->json([
+            'success' => true,
+            'message' => sprintf(
+                'Masalah berhasil dicatat. Denda %d%% = Rp %s dibuat dan menunggu pembayaran user.',
+                $penalty['percentage'],
+                number_format($penalty['amount'] / 100, 0, ',', '.')
+            ),
+        ]);
     }
 
     /**
@@ -467,6 +531,90 @@ class OfficerBookingStatusController extends Controller
         }
 
         return null;
+    }
+
+    private function calculatePenalty($booking, string $issueCondition): array
+    {
+        $percentage = self::PENALTY_MAP[$issueCondition] ?? 0;
+        $baseAmount = $this->calculateBaseRentalAmount($booking);
+        $penaltyAmount = (int) round($baseAmount * ($percentage / 100));
+
+        return [
+            'base_amount' => $baseAmount,
+            'percentage' => $percentage,
+            'amount' => max(0, $penaltyAmount),
+            'condition' => $issueCondition,
+        ];
+    }
+
+    private function calculateBaseRentalAmount($booking): int
+    {
+        if ($booking instanceof BookProduct) {
+            $computed = (int) round($booking->rental_total * 100);
+            if ($computed > 0) {
+                return $computed;
+            }
+
+            $unitPrice = (float) ($booking->product?->price_per_day ?? $booking->product?->price ?? 0);
+            $quantity = max(1, (int) ($booking->amount ?? 1));
+            $days = $this->getRentalDays($booking);
+
+            return (int) round($unitPrice * $quantity * $days * 100);
+        }
+
+        if ($booking instanceof Book) {
+            $dailyPrice = (float) ($booking->package?->price ?? 0);
+            $days = $this->getRentalDays($booking);
+
+            return (int) round($dailyPrice * $days * 100);
+        }
+
+        return 0;
+    }
+
+    private function getRentalDays($booking): int
+    {
+        if (! $booking->checkin_appointment_start || ! $booking->checkout_appointment_end) {
+            return 1;
+        }
+
+        $start = $booking->checkin_appointment_start->copy()->startOfDay();
+        $end = $booking->checkout_appointment_end->copy()->startOfDay();
+
+        return max(1, $start->diffInDays($end) + 1);
+    }
+
+    private function createOrUpdatePenaltyPayment($booking, array $penalty, string $issueCondition): void
+    {
+        $existingPending = $booking->payments()
+            ->where('method', 'penalty')
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        $payload = [
+            'amount' => $penalty['amount'],
+            'currency' => 'IDR',
+            'status' => 'pending',
+            'provider' => 'manual',
+            'method' => 'penalty',
+            'meta' => [
+                'type' => 'damage_penalty',
+                'issue_condition' => $issueCondition,
+                'fine_percentage' => $penalty['percentage'],
+                'base_amount' => $penalty['base_amount'],
+                'book_code' => $booking->book_code,
+                'booking_type' => $booking instanceof BookProduct ? 'product' : 'package',
+            ],
+        ];
+
+        if ($existingPending) {
+            $existingPending->update($payload);
+
+            return;
+        }
+
+        $booking->payments()->create($payload);
     }
 
     private function logBookingActivity($booking, string $event, string $description, array $properties = []): void

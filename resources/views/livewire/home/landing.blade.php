@@ -103,7 +103,13 @@
                 @endauth
                 <!-- Cart Icon (linked & dynamic count) -->
                 @php
-                    $cartCount = session('cart') ? count(session('cart')) : 0;
+                    $cartItems = session('cart', []);
+                    $isCartList = !empty($cartItems) && array_keys($cartItems) === range(0, count($cartItems) - 1);
+                    $cartCount = $isCartList
+                        ? count($cartItems)
+                        : collect($cartItems)->sum(function ($qty) {
+                            return max(1, (int) $qty);
+                        });
                 @endphp
                 <a href="/cart" class="relative bg-white rounded-xl p-2 flex items-center justify-center shadow hover:opacity-90 transition" aria-label="Lihat Keranjang">
                     <x-heroicon-o-shopping-cart class="h-8 w-8 text-gray-800" />

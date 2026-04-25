@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Package;
 use App\Models\Book;
+use App\Models\BookProduct;
 use App\Models\DetailBook;
+use App\Models\Payment;
 use App\Enums\OrderStatus;
 use App\Enums\ItemStatus;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +19,20 @@ class BookingPackageController extends Controller
 {
     public function create($packageId)
     {
+        if ($response = $this->blockIfHasOutstandingPenalty()) {
+            return $response;
+        }
+
         $package = Package::with(['products'])->findOrFail($packageId);
         return view('user.booking.package', compact('package'));
     }
 
     public function store(Request $request, $packageId)
     {
+        if ($response = $this->blockIfHasOutstandingPenalty()) {
+            return $response;
+        }
+
         $package = Package::with(['products'])->findOrFail($packageId);
         $validated = $request->validate([
             'booker_name' => 'required|string|max:255',
@@ -98,5 +108,37 @@ class BookingPackageController extends Controller
 
         // Redirect ke halaman sukses atau detail booking
         return redirect()->route('user.my-booking')->with('success', 'Booking paket berhasil dibuat!');
+    }
+
+    private function blockIfHasOutstandingPenalty()
+    {
+        $count = $this->pendingPenaltyQuery()->count();
+        if ($count < 1) {
+            return null;
+        }
+
+        $pendingTotal = $this->pendingPenaltyQuery()->sum('amount');
+
+        return redirect()
+            ->route('user.my-booking')
+            ->with('error', sprintf(
+                'Anda memiliki %d denda belum dibayar (total Rp %s). Selesaikan pembayaran denda terlebih dahulu sebelum booking lagi.',
+                $count,
+                number_format($pendingTotal / 100, 0, ',', '.')
+            ));
+    }
+
+    private function pendingPenaltyQuery()
+    {
+        return Payment::query()
+            ->where('status', 'pending')
+            ->where('method', 'penalty')
+            ->where(function ($query) {
+                $query->whereHasMorph('payable', [BookProduct::class], function ($bookingQuery) {
+                    $bookingQuery->where('id_user', Auth::id());
+                })->orWhereHasMorph('payable', [Book::class], function ($bookingQuery) {
+                    $bookingQuery->where('id_user', Auth::id());
+                });
+            });
     }
 }

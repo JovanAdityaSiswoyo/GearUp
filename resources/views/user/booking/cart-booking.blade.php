@@ -16,6 +16,7 @@
                             <div class="font-semibold text-lg">{{ $product->name }}</div>
                             <div class="text-gray-500 text-sm">{{ $product->category->categories ?? '-' }}</div>
                             <div class="text-teal-700 font-bold">Rp {{ number_format($product->price_per_day, 0, ',', '.') }}/hari</div>
+                            <div class="text-sm text-gray-600 mt-1">Jumlah Unit: <span class="font-semibold">{{ $cartAmounts[$product->id] ?? 1 }}</span></div>
                         </div>
                     </li>
                 @endforeach
@@ -24,6 +25,7 @@
                 <form action="{{ route('user.booking.create-multi') }}" method="GET">
                     @foreach($products as $product)
                         <input type="hidden" name="products[]" value="{{ $product->id }}">
+                        <input type="hidden" name="amount[{{ $product->id }}]" value="{{ $cartAmounts[$product->id] ?? 1 }}">
                     @endforeach
                     <button type="submit" class="inline-block bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg font-semibold text-lg shadow transition mt-6">Konfirmasi &amp; Lanjut Booking</button>
                 </form>

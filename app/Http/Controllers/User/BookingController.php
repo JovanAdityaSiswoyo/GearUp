@@ -3,7 +3,9 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\BookProduct;
+use App\Models\Book;
 use App\Models\DetailBookProduct;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
@@ -16,6 +18,10 @@ class BookingController extends Controller
 {
     public function cartBooking(Request $request)
     {
+        if ($response = $this->blockIfHasOutstandingPenalty()) {
+            return $response;
+        }
+
         if ($request->isMethod('post')) {
             $validated = $request->validate([
                 'products' => 'required|array|min:1',
@@ -85,18 +91,37 @@ class BookingController extends Controller
         }
 
         $cart = session('cart_checkout', []);
+        if (!empty($cart) && array_keys($cart) === range(0, count($cart) - 1)) {
+            $cart = collect($cart)->mapWithKeys(function ($productId) {
+                return [(string) $productId => 1];
+            })->all();
+            session(['cart_checkout' => $cart]);
+        }
+
         if (empty($cart)) {
             return redirect()->route('user.cart.index')->with('error', 'Cart kosong.');
         }
-        $products = Product::whereIn('id', $cart)->get();
+
+        $cartProductIds = array_keys($cart);
+        $products = Product::whereIn('id', $cartProductIds)->get();
+        $cartAmounts = collect($cart)->mapWithKeys(function ($qty, $productId) {
+            return [(string) $productId => max(1, (int) $qty)];
+        })->all();
+
         // Tampilkan form booking massal
-        return view('user.booking.cart-booking', compact('products'));
+        return view('user.booking.cart-booking', compact('products', 'cartAmounts'));
     }
 
     public function create(Request $request, Product $product = null)
     {
+        if ($response = $this->blockIfHasOutstandingPenalty()) {
+            return $response;
+        }
+
         // Cek apakah ada parameter products[] (array) di query string
         $productIds = $request->input('products');
+        $amountFromRequest = $request->input('amount', []);
+
         if ($productIds) {
             $products = Product::whereIn('id', $productIds)->get();
         } elseif ($product) {
@@ -104,18 +129,36 @@ class BookingController extends Controller
         } else {
             $products = collect();
         }
-        return view('user.booking.create', compact('products'));
+
+        $amounts = collect($amountFromRequest)->mapWithKeys(function ($qty, $productId) {
+            return [(string) $productId => max(1, (int) $qty)];
+        })->all();
+
+        return view('user.booking.create', compact('products', 'amounts'));
     }
 
     public function createMulti(Request $request)
     {
+        if ($response = $this->blockIfHasOutstandingPenalty()) {
+            return $response;
+        }
+
         $productIds = $request->input('products', []);
         $products = Product::whereIn('id', $productIds)->get();
-        return view('user.booking.create', compact('products'));
+        $amountFromRequest = $request->input('amount', []);
+        $amounts = collect($amountFromRequest)->mapWithKeys(function ($qty, $productId) {
+            return [(string) $productId => max(1, (int) $qty)];
+        })->all();
+
+        return view('user.booking.create', compact('products', 'amounts'));
     }
 
     public function store(Request $request)
     {
+        if ($response = $this->blockIfHasOutstandingPenalty()) {
+            return $response;
+        }
+
         $validated = $request->validate([
             'products' => 'required|array|min:1',
             'products.*' => 'exists:products,id',
@@ -135,6 +178,22 @@ class BookingController extends Controller
             'rental_end_at' => 'required|date|after:rental_start_at',
             'identity_document' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        $cartCheckout = session('cart_checkout', []);
+        if (!empty($cartCheckout)) {
+            if (array_keys($cartCheckout) === range(0, count($cartCheckout) - 1)) {
+                $cartCheckout = collect($cartCheckout)->mapWithKeys(function ($productId) {
+                    return [(string) $productId => 1];
+                })->all();
+            }
+
+            foreach ($validated['products'] as $productId) {
+                $productId = (string) $productId;
+                if (array_key_exists($productId, $cartCheckout)) {
+                    $validated['amount'][$productId] = max(1, (int) $cartCheckout[$productId]);
+                }
+            }
+        }
 
         // Upload identity document
         $identityPath = $request->file('identity_document')->store('identity_documents', 'public');
@@ -180,23 +239,32 @@ class BookingController extends Controller
             }
         });
 
+        if (!empty($cartCheckout)) {
+            session()->forget('cart_checkout');
+        }
+
         return redirect()->route('user.my-booking')->with('success', 'Booking untuk semua produk berhasil dibuat! Kami akan segera menghubungi Anda untuk konfirmasi booking.');
     }
 
     public function myBooking()
     {
-        $bookings = BookProduct::with(['product', 'detailBookProduct'])
+        $bookings = BookProduct::with(['product', 'detailBookProduct', 'payments'])
             ->where('id_user', Auth::id())
             ->latest()
             ->get();
 
         // Ambil riwayat booking package user
-        $packageBookings = \App\Models\Book::with(['package', 'detailBooks'])
+        $packageBookings = \App\Models\Book::with(['package', 'detailBooks', 'payments'])
             ->where('id_user', Auth::id())
             ->latest()
             ->get();
 
-        return view('user.booking.my-booking', compact('bookings', 'packageBookings'));
+        $pendingPenalties = $this->pendingPenaltyQuery()
+            ->with('payable')
+            ->latest()
+            ->get();
+
+        return view('user.booking.my-booking', compact('bookings', 'packageBookings', 'pendingPenalties'));
     }
 
     public function myReturns()
@@ -247,5 +315,37 @@ class BookingController extends Controller
             'productReturnCompleted' => $productReturnCompleted,
             'packageReturnCompleted' => $packageReturnCompleted,
         ]);
+    }
+
+    private function blockIfHasOutstandingPenalty()
+    {
+        $count = $this->pendingPenaltyQuery()->count();
+        if ($count < 1) {
+            return null;
+        }
+
+        $pendingTotal = $this->pendingPenaltyQuery()->sum('amount');
+
+        return redirect()
+            ->route('user.my-booking')
+            ->with('error', sprintf(
+                'Anda memiliki %d denda belum dibayar (total Rp %s). Selesaikan pembayaran denda terlebih dahulu sebelum booking lagi.',
+                $count,
+                number_format($pendingTotal / 100, 0, ',', '.')
+            ));
+    }
+
+    private function pendingPenaltyQuery()
+    {
+        return Payment::query()
+            ->where('status', 'pending')
+            ->where('method', 'penalty')
+            ->where(function ($query) {
+                $query->whereHasMorph('payable', [BookProduct::class], function ($bookingQuery) {
+                    $bookingQuery->where('id_user', Auth::id());
+                })->orWhereHasMorph('payable', [Book::class], function ($bookingQuery) {
+                    $bookingQuery->where('id_user', Auth::id());
+                });
+            });
     }
 }

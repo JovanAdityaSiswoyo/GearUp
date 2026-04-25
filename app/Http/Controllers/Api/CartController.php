@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Book;
 use App\Models\BookProduct;
 use App\Models\Cart;
 use App\Models\DetailBookProduct;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -111,6 +113,24 @@ class CartController extends Controller
             return response()->json([
                 'message' => 'Unauthenticated',
             ], 401);
+        }
+
+        $hasPendingPenalty = Payment::query()
+            ->where('status', 'pending')
+            ->where('method', 'penalty')
+            ->where(function ($query) use ($user) {
+                $query->whereHasMorph('payable', [BookProduct::class], function ($bookingQuery) use ($user) {
+                    $bookingQuery->where('id_user', $user->id);
+                })->orWhereHasMorph('payable', [Book::class], function ($bookingQuery) use ($user) {
+                    $bookingQuery->where('id_user', $user->id);
+                });
+            })
+            ->exists();
+
+        if ($hasPendingPenalty) {
+            return response()->json([
+                'message' => 'Anda memiliki denda yang belum dibayar. Lunasi denda terlebih dahulu sebelum booking lagi.',
+            ], 422);
         }
 
         $validated = $request->validate([

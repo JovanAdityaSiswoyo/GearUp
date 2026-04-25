@@ -42,16 +42,30 @@
             <div class="mb-3 text-base text-gray-500">Stok: <span class="font-medium text-gray-700">{{ $product->stock }} unit</span></div>
             <div class="mb-6 text-gray-700 leading-relaxed border-t pt-4">{{ $product->description }}</div>
             @php
-                $isInCart = in_array($product->id, session('cart', []));
+                $cartSession = session('cart', []);
+                $isCartList = !empty($cartSession) && array_keys($cartSession) === range(0, count($cartSession) - 1);
+                $isInCart = $isCartList ? in_array($product->id, $cartSession) : array_key_exists($product->id, $cartSession);
             @endphp
             <form action="{{ route('user.cart.add', $product->id) }}" method="POST">
                 @csrf
+                <div class="mb-3 flex items-center gap-3">
+                    <label for="quantity" class="text-sm text-gray-700 font-medium">Jumlah Unit</label>
+                    <input
+                        id="quantity"
+                        type="number"
+                        name="quantity"
+                        min="1"
+                        max="{{ $product->stock }}"
+                        value="1"
+                        class="w-24 px-3 py-2 border border-gray-300 rounded-lg"
+                        required
+                    >
+                </div>
                 <button
                     type="submit"
-                    @disabled($isInCart)
-                    class="inline-block w-full md:w-auto text-center text-lg font-semibold px-10 py-3 rounded-lg shadow transition {{ $isInCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700 text-white' }}"
+                    class="inline-block w-full md:w-auto text-center text-lg font-semibold px-10 py-3 rounded-lg shadow transition bg-teal-600 hover:bg-teal-700 text-white"
                 >
-                    {{ $isInCart ? 'Sudah di Cart' : 'Tambah ke Cart' }}
+                    {{ $isInCart ? 'Tambah Lagi ke Cart' : 'Tambah ke Cart' }}
                 </button>
             </form>
         </div>

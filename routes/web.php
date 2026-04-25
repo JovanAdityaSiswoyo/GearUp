@@ -15,6 +15,7 @@ Route::get('/package/{package}', [App\Http\Controllers\User\PackageController::c
 Route::get('/brand/{brand}', [App\Http\Controllers\User\ProductController::class, 'brandProducts'])->name('user.brand.products');
 Route::get('/cart', [App\Http\Controllers\User\CartController::class, 'index'])->name('user.cart.index');
 Route::post('/cart/add/{product}', [App\Http\Controllers\User\CartController::class, 'add'])->name('user.cart.add');
+Route::post('/cart/update/{product}', [App\Http\Controllers\User\CartController::class, 'update'])->name('user.cart.update');
 Route::post('/cart/remove/{product}', [App\Http\Controllers\User\CartController::class, 'remove'])->name('user.cart.remove');
 
 // Guest Routes (Not Authenticated)
@@ -125,6 +126,11 @@ Route::prefix('officer')->middleware(['auth:web,officer'])->name('officer.')->gr
 
     // Print Reports
     Route::get('/print-report', [App\Http\Controllers\OfficerReportController::class, 'print'])->name('reports.print');
+
+    // Payments & Penalties
+    Route::get('/payments', [App\Http\Controllers\OfficerPaymentController::class, 'index'])->name('payments.index');
+    Route::get('/penalties', [App\Http\Controllers\OfficerPaymentController::class, 'penalties'])->name('penalties.index');
+    Route::get('/penalties/export-pdf', [App\Http\Controllers\OfficerPaymentController::class, 'exportPdf'])->name('penalties.export-pdf');
 
     // Book Loans Management (placeholder)
     Route::get('/books', function () { return 'Book Loans Index'; })->name('books.index');
@@ -256,6 +262,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-booking', [App\Http\Controllers\User\BookingController::class, 'myBooking'])->name('user.my-booking');
     Route::get('/my-returns', [App\Http\Controllers\User\BookingController::class, 'myReturns'])->name('user.my-returns');
 
+    // User Fines Routes
+    Route::get('/fines', [App\Http\Controllers\User\FineController::class, 'index'])->name('user.fines.index');
+    Route::patch('/fines/{id}/verify', [App\Http\Controllers\User\FineController::class, 'verify'])->name('fines.verify');
+    Route::patch('/fines/{id}/pay', [App\Http\Controllers\User\TransactionController::class, 'payPenalty'])->name('fines.pay');
+    Route::get('/fines/export-pdf', [App\Http\Controllers\User\FineController::class, 'exportPdf'])->name('fines.export-pdf');
+
+    Route::post('/booking/{type}/{booking}/pay', [App\Http\Controllers\User\TransactionController::class, 'payBooking'])
+        ->where('type', 'product|package')
+        ->name('user.booking.pay');
+    Route::get('/payments/checkout/{transaction}', [App\Http\Controllers\User\TransactionController::class, 'checkout'])
+        ->name('user.payment.checkout');
 
     // User Cart Routes
     Route::post('/cart/checkout', [App\Http\Controllers\User\CartController::class, 'checkout'])->name('user.cart.checkout');

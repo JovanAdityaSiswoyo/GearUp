@@ -292,18 +292,25 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                                 Jumlah Unit per Produk <span class="text-red-500">*</span>
                                             </label>
+                                            @if(!empty($amounts ?? []))
+                                                <p class="text-xs text-gray-500 mb-2">Jumlah unit diambil dari cart dan tidak dapat diubah di form ini.</p>
+                                            @endif
                                             <div class="space-y-3">
                                                 @foreach($products as $product)
                                                     <div class="flex items-center space-x-3">
                                                         <span class="w-40 font-medium text-gray-700">{{ $product->name }}</span>
+                                                        @php
+                                                            $amountValue = old('amount.' . $product->id, $amounts[$product->id] ?? 1);
+                                                        @endphp
                                                         <input 
                                                             type="number" 
                                                             name="amount[{{ $product->id }}]"
-                                                            value="{{ old('amount.' . $product->id, 1) }}"
+                                                            value="{{ $amountValue }}"
                                                             min="1"
                                                             max="{{ $product->stock }}"
                                                             data-unit-price="{{ $product->price_per_day }}"
-                                                            class="booking-amount-input w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                                                            class="booking-amount-input w-24 px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
+                                                            @readonly(!empty($amounts ?? []))
                                                             required
                                                         >
                                                         <span class="text-gray-500 text-sm">/ stok: {{ $product->stock }}</span>

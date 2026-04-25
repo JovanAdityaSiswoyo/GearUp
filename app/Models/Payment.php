@@ -37,4 +37,9 @@ class Payment extends Model
     {
         return $this->morphTo();
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

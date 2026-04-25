@@ -24,6 +24,9 @@ class Book extends Model
         'return_photo',
         'issue_photo',
         'issue_notes',
+        'issue_condition',
+        'fine_percentage',
+        'fine_amount',
         'checkin_appointment_start',
         'checkout_appointment_end',
         'delivery_at',
@@ -39,6 +42,8 @@ class Book extends Model
         'checkout_appointment_end' => 'datetime',
         'delivery_at' => 'datetime',
         'returned_at' => 'datetime',
+        'fine_percentage' => 'integer',
+        'fine_amount' => 'integer',
         'item_status' => ItemStatus::class,
         'order_status' => OrderStatus::class,
     ];

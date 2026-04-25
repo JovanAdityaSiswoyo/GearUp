@@ -393,6 +393,16 @@
                 <textarea id="photoActionNotes" name="issue_notes" placeholder="Deskripsi issue..." 
                     class="w-full border rounded p-3 text-sm" rows="4"></textarea>
             </div>
+            <div id="photoActionConditionWrapper" class="hidden mb-4">
+                <label for="photoActionCondition" class="block text-sm font-medium text-gray-700 mb-2">Kondisi Barang</label>
+                <select id="photoActionCondition" name="issue_condition" class="w-full border rounded p-3 text-sm bg-white">
+                    <option value="">-- Pilih kondisi --</option>
+                    <option value="rusak_ringan">Rusak Ringan (15%)</option>
+                    <option value="rusak_sedang">Rusak Sedang (30%)</option>
+                    <option value="rusak_berat">Rusak Berat (70%)</option>
+                    <option value="hilang">Hilang (100%)</option>
+                </select>
+            </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti</label>
                 <input id="photoActionFile" type="file" accept="image/*" capture="environment" class="block w-full text-sm">
@@ -448,20 +458,23 @@
         });
     }
 
-    function confirmActionWithPhoto(url, action, fieldName, notesRequired = false) {
+    function confirmActionWithPhoto(url, action, fieldName, notesRequired = false, conditionRequired = false) {
         currentPhotoActionConfig = {
             url,
             action,
             fieldName,
-            notesRequired
+            notesRequired,
+            conditionRequired
         };
 
         document.getElementById('photoActionTitle').textContent = action;
         document.getElementById('photoActionNotesWrapper').classList.toggle('hidden', !notesRequired);
+        document.getElementById('photoActionConditionWrapper').classList.toggle('hidden', !conditionRequired);
         document.getElementById('photoActionPreview').classList.add('hidden');
         document.getElementById('photoActionPreview').src = '';
         document.getElementById('photoActionFile').value = '';
         document.getElementById('photoActionNotes').value = '';
+        document.getElementById('photoActionCondition').value = '';
         document.getElementById('photoActionModal').classList.remove('hidden');
     }
 
@@ -544,7 +557,7 @@
     }
 
     function openIssueModal() {
-        confirmActionWithPhoto('{{ $issueRoute }}', 'Deteksi Issue', 'issue_photo', true);
+        confirmActionWithPhoto('{{ $issueRoute }}', 'Deteksi Issue', 'issue_photo', true, true);
     }
 
     function closePhotoActionModal() {
@@ -598,6 +611,16 @@
             }
 
             formData.append('issue_notes', notes);
+        }
+
+        if (currentPhotoActionConfig.conditionRequired) {
+            const condition = document.getElementById('photoActionCondition').value;
+            if (!condition) {
+                Swal.fire('Error!', 'Kondisi barang harus dipilih', 'error');
+                return;
+            }
+
+            formData.append('issue_condition', condition);
         }
 
         fetch(currentPhotoActionConfig.url, {
